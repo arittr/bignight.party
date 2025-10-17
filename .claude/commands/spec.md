@@ -14,11 +14,16 @@ Example: `/spec magic link authentication with Auth.js`
 
 ### Step 1: Brainstorm Requirements
 
-Use the `brainstorming` skill to refine the feature requirements:
-- Clarify scope and boundaries
-- Identify architectural decisions needed
-- Define acceptance criteria
-- Explore alternatives if applicable
+Use the `brainstorming` skill for Phases 1-3 ONLY:
+- Phase 1: Understanding - Clarify scope and boundaries
+- Phase 2: Exploration - Explore alternatives, identify architectural decisions
+- Phase 3: Design Presentation - Present design incrementally
+
+**IMPORTANT**: STOP after Phase 3 (Design Presentation). Do NOT continue to:
+- Phase 4: Worktree Setup
+- Phase 5: Planning Handoff (which launches writing-plans skill)
+
+Return to this /spec workflow after design is validated.
 
 ### Step 2: Analyze Codebase Context
 
@@ -74,7 +79,7 @@ OUTPUT: Create a codebase context document with:
 
 ### Step 3: Generate Feature Specification
 
-Create a comprehensive spec document at `specs/features/{feature-name}.md`:
+Create a comprehensive spec document at `specs/{feature-name}/spec.md`:
 
 ```markdown
 # Feature: {Feature Name}
@@ -243,7 +248,7 @@ Report to user:
 ```
 ✅ Feature Specification Complete
 
-Location: specs/features/{feature-name}.md
+Location: specs/{feature-name}/spec.md
 
 Components:
 - {count} model files
@@ -254,8 +259,8 @@ Components:
 Estimated Complexity: {total}
 
 Next Steps:
-1. Review spec: specs/features/{feature-name}.md
-2. Implement: /implement-feature @specs/features/{feature-name}.md
+1. Review spec: specs/{feature-name}/spec.md
+2. Create implementation plan: /plan @specs/{feature-name}/spec.md
 ```
 
 Now generate the specification for: {feature-description}
