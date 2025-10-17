@@ -12,6 +12,53 @@ Example: `/execute @specs/features/magic-link-auth/plan.md`
 
 ## Workflow
 
+### Step 0: Check for Existing Work
+
+Before starting or resuming, check current state:
+
+```bash
+# Check current branch
+git branch --show-current
+
+# Check recent commits for task markers
+git log --oneline --grep="\[Task" -20
+
+# Check for existing stacked branches
+gs ls
+gs branch tree
+
+# Check working directory status
+git status
+```
+
+**If work already exists:**
+
+1. **Identify completed tasks:**
+   - Look for commits with `[Task X.Y]` pattern in git log
+   - Check `gs ls` and `gs branch tree` for task branches
+   - Match branch names to plan tasks (e.g., `task-2-1-auth-models`)
+   - Determine which phase and task to resume from
+
+2. **Resume strategy:**
+   - Sequential phases: Resume from next incomplete task in current phase
+   - Parallel phases: Resume incomplete tasks only
+   - If phase complete: Move to next phase
+
+3. **Report resume point:**
+   ```
+   📍 Resuming execution from existing work
+
+   **Current branch**: {branch-name}
+   **Completed tasks**: Task 1.1, Task 1.2
+   **Resuming at**: Task 1.3 - {task-name}
+   **Remaining**: {count} tasks in {phase-count} phases
+   ```
+
+4. **Skip to Step 3** (Execute Phases) at the resume point
+
+**If no existing work:**
+- Continue to Step 1 (Read and Parse Plan)
+
 ### Step 1: Read and Parse Plan
 
 Read the plan file and extract:
@@ -28,6 +75,8 @@ Verify plan structure:
 
 ### Step 2: Create Feature Branch
 
+**Skip this step if resuming from existing work** (Step 0 detected existing branches).
+
 Create a new git-spice branch for this feature:
 
 ```bash
@@ -41,6 +90,8 @@ Prompt for:
 This branch will be the integration point for all work.
 
 ### Step 3: Execute Phases
+
+**If resuming:** Start from the incomplete phase/task identified in Step 0.
 
 For each phase in the plan, execute based on strategy:
 
