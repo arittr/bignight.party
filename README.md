@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BigNight.Party
+
+A real-time prediction game for awards shows, starting with the Oscars. Compete with friends to see who can predict the most winners!
+
+## What It Does
+
+- 🎬 **Pick Your Winners** - Fill out predictions for each category via a guided wizard
+- 🏆 **Live Scoring** - Watch the leaderboard update in real-time as winners are revealed
+- 📊 **See the Stats** - View aggregate prediction percentages without seeing individual picks
+- 🎉 **React Live** - Send emoji reactions during the ceremony that appear on the leaderboard
+- 👤 **Magic Link Auth** - Sign in securely with just your email
+- 🔐 **Admin Controls** - Manage categories, set point values, mark winners, and control reveals
+
+## Tech Stack
+
+- **Next.js 15** (App Router with Turbopack)
+- **TypeScript** with strict linting (Biome)
+- **Prisma** + PostgreSQL (Docker local / Neon production)
+- **Auth.js v5** for magic link authentication
+- **Socket.io** for real-time WebSocket updates
+- **Resend** for email delivery
+- **Tailwind CSS v4** for styling
+- **next-safe-action** for type-safe server actions
+- **ts-pattern** for exhaustive pattern matching
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Start local PostgreSQL (Docker)
+docker-compose up -d
+
+# Run database migrations
+pnpm prisma migrate dev
+
+# Start development server
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/           # Next.js App Router pages
+├── components/    # React components
+├── lib/
+│   ├── actions/   # Server Actions
+│   ├── auth/      # Auth.js configuration
+│   ├── db/        # Prisma client
+│   ├── models/    # Database access layer
+│   ├── services/  # Business logic
+│   └── websocket/ # Socket.io server
+├── schemas/       # Zod validation schemas
+└── types/         # TypeScript type definitions
+```
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
+See [specs/](./specs/) for detailed architecture and design documentation.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Format code
+pnpm format
 
-## Deploy on Vercel
+# Lint code
+pnpm lint
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Run database migrations
+pnpm prisma migrate dev
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Open Prisma Studio
+pnpm prisma studio
+
+# Debug mode
+pnpm dev:debug
+```
+
+## Deployment
+
+Deploys to Vercel with Neon PostgreSQL database.
