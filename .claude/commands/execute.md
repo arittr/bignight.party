@@ -48,64 +48,104 @@ For each phase in the plan, execute based on strategy:
 
 For phases where tasks must run in order:
 
-**Use `subagent-driven-development` skill in current branch:**
+**Execute tasks sequentially with stacked branches:**
 
-1. Announce: "I'm using the Subagent-Driven Development skill to execute Phase {N}: {phase-name}"
+1. For each task in the phase:
 
-2. The skill will:
-   - Spawn fresh subagent per task
-   - Each subagent implements autonomously
-   - Code review after each task
-   - Continuous commits
-
-3. Monitor progress and handle any issues
-
-4. After phase completes, verify:
+   a. **Create stacked branch for task:**
    ```bash
-   pnpm biome check
-   pnpm test
-   git log --oneline -10  # Review commits
+   gs branch create --parent {current-branch}
    ```
+
+   Prompt for:
+   - **Branch name**: `task-{task-id}-{short-name}`
+   - **Description**: Task name from plan
+
+   b. **Spawn subagent for task implementation:**
+
+   ```
+   ROLE: You are implementing Task {task-id} for BigNight.Party.
+
+   TASK: {task-name}
+   BRANCH: {task-branch}
+
+   IMPLEMENTATION:
+
+   Read task details from: {plan-path}
+   Find: "Task {task-id}: {task-name}"
+
+   Implement according to:
+   - Files specified in task
+   - Acceptance criteria in task
+   - BigNight.Party mandatory patterns (see @docs/constitutions/current/)
+
+   Quality checks:
+   ```bash
+   pnpm format
+   pnpm lint
+   pnpm test
+   ```
+
+   Commit and create next stacked branch when complete:
+   ```bash
+   git add --all
+   gs branch create -m "[Task {task-id}] {task-name}"
+   ```
+
+   Report completion with summary of changes.
+   ```
+
+   c. **Verify task completion:**
+   ```bash
+   pnpm test
+   pnpm lint
+   git log --oneline -1
+   ```
+
+2. After ALL tasks in phase complete:
+
+   **Use `requesting-code-review` skill:**
+
+   Dispatch code-reviewer subagent to review the entire phase:
+   - All task branches in this phase
+   - Verify patterns followed
+   - Check acceptance criteria met
+   - Review quality and consistency
+
+3. Address review feedback if needed
+
+4. Phase is complete when code review passes
 
 #### Parallel Phase Strategy
 
 For phases where tasks are independent:
 
-**Create worktrees and spawn parallel agents:**
+**Create stacked branches and spawn parallel agents:**
 
 1. **Verify independence** (from plan's dependency analysis):
    - Confirm no file overlaps between tasks
    - Check dependencies are satisfied
 
-2. **Create worktree per task**:
+2. **Create stacked branch per task**:
 
    For each task in parallel phase:
    ```bash
-   git worktree add ../worktree-{task-id} -b {task-id}
+   gs branch create --parent {feature-branch}
    ```
 
-   Store worktree info:
+   Prompt for:
+   - **Branch name**: `task-{task-id}-{short-name}`
+   - **Description**: Task name from plan
+
+   Store branch info:
    ```javascript
-   worktrees = {
-     'task-3-magic-link-service': {
-       path: '../worktree-task-3-magic-link-service',
-       branch: 'task-3-magic-link-service'
-     },
-     'task-4-email-service': {
-       path: '../worktree-task-4-email-service',
-       branch: 'task-4-email-service'
-     }
+   taskBranches = {
+     'task-3-magic-link-service': 'task-3-magic-link-service',
+     'task-4-email-service': 'task-4-email-service'
    }
    ```
 
-3. **Setup each worktree**:
-   ```bash
-   cd {worktree-path}
-   pnpm install
-   pnpm test  # Verify baseline
-   ```
-
-4. **Spawn parallel agents** (CRITICAL: Single message with multiple Task tools):
+3. **Spawn parallel agents** (CRITICAL: Single message with multiple Task tools):
 
    For each task, spawn agent with this prompt:
 
@@ -113,98 +153,91 @@ For phases where tasks are independent:
    ROLE: You are implementing Task {task-id} for BigNight.Party.
 
    TASK: {task-name}
-   WORKTREE: {worktree-path}
-   BRANCH: {branch-name}
+   BRANCH: {task-branch}
+   PARENT BRANCH: {feature-branch}
 
-   CRITICAL - WORKTREE ISOLATION:
-   You are working in an isolated worktree at: {worktree-path}
-
-   1. ALL operations happen in worktree:
-      cd {worktree-path}
-
-   2. Read plan from MAIN repository:
-      /Users/drewritter/projects/bignight.party/{plan-path}
-
-   3. Find your task: "Task {task-id}: {task-name}"
-
-   4. You are on branch: {branch-name}
-
-   5. DO NOT touch main repository
+   CRITICAL - BRANCH ISOLATION:
+   1. You are on branch: {task-branch} (stacked on {feature-branch})
+   2. Implement ONLY this task
+   3. DO NOT touch files outside this task's scope
 
    IMPLEMENTATION:
 
-   Use the `subagent-driven-development` skill to implement this ONE task.
+   Read plan from: /Users/drewritter/projects/bignight.party/{plan-path}
+   Find: "Task {task-id}: {task-name}"
 
-   The task specifies:
-   - Files to modify: {files}
-   - Acceptance criteria: {criteria}
-   - Implementation steps: {steps}
+   Implement according to:
+   - Files specified in task
+   - Acceptance criteria in task
+   - BigNight.Party mandatory patterns (see @docs/constitutions/current/)
 
-   Follow BigNight.Party mandatory patterns:
+   Follow mandatory patterns:
    - Server actions: Use next-safe-action ONLY
    - Discriminated unions: Use ts-pattern with .exhaustive()
    - Layer boundaries: Models (Prisma) → Services → Actions
    - No Prisma imports outside models layer
 
-   Quality gates (in worktree):
+   Quality checks:
    ```bash
-   cd {worktree-path}
-   pnpm biome check --write .
+   pnpm format
+   pnpm lint
    pnpm test
    ```
 
-   Commit after task completes:
+   Commit and create next stacked branch when complete:
    ```bash
-   cd {worktree-path}
    git add --all
-   git commit -m "[{task-id}] {task-name}"
+   gs branch create -m "[Task {task-id}] {task-name}"
    ```
 
    CRITICAL:
-   - ✅ Stay in worktree directory
+   - ✅ Stay on task branch
    - ✅ Implement ONLY this task
    - ✅ Follow mandatory patterns
-   - ❌ DO NOT touch other files
+   - ❌ DO NOT touch other task files
 
    Execute: Task {task-id}
    ```
 
-5. **Monitor parallel execution**:
+4. **Monitor parallel execution**:
    - Track progress of each agent
    - Watch for errors or blockers
    - Note when agents complete
 
-6. **Verify each worktree after completion**:
+5. **Verify each task after completion**:
    ```bash
-   cd {worktree-path}
+   git checkout {task-branch}
    pnpm test  # Must pass
-   pnpm biome check  # Must be clean
-   git log --oneline  # Review commits
+   pnpm lint  # Must be clean
+   git log --oneline -1  # Review commit
    ```
 
-7. **Merge worktree branches into feature branch**:
+6. **After ALL parallel tasks complete:**
 
-   For each completed worktree:
+   **Use `requesting-code-review` skill:**
+
+   Dispatch code-reviewer subagent to review the entire phase:
+   - All task branches in this phase
+   - Check for integration issues
+   - Verify patterns followed
+   - Ensure no file conflicts
+   - Review quality and consistency
+
+7. **Address review feedback if needed**
+
+8. **Verify integration** (after review passes):
    ```bash
-   # Switch to main repository
-   cd /Users/drewritter/projects/bignight.party
-
-   # Merge task branch into feature branch
    git checkout {feature-branch}
-   git merge --no-ff {task-branch} -m "Merge task: {task-name}"
-   ```
 
-8. **Cleanup worktrees**:
-   ```bash
-   git worktree remove {worktree-path}
-   ```
+   # Git-spice will handle stacking - verify all tasks visible
+   gs branch tree
 
-9. **Verify merged result**:
-   ```bash
-   cd /Users/drewritter/projects/bignight.party
+   # Test integration
    pnpm test
-   pnpm biome check
+   pnpm lint
    ```
+
+9. Phase is complete when code review passes and integration verified
 
 ### Step 4: Verify Completion
 
@@ -220,7 +253,7 @@ This skill enforces verification BEFORE claiming work is done.
 pnpm test
 
 # Run linting
-pnpm biome check
+pnpm lint
 
 # Run production build
 pnpm build
@@ -324,27 +357,34 @@ If one agent in parallel phase fails:
 ❌ Parallel Phase {id} - Agent Failure
 
 **Failed Task**: {task-id}
-**Worktree**: {worktree-path}
+**Branch**: {task-branch}
 **Error**: {error-message}
 
 **Successful Tasks**: {list}
 
 ## Resolution Options
 
-### Option A: Fix in Worktree
+### Option A: Fix in Branch
 ```bash
-cd {worktree-path}
+git checkout {task-branch}
 # Debug and fix issue
 pnpm test
+pnpm format
+pnpm lint
 git add --all
 git commit -m "[{task-id}] Fix: {description}"
 ```
 
 ### Option B: Restart Failed Agent
-Delete worktree, recreate, spawn new agent for this task only.
+Reset task branch, spawn new agent for this task only:
+```bash
+git checkout {task-branch}
+git reset --hard {feature-branch}
+# Spawn fresh agent for this task
+```
 
 ### Option C: Continue Without Failed Task
-Merge successful tasks, address failed task separately.
+Complete successful tasks, address failed task in follow-up.
 ```
 
 ### Merge Conflicts
