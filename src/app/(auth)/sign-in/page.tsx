@@ -11,7 +11,7 @@ export default function SignInPage() {
     const result = emailSchema.safeParse({ email });
 
     if (!result.success) {
-      throw new Error(result.error.errors[0]?.message ?? "Invalid email");
+      throw new Error(result.error.issues[0]?.message ?? "Invalid email");
     }
 
     // Trigger Auth.js magic link flow
