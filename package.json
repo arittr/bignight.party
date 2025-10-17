@@ -27,7 +27,7 @@
     "dev": "next dev --turbopack",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev --turbopack",
     "format": "biome format --write",
-    "lint": "biome check",
+    "lint": "biome check --write",
     "prepare": "husky",
     "start": "next start"
   },
