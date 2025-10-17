@@ -100,138 +100,80 @@ Create a comprehensive spec document at `specs/{feature-name}/spec.md`:
 
 ## Requirements
 
+> **Note**: All features must follow architecture patterns defined in @docs/constitutions/current/
+
 ### Functional Requirements
-- FR1: {requirement}
-- FR2: {requirement}
-- FR3: {requirement}
+- FR1: {specific requirement for this task}
+- FR2: {specific requirement for this task}
+- FR3: {specific requirement for this task}
 
 ### Non-Functional Requirements
-- NFR1: Must use next-safe-action for all server actions
-- NFR2: Must use ts-pattern for all discriminated unions
-- NFR3: Must follow model/service/action layer boundaries
-- NFR4: {performance/security requirement}
+- NFR1: {performance requirement specific to this task}
+- NFR2: {security requirement specific to this task}
+- NFR3: {DX requirement specific to this task}
 
 ## Architecture
 
-### Components
+> **See**: @docs/constitutions/current/architecture.md for layer boundaries and patterns
 
-#### 1. Model Layer (src/lib/models/{feature}.ts)
-**Purpose**: Database access only
+### Task-Specific Components
 
-**Files**:
-- `src/lib/models/{model}.ts`
+{List files from codebase analysis - existing files to modify, new files to create}
 
-**Responsibilities**:
-- Prisma queries only
-- No business logic
-- Return Prisma types
+**Example:**
+- **New**: `src/lib/db/prisma.ts` - Prisma client singleton
+- **New**: `docker-compose.yml` - PostgreSQL container
+- **New**: `prisma/schema.prisma` - Database schema
+- **Modify**: `package.json` - Add Prisma dependencies and scripts
 
-#### 2. Service Layer (src/lib/services/{feature}-service.ts)
-**Purpose**: Business logic and orchestration
+### Dependencies
 
-**Files**:
-- `src/lib/services/{service}.ts`
+{From codebase analysis}
 
-**Responsibilities**:
-- Call model layer for data
-- Implement business rules using ts-pattern
-- Emit WebSocket events if needed
-- No direct Prisma imports
+**New packages to install:**
+- `@prisma/client` - Prisma ORM client
+- `prisma` (dev) - Schema management
+- `tsx` (dev) - TypeScript script runner
 
-#### 3. Action Layer (src/lib/actions/{feature}-actions.ts)
-**Purpose**: Server actions with validation
+### Schema Changes
 
-**Files**:
-- `src/lib/actions/{feature}-actions.ts`
+{If applicable from codebase analysis}
 
-**Responsibilities**:
-- Use next-safe-action for all actions
-- Zod schema validation
-- Call service layer only
-- Auth checks via middleware
-
-#### 4. UI Components (src/components/{feature}/)
-**Purpose**: React components
-
-**Files**:
-- `src/components/{feature}/{Component}.tsx`
-
-**Responsibilities**:
-- Use useAction hook from next-safe-action
-- Call server actions
-- Display loading/error states
-
-#### 5. Schemas (src/schemas/{feature}-schema.ts)
-**Purpose**: Zod validation schemas
-
-**Files**:
-- `src/schemas/{feature}-schema.ts`
-
-**Responsibilities**:
-- Define all input validation schemas
-- Export types inferred from schemas
-
-#### 6. Types (src/types/{feature}.ts)
-**Purpose**: Shared TypeScript types
-
-**Files**:
-- `src/types/{feature}.ts`
-
-**Responsibilities**:
-- Client/server shared types
-- Domain types
+**Migrations needed:**
+1. Migration name: `init` - Create enums
+2. Migration name: `auth` - Add auth models
+3. Migration name: `game` - Add game models
 
 ### Implementation Order
 
-1. **Database/Types** (if schema changes needed)
-   - Update Prisma schema
-   - Run migrations
-   - Define types
+{From codebase analysis - task-specific order based on dependencies}
 
-2. **Model Layer**
-   - Implement data access functions
-
-3. **Service Layer**
-   - Implement business logic with ts-pattern
-   - Add WebSocket events if needed
-
-4. **Schemas**
-   - Define Zod validation schemas
-
-5. **Action Layer**
-   - Create next-safe-action actions
-   - Add auth middleware
-
-6. **UI Components**
-   - Build React components
-   - Connect to actions via useAction
+**Example:**
+1. Docker & environment setup
+2. Install dependencies
+3. Create Prisma schema
+4. Run migrations
+5. Create Prisma client singleton
+6. Create validation script
+7. Update package scripts
 
 ## Acceptance Criteria
 
-- [ ] All server actions use next-safe-action
-- [ ] All discriminated unions use ts-pattern with .exhaustive()
-- [ ] Layer boundaries respected (no Prisma in services/actions)
-- [ ] All inputs validated with Zod
-- [ ] Tests pass
+**Must follow constitution patterns:**
+- [ ] All server actions use next-safe-action (see patterns.md)
+- [ ] All discriminated unions use ts-pattern with .exhaustive() (see patterns.md)
+- [ ] Layer boundaries respected: no Prisma outside models/ (see architecture.md)
+- [ ] All inputs validated with Zod (see patterns.md)
+
+**Task-specific criteria:**
+- [ ] {criterion specific to this task}
+- [ ] {criterion specific to this task}
+- [ ] {criterion specific to this task}
+
+**Verification:**
+- [ ] Tests pass (if tests exist)
 - [ ] Biome linting passes
 - [ ] Feature works end-to-end
-
-## Implementation Plan
-
-### Task 1: {Task Name}
-**Complexity**: M (2-4 hours)
-**Files**:
-- `{file-1}`
-- `{file-2}`
-
-**Description**: {what to implement}
-
-**Acceptance**:
-- [ ] {criterion 1}
-- [ ] {criterion 2}
-
-### Task 2: {Task Name}
-{Similar structure...}
 
 ## References
 
