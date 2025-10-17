@@ -25,56 +25,63 @@ Use the `brainstorming` skill for Phases 1-3 ONLY:
 
 Return to this /spec workflow after design is validated.
 
-### Step 2: Analyze Codebase Context
+### Step 2: Analyze Task-Specific Context
 
-Use the Task tool to spawn an agent that analyzes relevant codebase context:
+Use the Task tool to spawn an agent that analyzes task-specific integration points:
 
 ```
 ROLE: You are a codebase analysis agent for BigNight.Party.
 
-TASK: Analyze the codebase to provide architectural context for: {feature-description}
+TASK: Analyze task-specific context for: {feature-description}
 
-REQUIRED READING:
-- @docs/constitutions/current/architecture.md - Mandatory patterns and tech stack
-- @docs/constitutions/current/patterns.md - Required libraries (ts-pattern, next-safe-action)
-- @docs/constitutions/current/schema-rules.md - Database design philosophy
+REQUIRED READING (architectural rules - do NOT recreate these):
+- @docs/constitutions/current/architecture.md - Layer boundaries and tech stack
+- @docs/constitutions/current/patterns.md - Mandatory patterns (ts-pattern, next-safe-action)
+- @docs/constitutions/current/schema-rules.md - Database design rules
+- @docs/constitutions/current/tech-stack.md - Required and prohibited libraries
+- @docs/constitutions/current/testing.md - TDD requirements
 
-ANALYSIS TASKS:
+FOCUS: Analyze ONLY task-specific details, NOT general architecture (that's in constitutions).
 
-1. **Identify Integration Points**:
-   - Which existing files/modules will be affected?
-   - What patterns should be followed?
-   - Where does this feature fit in the architecture?
+TASK-SPECIFIC ANALYSIS:
 
-2. **Technology Stack**:
-   - Next.js 15 App Router
-   - Auth.js v5 for authentication
-   - Prisma + PostgreSQL
-   - Socket.io for real-time
-   - ts-pattern for discriminated unions
-   - next-safe-action for server actions
+1. **Existing Files Scan**:
+   - What files currently exist in the codebase?
+   - Which existing files will this feature integrate with?
+   - What directories need to be created?
+   - Are there similar features to reference?
 
-3. **Required Components**:
-   - Model layer files (src/lib/models/)
-   - Service layer files (src/lib/services/)
-   - Action layer files (src/lib/actions/)
-   - UI components (src/components/)
-   - Schemas (src/schemas/)
-   - Types (src/types/)
+2. **Dependencies Check**:
+   - What npm packages are currently installed?
+   - What new dependencies are needed for THIS task?
+   - Check package.json, pnpm-lock.yaml
 
-4. **Mandatory Patterns** (from patterns.md):
-   - ALL server actions use next-safe-action
-   - ALL discriminated unions use ts-pattern with .exhaustive()
-   - Models only import Prisma
-   - Services call models, contain business logic
-   - Actions only call services
-   - No Prisma outside models layer
+3. **Schema State**:
+   - Does prisma/schema.prisma exist?
+   - What migrations exist in prisma/migrations/?
+   - Does this task need schema changes?
 
-OUTPUT: Create a codebase context document with:
-- Integration points (specific file paths)
-- Components needed (with layer assignments)
-- Patterns to follow (with examples)
-- Dependencies and ordering
+4. **File Path Mapping**:
+   Map exactly where new files go (following architecture.md):
+   - Models: src/lib/models/{name}.ts
+   - Services: src/lib/services/{name}-service.ts
+   - Actions: src/lib/actions/{name}-actions.ts
+   - Components: src/components/{name}/
+   - Schemas: src/schemas/{name}-schema.ts
+   - Types: src/types/{name}.ts
+
+OUTPUT (focused on THIS task only):
+- List of existing files that will be modified (exact paths)
+- List of new files to create (exact paths with layer assignment)
+- New dependencies to install (if any)
+- Schema changes needed (if any)
+- Implementation order based on dependencies
+- References to similar existing code (if any)
+
+DO NOT include:
+- General architecture explanations (already in constitutions)
+- Pattern examples (already in patterns.md)
+- Layer boundary rules (already in architecture.md)
 ```
 
 ### Step 3: Generate Feature Specification
