@@ -9,8 +9,8 @@ export default async function PeoplePage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-900">People</h1>
         <Link
-          href="/admin/people/new"
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          href="/admin/people/new"
         >
           Add Person
         </Link>
@@ -21,26 +21,26 @@ export default async function PeoplePage() {
           <thead className="bg-gray-50">
             <tr>
               <th
-                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                scope="col"
               >
                 Name
               </th>
               <th
-                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                scope="col"
               >
                 Image
               </th>
               <th
-                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                scope="col"
               >
                 Nominations
               </th>
               <th
-                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                scope="col"
               >
                 Actions
               </th>
@@ -49,22 +49,22 @@ export default async function PeoplePage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {people.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                <td className="px-6 py-4 text-center text-gray-500" colSpan={4}>
                   No people found. Add your first person to get started.
                 </td>
               </tr>
             ) : (
               people.map((person) => (
-                <tr key={person.id} className="hover:bg-gray-50">
+                <tr className="hover:bg-gray-50" key={person.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{person.name}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {person.imageUrl ? (
                       <img
-                        src={person.imageUrl}
                         alt={person.name}
                         className="h-10 w-10 rounded-full object-cover"
+                        src={person.imageUrl}
                       />
                     ) : (
                       <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -80,8 +80,8 @@ export default async function PeoplePage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <Link
-                      href={`/admin/people/${person.id}`}
                       className="text-blue-600 hover:text-blue-900 font-medium"
+                      href={`/admin/people/${person.id}`}
                     >
                       View Details
                     </Link>
