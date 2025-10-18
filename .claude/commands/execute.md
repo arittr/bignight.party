@@ -63,7 +63,7 @@ git status
    **Remaining**: {count} tasks in {phase-count} phases
    ```
 
-4. **Skip to Step 3** (Execute Phases) at the resume point
+4. **Skip to Step 2** (Execute Phases) at the resume point
 
 **If no existing work:**
 - Continue to Step 1 (Read and Parse Plan)
@@ -82,23 +82,7 @@ Verify plan structure:
 - ✅ All tasks have acceptance criteria
 - ✅ Dependencies make sense
 
-### Step 2: Create Feature Branch
-
-**Skip this step if resuming from existing work** (Step 0 detected existing branches).
-
-Create a new git-spice branch for this feature:
-
-```bash
-gs branch create
-```
-
-Prompt for:
-- **Branch name**: `feature/{feature-name-from-plan}`
-- **Description**: Feature overview from plan
-
-This branch will be the integration point for all work.
-
-### Step 3: Execute Phases
+### Step 2: Execute Phases
 
 **If resuming:** Start from the incomplete phase/task identified in Step 0.
 
@@ -216,16 +200,19 @@ For phases where tasks are independent:
    - Confirm no file overlaps between tasks
    - Check dependencies are satisfied
 
-2. **For each parallel task, create worktree on feature branch**:
+2. **For each parallel task, create worktree on current branch**:
 
    ```bash
-   # Create worktree on feature branch (do NOT create task branch yet)
-   git worktree add ./.worktrees/task-{task-id} {feature-branch}
-   # Example: git worktree add ./.worktrees/task-2-1 feature/authentication
+   # Get current branch name
+   CURRENT_BRANCH=$(git branch --show-current)
+
+   # Create worktree on current branch (do NOT create task branch yet)
+   git worktree add ./.worktrees/task-{task-id} $CURRENT_BRANCH
+   # Example: git worktree add ./.worktrees/task-2-1 task-1-2-install-tsx
    ```
 
    This creates:
-   - A worktree at `./.worktrees/task-{task-id}` checked out to the feature branch
+   - A worktree at `./.worktrees/task-{task-id}` checked out to current branch
    - Task branch will be created later with `gs branch create` after work is done
 
    Store worktree info:
@@ -247,7 +234,7 @@ For phases where tasks are independent:
 
    TASK: {task-name}
    WORKTREE: {worktree-path}
-   FEATURE BRANCH: {feature-branch}
+   BASE BRANCH: {base-branch}
 
    CRITICAL - WORKTREE ISOLATION:
    You are working in an isolated git worktree. This means:
@@ -259,7 +246,7 @@ For phases where tasks are independent:
    SETUP:
    ```bash
    cd {worktree-path}
-   git branch --show-current  # Should be {feature-branch}
+   git branch --show-current  # Should be {base-branch}
    pwd  # Confirm you're in worktree directory
    ```
 
@@ -311,7 +298,7 @@ For phases where tasks are independent:
    This will:
    - Create a new branch `task-{task-id}-{short-name}`
    - Commit all staged changes
-   - Stack the branch on feature branch automatically
+   - Stack the branch on base branch automatically
 
    7. Report completion with:
       - Summary of changes
@@ -368,22 +355,21 @@ For phases where tasks are independent:
 
    Check that all task branches are properly tracked and stacked:
    ```bash
-   git checkout {feature-branch}
    gs log short     # Verify all task branches visible
    gs repo restack  # Restack if needed (shouldn't be necessary)
    ```
 
-   Expected output (all tasks stacked on feature branch):
+   Expected output (all parallel tasks stacked on same base):
    ```
-   ┌── task-2-3-magic-link (on feature/authentication)
-   ├── task-2-2-email-service (on feature/authentication)
-   ├── task-2-1-auth-models (on feature/authentication)
-   └── feature/authentication
+   ┌── task-2-2-validation-schemas (on task-1-2-install-tsx)
+   ├── task-2-1-create-models (on task-1-2-install-tsx)
+   └── task-1-2-install-tsx
+       ├── task-1-1-add-schema
        main
    ```
 
-   Note: Since each task used `gs branch create` from the feature branch,
-   all tasks are automatically stacked on the feature branch in parallel.
+   Note: Since each parallel task used `gs branch create` from the same base branch,
+   all parallel tasks are automatically stacked on that base in parallel.
 
 8. **After verification, use `requesting-code-review` skill:**
 
@@ -398,9 +384,10 @@ For phases where tasks are independent:
 
 10. **Verify integration** (after review passes):
     ```bash
-    git checkout {feature-branch}
+    # Check out one of the parallel task branches
+    git checkout {any-task-branch-from-phase}
 
-    # Run tests on integrated feature branch
+    # Run tests on the branch (includes all previous work)
     pnpm test
     pnpm lint
     pnpm build
@@ -408,7 +395,7 @@ For phases where tasks are independent:
 
 11. Phase is complete when code review passes and integration verified
 
-### Step 4: Verify Completion
+### Step 3: Verify Completion
 
 After all phases execute successfully:
 
@@ -433,7 +420,7 @@ echo "All checks passed - ready to complete"
 
 **Critical:** Evidence before assertions. Never claim "tests pass" without running them.
 
-### Step 5: Finish Branch
+### Step 4: Finish Stack
 
 After verification passes:
 
@@ -444,13 +431,13 @@ Use the `finishing-a-development-branch` skill to:
    - Continue with dependent feature: `gs branch create`
    - Mark complete and sync: `gs repo sync`
 
-### Step 6: Final Report
+### Step 5: Final Report
 
 ```markdown
 ✅ Feature Implementation Complete
 
 **Feature**: {feature-name}
-**Branch**: {feature-branch}
+**Stack**: {count} task branches
 
 ## Execution Summary
 
@@ -476,15 +463,15 @@ Use the `finishing-a-development-branch` skill to:
 ✅ All tests passing
 ✅ Biome linting clean
 ✅ Build successful
-✅ {total-commits} commits on feature branch
+✅ {total-commits} commits across {branch-count} task branches
 
 ## Next Steps
 
 ### Review Changes
 ```bash
-gs log long               # View all branches and commits in stack
-git log --oneline {feature-branch}
-git diff main..{feature-branch}
+gs log short              # View all branches and commits in stack
+gs log long               # Detailed view with commit messages
+git diff main..HEAD       # See all changes in current stack
 ```
 
 ### Submit for Review
@@ -549,7 +536,7 @@ git commit -m "[{task-id}] Fix: {description}"
 Reset task branch, spawn new agent for this task only:
 ```bash
 git checkout {task-branch}
-git reset --hard {feature-branch}
+git reset --hard {base-branch}
 # Spawn fresh agent for this task
 ```
 
@@ -575,8 +562,8 @@ This should not happen if task independence was verified correctly.
 2. Check if tasks truly independent
 3. Resolve conflict manually:
    ```bash
-   git checkout {feature-branch}
-   git merge {task-branch}
+   git checkout {one-task-branch}
+   git merge {other-task-branch}
    # Resolve conflicts in editor
    git add {conflicted-files}
    git commit
@@ -596,8 +583,8 @@ If worktree creation fails:
 
 Common causes:
 - Path already exists: `rm -rf {path}` and `git worktree prune`
-- Uncommitted changes on feature branch: `git stash`
-- Feature branch doesn't exist: Check `gs ls` for branch name
+- Uncommitted changes on current branch: `git stash`
+- Working directory not clean: Commit or stash changes first
 
 After fixing, re-run `/execute`
 ```
@@ -606,7 +593,8 @@ After fixing, re-run `/execute`
 
 - **Skill-driven execution** - Uses using-git-spice, using-git-worktrees, and other superpowers skills
 - **Automatic orchestration** - Reads plan strategies, executes accordingly
-- **Git-spice stacking** - All task branches stack on feature branch (per using-git-spice skill)
+- **Git-spice stacking** - Sequential tasks stack linearly; parallel tasks branch from same base (per using-git-spice skill)
+- **No feature branch** - The stack of task branches IS the feature; never create empty branch upfront
 - **Worktree isolation** - Parallel tasks run in separate worktrees (per using-git-worktrees skill)
 - **Context management** - Each task runs in isolated subagent to avoid token bloat
 - **Mandatory patterns** - All agents enforce BigNight.Party patterns
