@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import * as eventModel from "@/lib/models/event";
+import { redirect } from "next/navigation";
 import { createCategoryAction } from "@/lib/actions/admin-actions";
+import * as eventModel from "@/lib/models/event";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -25,10 +25,10 @@ export default async function NewCategoryPage(props: Props) {
 
     const result = await createCategoryAction({
       eventId: params.id,
+      isRevealed,
       name,
       order,
       points,
-      isRevealed,
     });
 
     if (result?.data) {
@@ -39,7 +39,7 @@ export default async function NewCategoryPage(props: Props) {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <Link href={`/admin/events/${params.id}`} className="text-blue-600 hover:underline text-sm">
+        <Link className="text-blue-600 hover:underline text-sm" href={`/admin/events/${params.id}`}>
           ← Back to {event.name}
         </Link>
       </div>
@@ -48,48 +48,48 @@ export default async function NewCategoryPage(props: Props) {
 
       <form action={handleCreate} className="space-y-6 bg-white p-6 rounded-lg shadow">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
             Category Name
           </label>
           <input
-            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             id="name"
             name="name"
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="e.g., Best Picture, Best Director"
+            required
+            type="text"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="order" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="order">
               Display Order
             </label>
             <input
-              type="number"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue="0"
               id="order"
+              min="0"
               name="order"
               required
-              min="0"
-              defaultValue="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="number"
             />
             <p className="mt-1 text-sm text-gray-500">Order in which this category appears</p>
           </div>
 
           <div>
-            <label htmlFor="points" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="points">
               Points
             </label>
             <input
-              type="number"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue="1"
               id="points"
+              min="1"
               name="points"
               required
-              min="1"
-              defaultValue="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="number"
             />
             <p className="mt-1 text-sm text-gray-500">Points awarded for correct pick</p>
           </div>
@@ -97,7 +97,7 @@ export default async function NewCategoryPage(props: Props) {
 
         <div>
           <label className="flex items-center space-x-2">
-            <input type="checkbox" id="isRevealed" name="isRevealed" className="rounded" />
+            <input className="rounded" id="isRevealed" name="isRevealed" type="checkbox" />
             <span className="text-sm font-medium text-gray-700">Is Revealed</span>
           </label>
           <p className="mt-1 text-sm text-gray-500 ml-6">
@@ -107,14 +107,14 @@ export default async function NewCategoryPage(props: Props) {
 
         <div className="flex gap-4">
           <button
-            type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            type="submit"
           >
             Create Category
           </button>
           <Link
-            href={`/admin/events/${params.id}`}
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+            href={`/admin/events/${params.id}`}
           >
             Cancel
           </Link>

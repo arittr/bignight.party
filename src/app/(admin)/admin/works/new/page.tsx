@@ -1,6 +1,6 @@
+import { WorkType } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { WorkType } from "@prisma/client";
 import { createWorkAction } from "@/lib/actions/admin-actions";
 
 export default function NewWorkPage() {
@@ -27,7 +27,7 @@ export default function NewWorkPage() {
   return (
     <div>
       <div className="mb-8">
-        <Link href="/admin/works" className="text-blue-600 hover:text-blue-800 mb-4 inline-block">
+        <Link className="text-blue-600 hover:text-blue-800 mb-4 inline-block" href="/admin/works">
           ← Back to Works
         </Link>
         <h1 className="text-3xl font-bold">Create New Work</h1>
@@ -37,29 +37,29 @@ export default function NewWorkPage() {
         <form action={handleCreate}>
           {/* Title */}
           <div className="mb-4">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="title">
               Title <span className="text-red-500">*</span>
             </label>
             <input
-              type="text"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               id="title"
               name="title"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter work title"
+              required
+              type="text"
             />
           </div>
 
           {/* Type */}
           <div className="mb-4">
-            <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="type">
               Type <span className="text-red-500">*</span>
             </label>
             <select
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               id="type"
               name="type"
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a type</option>
               <option value={WorkType.FILM}>Film</option>
@@ -73,59 +73,59 @@ export default function NewWorkPage() {
 
           {/* Year */}
           <div className="mb-4">
-            <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="year">
               Year
             </label>
             <input
-              type="number"
-              id="year"
-              name="year"
-              min="1900"
-              max={new Date().getFullYear() + 10}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              id="year"
+              max={new Date().getFullYear() + 10}
+              min="1900"
+              name="year"
               placeholder="Enter year"
+              type="number"
             />
           </div>
 
           {/* Poster URL */}
           <div className="mb-4">
-            <label htmlFor="posterUrl" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="posterUrl">
               Poster URL
             </label>
             <input
-              type="url"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               id="posterUrl"
               name="posterUrl"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="https://example.com/poster.jpg"
+              type="url"
             />
           </div>
 
           {/* External ID */}
           <div className="mb-6">
-            <label htmlFor="externalId" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="externalId">
               External ID
             </label>
             <input
-              type="text"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               id="externalId"
               name="externalId"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g., IMDB ID, ISBN, etc."
+              type="text"
             />
           </div>
 
           {/* Submit buttons */}
           <div className="flex gap-4">
             <button
-              type="submit"
               className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              type="submit"
             >
               Create Work
             </button>
             <Link
-              href="/admin/works"
               className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors inline-block"
+              href="/admin/works"
             >
               Cancel
             </Link>
