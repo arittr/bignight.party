@@ -19,11 +19,11 @@ export default async function EventDetailPage({ params }: { params: { id: string
     const eventDate = formData.get("eventDate") as string;
 
     await updateEventAction({
+      description: description || undefined,
+      eventDate: new Date(eventDate),
       id: params.id,
       name,
       slug,
-      description: description || undefined,
-      eventDate: new Date(eventDate),
     });
   }
 
@@ -37,7 +37,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
   return (
     <div>
       <div className="mb-6">
-        <Link href="/admin/events" className="text-blue-600 hover:text-blue-900">
+        <Link className="text-blue-600 hover:text-blue-900" href="/admin/events">
           &larr; Back to Events
         </Link>
       </div>
@@ -51,31 +51,31 @@ export default async function EventDetailPage({ params }: { params: { id: string
             <form action={handleUpdateEvent}>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="name">
                     Event Name
                   </label>
                   <input
-                    type="text"
-                    name="name"
-                    id="name"
-                    required
-                    defaultValue={event.name}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    defaultValue={event.name}
+                    id="name"
+                    name="name"
+                    required
+                    type="text"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="slug">
                     Slug
                   </label>
                   <input
-                    type="text"
-                    name="slug"
-                    id="slug"
-                    required
-                    pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
-                    defaultValue={event.slug}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    defaultValue={event.slug}
+                    id="slug"
+                    name="slug"
+                    pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                    required
+                    type="text"
                   />
                   <p className="mt-1 text-sm text-gray-500">
                     Lowercase letters, numbers, and hyphens only
@@ -83,49 +83,50 @@ export default async function EventDetailPage({ params }: { params: { id: string
                 </div>
 
                 <div>
-                  <label htmlFor="eventDate" className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="eventDate">
                     Event Date
                   </label>
                   <input
-                    type="date"
-                    name="eventDate"
-                    id="eventDate"
-                    required
-                    defaultValue={new Date(event.eventDate).toISOString().split("T")[0]}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    defaultValue={new Date(event.eventDate).toISOString().split("T")[0]}
+                    id="eventDate"
+                    name="eventDate"
+                    required
+                    type="date"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="description">
                     Description (Optional)
                   </label>
                   <textarea
-                    name="description"
-                    id="description"
-                    rows={4}
-                    defaultValue={event.description || ""}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    defaultValue={event.description || ""}
+                    id="description"
+                    name="description"
+                    rows={4}
                   />
                 </div>
 
-                <div className="flex gap-4 pt-4">
+                <div className="pt-4">
                   <button
-                    type="submit"
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    type="submit"
                   >
                     Save Changes
                   </button>
-                  <form action={handleDeleteEvent}>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                    >
-                      Delete Event
-                    </button>
-                  </form>
                 </div>
               </div>
+            </form>
+
+            <form action={handleDeleteEvent} className="mt-4">
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                type="submit"
+              >
+                Delete Event
+              </button>
             </form>
           </div>
         </div>
@@ -136,8 +137,8 @@ export default async function EventDetailPage({ params }: { params: { id: string
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
               <Link
-                href={`/admin/events/${event.id}/categories/new`}
                 className="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                href={`/admin/events/${event.id}/categories/new`}
               >
                 Add Category
               </Link>
@@ -152,8 +153,8 @@ export default async function EventDetailPage({ params }: { params: { id: string
                   .map((category) => (
                     <li key={category.id}>
                       <Link
-                        href={`/admin/events/${event.id}/categories/${category.id}`}
                         className="block p-3 rounded border border-gray-200 hover:bg-gray-50 transition-colors"
+                        href={`/admin/events/${event.id}/categories/${category.id}`}
                       >
                         <div className="font-medium text-gray-900">{category.name}</div>
                         <div className="text-sm text-gray-500">
@@ -177,8 +178,8 @@ export default async function EventDetailPage({ params }: { params: { id: string
                 {event.games.map((game) => (
                   <li key={game.id}>
                     <Link
-                      href={`/admin/games/${game.id}`}
                       className="block p-3 rounded border border-gray-200 hover:bg-gray-50 transition-colors"
+                      href={`/admin/games/${game.id}`}
                     >
                       <div className="font-medium text-gray-900">{game.name}</div>
                       <div className="text-sm text-gray-500">

@@ -15,9 +15,9 @@ export default async function NewGamePage() {
     const picksLockAt = formData.get("picksLockAt") as string;
 
     const result = await createGameAction({
-      name,
-      eventId,
       accessCode,
+      eventId,
+      name,
       picksLockAt: picksLockAt ? new Date(picksLockAt) : undefined,
     });
 
@@ -29,7 +29,7 @@ export default async function NewGamePage() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <Link href="/admin/games" className="text-blue-600 hover:text-blue-800">
+        <Link className="text-blue-600 hover:text-blue-800" href="/admin/games">
           &larr; Back to Games
         </Link>
       </div>
@@ -39,28 +39,28 @@ export default async function NewGamePage() {
       <div className="bg-white shadow-md rounded-lg p-6 max-w-2xl">
         <form action={handleCreateGame} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="name">
               Name *
             </label>
             <input
-              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               id="name"
               name="name"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Friends & Family Game"
+              required
+              type="text"
             />
           </div>
 
           <div>
-            <label htmlFor="eventId" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="eventId">
               Event *
             </label>
             <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               id="eventId"
               name="eventId"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select an event</option>
               {events.map((event) => (
@@ -72,31 +72,31 @@ export default async function NewGamePage() {
           </div>
 
           <div>
-            <label htmlFor="accessCode" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="accessCode">
               Access Code *
             </label>
             <input
-              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
               id="accessCode"
               name="accessCode"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-              placeholder="OSCARS2025"
               pattern="[A-Z0-9]+"
+              placeholder="OSCARS2025"
+              required
               title="Access code must be uppercase letters and numbers only"
+              type="text"
             />
             <p className="mt-1 text-sm text-gray-500">Uppercase letters and numbers only</p>
           </div>
 
           <div>
-            <label htmlFor="picksLockAt" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="picksLockAt">
               Picks Lock At
             </label>
             <input
-              type="datetime-local"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               id="picksLockAt"
               name="picksLockAt"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="datetime-local"
             />
             <p className="mt-1 text-sm text-gray-500">
               When should users no longer be able to make picks? Leave empty for no deadline.
@@ -105,14 +105,14 @@ export default async function NewGamePage() {
 
           <div className="flex gap-3 pt-4">
             <button
-              type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              type="submit"
             >
               Create Game
             </button>
             <Link
-              href="/admin/games"
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              href="/admin/games"
             >
               Cancel
             </Link>
