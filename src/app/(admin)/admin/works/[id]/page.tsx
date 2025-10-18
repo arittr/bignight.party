@@ -1,6 +1,7 @@
+import { WorkType } from "@prisma/client";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { WorkType } from "@prisma/client";
+import { ConfirmDeleteButton } from "@/app/(admin)/admin/_components/confirm-delete-button";
 import { deleteWorkAction, updateWorkAction } from "@/lib/actions/admin-actions";
 import * as workModel from "@/lib/models/work";
 
@@ -34,7 +35,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
   return (
     <div>
       <div className="mb-8">
-        <Link href="/admin/works" className="text-blue-600 hover:text-blue-800 mb-4 inline-block">
+        <Link className="text-blue-600 hover:text-blue-800 mb-4 inline-block" href="/admin/works">
           ← Back to Works
         </Link>
         <h1 className="text-3xl font-bold">{work.title}</h1>
@@ -65,32 +66,32 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
               });
             }}
           >
-            <input type="hidden" name="id" value={work.id} />
+            <input name="id" type="hidden" value={work.id} />
 
             {/* Title */}
             <div className="mb-4">
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="title">
                 Title
               </label>
               <input
-                type="text"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                defaultValue={work.title}
                 id="title"
                 name="title"
-                defaultValue={work.title}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                type="text"
               />
             </div>
 
             {/* Type */}
             <div className="mb-4">
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="type">
                 Type
               </label>
               <select
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                defaultValue={work.type}
                 id="type"
                 name="type"
-                defaultValue={work.type}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value={WorkType.FILM}>Film</option>
                 <option value={WorkType.TV_SHOW}>TV Show</option>
@@ -103,52 +104,52 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
 
             {/* Year */}
             <div className="mb-4">
-              <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="year">
                 Year
               </label>
               <input
-                type="number"
-                id="year"
-                name="year"
-                defaultValue={work.year ?? ""}
-                min="1900"
-                max={new Date().getFullYear() + 10}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                defaultValue={work.year ?? ""}
+                id="year"
+                max={new Date().getFullYear() + 10}
+                min="1900"
+                name="year"
+                type="number"
               />
             </div>
 
             {/* Poster URL */}
             <div className="mb-4">
-              <label htmlFor="posterUrl" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="posterUrl">
                 Poster URL
               </label>
               <input
-                type="url"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                defaultValue={work.posterUrl ?? ""}
                 id="posterUrl"
                 name="posterUrl"
-                defaultValue={work.posterUrl ?? ""}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                type="url"
               />
             </div>
 
             {/* External ID */}
             <div className="mb-6">
-              <label htmlFor="externalId" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="externalId">
                 External ID
               </label>
               <input
-                type="text"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                defaultValue={work.externalId ?? ""}
                 id="externalId"
                 name="externalId"
-                defaultValue={work.externalId ?? ""}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                type="text"
               />
             </div>
 
             {/* Submit button */}
             <button
-              type="submit"
               className="w-full px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              type="submit"
             >
               Update Work
             </button>
@@ -188,7 +189,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
             ) : (
               <ul className="space-y-2">
                 {work.nominations.map((nomination) => (
-                  <li key={nomination.id} className="text-sm text-gray-700 p-2 bg-gray-50 rounded">
+                  <li className="text-sm text-gray-700 p-2 bg-gray-50 rounded" key={nomination.id}>
                     {nomination.nominationText}
                   </li>
                 ))}
@@ -198,19 +199,26 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
 
           {/* Delete button */}
           <div className="border-t pt-4 mt-6">
-            <form action={handleDelete}>
-              <button
-                type="submit"
+            {work.nominations.length > 0 ? (
+              <div>
+                <button
+                  className="w-full px-6 py-2 bg-gray-400 text-white rounded cursor-not-allowed"
+                  disabled
+                  type="button"
+                >
+                  Cannot Delete (Has Nominations)
+                </button>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Remove all nominations before deleting this work.
+                </p>
+              </div>
+            ) : (
+              <ConfirmDeleteButton
+                buttonText="Delete Work"
                 className="w-full px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                disabled={work.nominations.length > 0}
-              >
-                {work.nominations.length > 0 ? "Cannot Delete (Has Nominations)" : "Delete Work"}
-              </button>
-            </form>
-            {work.nominations.length > 0 && (
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                Remove all nominations before deleting this work.
-              </p>
+                confirmMessage="Are you sure you want to delete this work?"
+                onDelete={handleDelete}
+              />
             )}
           </div>
         </div>
