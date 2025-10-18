@@ -386,37 +386,51 @@ For phases where tasks are independent:
    # Should still see all task branches
    ```
 
-   5. Verify git-spice stack structure:
+   5. Create linear stack from parallel branches:
+   ```bash
+   # Stack parallel branches linearly (task order: 2.1 -> 2.2 -> 2.3 etc)
+   # First task stays on base, subsequent tasks stack on previous
+   git checkout task-{task-id-2}-{short-name}
+   gs upstack onto task-{task-id-1}-{short-name}
+
+   # For 3+ parallel tasks, continue stacking:
+   # git checkout task-{task-id-3}-{short-name}
+   # gs upstack onto task-{task-id-2}-{short-name}
+   ```
+
+   6. Verify git-spice stack structure:
    ```bash
    gs log short
    ```
 
-   Expected: All parallel tasks stacked on same base branch:
+   Expected: Linear stack (task number order):
    ```
-   ┌── task-2-2-validation-schemas (on task-1-2-install-tsx)
-   ├── task-2-1-create-models (on task-1-2-install-tsx)
-   └── task-1-2-install-tsx
+   ┏━□ task-2-2-validation-schemas (on task-2-1-models-layer)
+       ┏━┻□ task-2-1-models-layer (on task-1-2-install-tsx)
+     ┏━┻□ task-1-2-install-tsx
+   ┏━┻□ task-1-1-game-schema
+   main
    ```
 
-   6. Run integration tests:
+   7. Run integration tests:
    ```bash
-   # Check out one of the parallel task branches
-   git checkout task-{task-id-1}-{short-name}
+   # Check out the top of the stack (last parallel task)
+   git checkout task-{task-id-2}-{short-name}
 
    # Run tests on the branch (includes all previous work)
    pnpm test
    pnpm lint
    ```
 
-   7. Report:
+   8. Report:
    - Confirmation all worktrees cleaned up
    - List of branches created and verified
-   - Git-spice stack structure
+   - Linear stack structure (task number order)
    - Integration test results
    - Any issues encountered
    ```
 
-6. **After cleanup verification, use `requesting-code-review` skill:**
+6. **After cleanup and linear stacking, use `requesting-code-review` skill:**
 
    Dispatch code-reviewer subagent to review the entire phase:
    - All task branches in this phase
@@ -427,7 +441,7 @@ For phases where tasks are independent:
 
 7. **Address review feedback if needed**
 
-8. Phase is complete when code review passes and cleanup verified
+8. Phase is complete when code review passes, cleanup verified, and linear stack confirmed
 
 ### Step 3: Verify Completion
 
