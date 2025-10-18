@@ -6,7 +6,10 @@ import { emailSchema } from "@/schemas/auth-schema";
 import { action, authenticatedAction } from "./safe-action";
 
 export const signInAction = action.schema(emailSchema).action(async ({ parsedInput }) => {
-  await signIn("resend", {
+  // Use "email" provider in development (Mailpit), "resend" in production
+  const providerId = process.env.NODE_ENV === "development" ? "email" : "resend";
+
+  await signIn(providerId, {
     email: parsedInput.email,
     redirect: false,
   });
