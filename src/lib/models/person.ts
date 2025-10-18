@@ -1,0 +1,41 @@
+import type { Prisma } from "@prisma/client";
+import prisma from "@/lib/db/prisma";
+
+export async function create(data: Prisma.PersonCreateInput) {
+  return prisma.person.create({
+    data,
+  });
+}
+
+export async function findAll() {
+  return prisma.person.findMany({
+    include: {
+      nominations: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+}
+
+export async function findById(id: string) {
+  return prisma.person.findUnique({
+    include: {
+      nominations: true,
+    },
+    where: { id },
+  });
+}
+
+export async function update(id: string, data: Prisma.PersonUpdateInput) {
+  return prisma.person.update({
+    data,
+    where: { id },
+  });
+}
+
+export async function deleteById(id: string) {
+  return prisma.person.delete({
+    where: { id },
+  });
+}
