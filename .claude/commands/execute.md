@@ -347,17 +347,21 @@ For phases where tasks are independent:
 
    Note: Branches are already tracked by git-spice since `gs branch create` was used.
 
-6. **Cleanup worktrees**:
+6. **Bring branches home and cleanup worktrees**:
    ```bash
-   # For each task worktree
-   git worktree remove {worktree-path}
+   # For each task worktree:
+   # 1. Detach HEAD to release the branch reference
+   git -C {worktree-path} switch --detach
 
-   # Or clean all at once
-   rm -rf ./.worktrees/*
-   git worktree prune
+   # 2. Now safely remove the worktree
+   git worktree remove {worktree-path}
    ```
 
-   Note: Commits are already on branches (tracked by git-spice), worktrees can be safely removed.
+   Why detach first: When `gs branch create` runs in a worktree, that branch becomes
+   "checked out" in that worktree. Detaching releases the ref so the branch is
+   accessible in the parent directory and the worktree can be cleanly removed.
+
+   Note: Commits are already on branches (tracked by git-spice), safe to remove worktrees.
    The `.worktrees/` directory itself persists (gitignored) for future runs.
 
 7. **Verify git-spice stack**:
