@@ -1,3 +1,5 @@
+"use client";
+
 import { deleteNominationAction } from "@/lib/actions/admin-actions";
 
 type DeleteNominationButtonProps = {
@@ -10,25 +12,16 @@ export function DeleteNominationButton({
   nominationText,
 }: DeleteNominationButtonProps) {
   async function handleDelete(formData: FormData) {
-    "use server";
-
-    const confirmed = formData.get("confirmed");
-    if (confirmed === "true") {
+    if (confirm(`Are you sure you want to delete: "${nominationText}"?`)) {
       await deleteNominationAction({ id: nominationId });
     }
   }
 
   return (
     <form action={handleDelete} className="inline">
-      <input type="hidden" name="confirmed" value="true" />
       <button
-        type="submit"
-        onClick={(e) => {
-          if (!confirm(`Are you sure you want to delete: "${nominationText}"?`)) {
-            e.preventDefault();
-          }
-        }}
         className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+        type="submit"
       >
         Delete
       </button>
