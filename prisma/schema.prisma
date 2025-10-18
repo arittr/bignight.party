@@ -12,6 +12,22 @@ enum Role {
   ADMIN
 }
 
+enum GameStatus {
+  SETUP
+  OPEN
+  LIVE
+  COMPLETED
+}
+
+enum WorkType {
+  FILM
+  TV_SHOW
+  ALBUM
+  SONG
+  PLAY
+  BOOK
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -21,6 +37,7 @@ model User {
   image         String?
 
   accounts Account[]
+  picks    Pick[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -52,4 +69,123 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  eventDate   DateTime
+
+  games      Game[]
+  categories Category[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Game {
+  id          String     @id @default(cuid())
+  eventId     String
+  name        String
+  accessCode  String     @unique
+  status      GameStatus @default(SETUP)
+  picksLockAt DateTime?
+
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  picks Pick[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+}
+
+model Category {
+  id                 String  @id @default(cuid())
+  eventId            String
+  name               String
+  order              Int
+  points             Int     @default(1)
+  isRevealed         Boolean @default(false)
+  winnerNominationId String?
+
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  nominations Nomination[]
+  picks       Pick[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+}
+
+model Work {
+  id         String   @id @default(cuid())
+  type       WorkType
+  title      String
+  year       Int?
+  posterUrl  String?
+  externalId String?
+
+  nominations Nomination[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Person {
+  id         String  @id @default(cuid())
+  name       String
+  imageUrl   String?
+  externalId String?
+
+  nominations Nomination[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Nomination {
+  id             String  @id @default(cuid())
+  categoryId     String
+  workId         String?
+  personId       String?
+  nominationText String
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  work     Work?    @relation(fields: [workId], references: [id])
+  person   Person?  @relation(fields: [personId], references: [id])
+  picks    Pick[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([workId])
+  @@index([personId])
+}
+
+model Pick {
+  id           String @id @default(cuid())
+  gameId       String
+  userId       String
+  categoryId   String
+  nominationId String
+
+  game       Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  nomination Nomination @relation(fields: [nominationId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([gameId, userId, categoryId])
+  @@index([gameId])
+  @@index([userId])
+  @@index([categoryId])
+  @@index([nominationId])
+  @@index([gameId, userId])
 }
