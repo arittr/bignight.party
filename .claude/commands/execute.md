@@ -112,23 +112,13 @@ For phases where tasks must run in order:
 
 1. For each task in the phase:
 
-   a. **Create stacked branch for task:**
-   ```bash
-   gs branch create
-   ```
-
-   Prompt for:
-   - **Branch name**: `task-{task-id}-{short-name}`
-   - **Description**: Task name from plan
-   - This stacks on current branch automatically (per using-git-spice skill)
-
-   b. **Spawn subagent for task implementation** (use Task tool):
+   a. **Spawn subagent for task implementation** (use Task tool):
 
    ```
    ROLE: You are implementing Task {task-id} for BigNight.Party.
 
    TASK: {task-name}
-   BRANCH: {task-branch}
+   CURRENT BRANCH: {current-branch}
 
    CRITICAL - CONTEXT MANAGEMENT:
    You are a subagent with isolated context. Complete this task independently.
@@ -137,7 +127,7 @@ For phases where tasks must run in order:
 
    1. Verify you're on the correct branch:
    ```bash
-   git branch --show-current  # Should be {task-branch}
+   git branch --show-current  # Should be {current-branch}
    ```
 
    2. Read task details from: /Users/drewritter/projects/bignight.party/{plan-path}
@@ -155,17 +145,10 @@ For phases where tasks must run in order:
    pnpm test
    ```
 
-   5. Commit when complete:
+   5. Stage changes (but DO NOT commit):
    ```bash
    git add --all
-   git commit -m "[Task {task-id}] {task-name}
-
-   {Brief summary of changes}
-
-   Acceptance criteria met:
-   - {criterion 1}
-   - {criterion 2}
-   "
+   git status  # Verify changes staged
    ```
 
    6. Report completion with:
@@ -175,17 +158,39 @@ For phases where tasks must run in order:
       - Any issues encountered
 
    CRITICAL:
-   - ✅ Stay on task branch
+   - ✅ Stay on current branch
    - ✅ Run ALL quality checks
-   - ✅ Commit before reporting completion
+   - ✅ Stage changes with git add
+   - ✅ DO NOT commit (orchestrator will use gs branch create)
    - ✅ Follow mandatory patterns
    ```
 
-   c. **Wait for subagent completion**, then verify:
+   b. **Wait for subagent completion**, then verify:
    ```bash
-   git log --oneline -1  # Confirm commit
-   pnpm test            # Verify tests pass
+   git status  # Confirm changes staged
+   pnpm test   # Verify tests pass
    ```
+
+   c. **Create branch and commit with gs branch create:**
+   ```bash
+   gs branch create task-{task-id}-{short-name}
+   ```
+
+   When prompted for commit message, use:
+   ```
+   [Task {task-id}] {task-name}
+
+   {Brief summary of changes from subagent report}
+
+   Acceptance criteria met:
+   - {criterion 1}
+   - {criterion 2}
+   ```
+
+   This will:
+   - Create a new branch `task-{task-id}-{short-name}`
+   - Commit all staged changes
+   - Stack the branch on current branch automatically
 
 2. After ALL tasks in phase complete:
 
