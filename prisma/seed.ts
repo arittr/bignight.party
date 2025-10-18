@@ -33,33 +33,33 @@ async function main() {
   console.log("\nCreating works...");
   const oppenheimer = await prisma.work.create({
     data: {
-      type: WorkType.FILM,
-      title: "Oppenheimer",
-      year: 2023,
-      posterUrl: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
       externalId: "tmdb:872585",
+      posterUrl: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+      title: "Oppenheimer",
+      type: WorkType.FILM,
+      year: 2023,
     },
   });
   console.log(`  - Created work: ${oppenheimer.title}`);
 
   const barbie = await prisma.work.create({
     data: {
-      type: WorkType.FILM,
-      title: "Barbie",
-      year: 2023,
-      posterUrl: "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
       externalId: "tmdb:346698",
+      posterUrl: "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
+      title: "Barbie",
+      type: WorkType.FILM,
+      year: 2023,
     },
   });
   console.log(`  - Created work: ${barbie.title}`);
 
   const killersOfTheFlowerMoon = await prisma.work.create({
     data: {
-      type: WorkType.FILM,
-      title: "Killers of the Flower Moon",
-      year: 2023,
-      posterUrl: "https://image.tmdb.org/t/p/w500/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
       externalId: "tmdb:466420",
+      posterUrl: "https://image.tmdb.org/t/p/w500/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
+      title: "Killers of the Flower Moon",
+      type: WorkType.FILM,
+      year: 2023,
     },
   });
   console.log(`  - Created work: ${killersOfTheFlowerMoon.title}`);
@@ -68,27 +68,27 @@ async function main() {
   console.log("\nCreating people...");
   const christopherNolan = await prisma.person.create({
     data: {
-      name: "Christopher Nolan",
-      imageUrl: "https://image.tmdb.org/t/p/w500/xuAIuYSmsUzKlUMBFGVZaWsY3DZ.jpg",
       externalId: "tmdb:525",
+      imageUrl: "https://image.tmdb.org/t/p/w500/xuAIuYSmsUzKlUMBFGVZaWsY3DZ.jpg",
+      name: "Christopher Nolan",
     },
   });
   console.log(`  - Created person: ${christopherNolan.name}`);
 
   const gretaGerwig = await prisma.person.create({
     data: {
-      name: "Greta Gerwig",
-      imageUrl: "https://image.tmdb.org/t/p/w500/5ZKYBkTN7OqK8aKsHBEX9r5dDkc.jpg",
       externalId: "tmdb:1221786",
+      imageUrl: "https://image.tmdb.org/t/p/w500/5ZKYBkTN7OqK8aKsHBEX9r5dDkc.jpg",
+      name: "Greta Gerwig",
     },
   });
   console.log(`  - Created person: ${gretaGerwig.name}`);
 
   const martinScorsese = await prisma.person.create({
     data: {
-      name: "Martin Scorsese",
-      imageUrl: "https://image.tmdb.org/t/p/w500/52dz4K0HQeIrNbbhJmNqnu9YoFr.jpg",
       externalId: "tmdb:1032",
+      imageUrl: "https://image.tmdb.org/t/p/w500/52dz4K0HQeIrNbbhJmNqnu9YoFr.jpg",
+      name: "Martin Scorsese",
     },
   });
   console.log(`  - Created person: ${martinScorsese.name}`);
@@ -97,10 +97,10 @@ async function main() {
   console.log("\nCreating event...");
   const event = await prisma.event.create({
     data: {
-      name: "97th Academy Awards",
-      slug: "oscars-2025",
       description: "The 97th Academy Awards will honor the best films released in 2024.",
       eventDate: new Date("2025-03-02"),
+      name: "97th Academy Awards",
+      slug: "oscars-2025",
     },
   });
   console.log(`  - Created event: ${event.name}`);
@@ -109,11 +109,11 @@ async function main() {
   console.log("\nCreating game...");
   const game = await prisma.game.create({
     data: {
+      accessCode: "OSCARS2025",
       eventId: event.id,
       name: "Friends & Family Game",
-      accessCode: "OSCARS2025",
-      status: GameStatus.SETUP,
       picksLockAt: new Date("2025-03-02T00:00:00Z"),
+      status: GameStatus.SETUP,
     },
   });
   console.log(`  - Created game: ${game.name}`);
@@ -123,10 +123,10 @@ async function main() {
   const bestPicture = await prisma.category.create({
     data: {
       eventId: event.id,
+      isRevealed: false,
       name: "Best Picture",
       order: 1,
       points: 5,
-      isRevealed: false,
     },
   });
   console.log(`  - Created category: ${bestPicture.name}`);
@@ -134,10 +134,10 @@ async function main() {
   const bestDirector = await prisma.category.create({
     data: {
       eventId: event.id,
+      isRevealed: false,
       name: "Best Director",
       order: 2,
       points: 3,
-      isRevealed: false,
     },
   });
   console.log(`  - Created category: ${bestDirector.name}`);
@@ -145,10 +145,10 @@ async function main() {
   const bestActor = await prisma.category.create({
     data: {
       eventId: event.id,
+      isRevealed: false,
       name: "Best Actor",
       order: 3,
       points: 2,
-      isRevealed: false,
     },
   });
   console.log(`  - Created category: ${bestActor.name}`);
@@ -160,8 +160,8 @@ async function main() {
   const bestPictureNom1 = await prisma.nomination.create({
     data: {
       categoryId: bestPicture.id,
-      workId: oppenheimer.id,
       nominationText: "Oppenheimer",
+      workId: oppenheimer.id,
     },
   });
   console.log(`  - Created nomination: ${bestPictureNom1.nominationText}`);
@@ -169,8 +169,8 @@ async function main() {
   const bestPictureNom2 = await prisma.nomination.create({
     data: {
       categoryId: bestPicture.id,
-      workId: barbie.id,
       nominationText: "Barbie",
+      workId: barbie.id,
     },
   });
   console.log(`  - Created nomination: ${bestPictureNom2.nominationText}`);
@@ -178,8 +178,8 @@ async function main() {
   const bestPictureNom3 = await prisma.nomination.create({
     data: {
       categoryId: bestPicture.id,
-      workId: killersOfTheFlowerMoon.id,
       nominationText: "Killers of the Flower Moon",
+      workId: killersOfTheFlowerMoon.id,
     },
   });
   console.log(`  - Created nomination: ${bestPictureNom3.nominationText}`);
@@ -188,9 +188,9 @@ async function main() {
   const bestDirectorNom1 = await prisma.nomination.create({
     data: {
       categoryId: bestDirector.id,
+      nominationText: "Christopher Nolan for Oppenheimer",
       personId: christopherNolan.id,
       workId: oppenheimer.id,
-      nominationText: "Christopher Nolan for Oppenheimer",
     },
   });
   console.log(`  - Created nomination: ${bestDirectorNom1.nominationText}`);
@@ -198,9 +198,9 @@ async function main() {
   const bestDirectorNom2 = await prisma.nomination.create({
     data: {
       categoryId: bestDirector.id,
+      nominationText: "Greta Gerwig for Barbie",
       personId: gretaGerwig.id,
       workId: barbie.id,
-      nominationText: "Greta Gerwig for Barbie",
     },
   });
   console.log(`  - Created nomination: ${bestDirectorNom2.nominationText}`);
@@ -208,9 +208,9 @@ async function main() {
   const bestDirectorNom3 = await prisma.nomination.create({
     data: {
       categoryId: bestDirector.id,
+      nominationText: "Martin Scorsese for Killers of the Flower Moon",
       personId: martinScorsese.id,
       workId: killersOfTheFlowerMoon.id,
-      nominationText: "Martin Scorsese for Killers of the Flower Moon",
     },
   });
   console.log(`  - Created nomination: ${bestDirectorNom3.nominationText}`);
@@ -219,9 +219,9 @@ async function main() {
   const bestActorNom1 = await prisma.nomination.create({
     data: {
       categoryId: bestActor.id,
+      nominationText: "Cillian Murphy in Oppenheimer",
       personId: christopherNolan.id,
       workId: oppenheimer.id,
-      nominationText: "Cillian Murphy in Oppenheimer",
     },
   });
   console.log(`  - Created nomination: ${bestActorNom1.nominationText}`);
@@ -229,9 +229,9 @@ async function main() {
   const bestActorNom2 = await prisma.nomination.create({
     data: {
       categoryId: bestActor.id,
+      nominationText: "Margot Robbie in Barbie",
       personId: gretaGerwig.id,
       workId: barbie.id,
-      nominationText: "Margot Robbie in Barbie",
     },
   });
   console.log(`  - Created nomination: ${bestActorNom2.nominationText}`);
@@ -239,9 +239,9 @@ async function main() {
   const bestActorNom3 = await prisma.nomination.create({
     data: {
       categoryId: bestActor.id,
+      nominationText: "Leonardo DiCaprio in Killers of the Flower Moon",
       personId: martinScorsese.id,
       workId: killersOfTheFlowerMoon.id,
-      nominationText: "Leonardo DiCaprio in Killers of the Flower Moon",
     },
   });
   console.log(`  - Created nomination: ${bestActorNom3.nominationText}`);

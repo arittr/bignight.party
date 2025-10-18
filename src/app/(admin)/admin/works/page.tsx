@@ -1,6 +1,7 @@
+import type { WorkType } from "@prisma/client";
 import Link from "next/link";
-import { WorkType } from "@prisma/client";
 import * as workModel from "@/lib/models/work";
+import { TypeFilter } from "./_components/type-filter";
 
 interface WorksPageProps {
   searchParams: Promise<{
@@ -20,41 +21,15 @@ export default async function WorksPage(props: WorksPageProps) {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Works</h1>
         <Link
-          href="/admin/works/new"
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          href="/admin/works/new"
         >
           New Work
         </Link>
       </div>
 
       {/* Type filter */}
-      <div className="mb-6">
-        <label htmlFor="typeFilter" className="block text-sm font-medium text-gray-700 mb-2">
-          Filter by Type
-        </label>
-        <form>
-          <select
-            id="typeFilter"
-            name="type"
-            defaultValue={typeFilter || ""}
-            onChange={(e) => {
-              const form = e.currentTarget.form;
-              if (form) {
-                form.submit();
-              }
-            }}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">All Types</option>
-            <option value={WorkType.FILM}>Film</option>
-            <option value={WorkType.TV_SHOW}>TV Show</option>
-            <option value={WorkType.ALBUM}>Album</option>
-            <option value={WorkType.SONG}>Song</option>
-            <option value={WorkType.PLAY}>Play</option>
-            <option value={WorkType.BOOK}>Book</option>
-          </select>
-        </form>
-      </div>
+      <TypeFilter />
 
       {/* Works table */}
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -81,17 +56,17 @@ export default async function WorksPage(props: WorksPageProps) {
           <tbody className="bg-white divide-y divide-gray-200">
             {works.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                <td className="px-6 py-4 text-center text-gray-500" colSpan={5}>
                   No works found. Create one to get started.
                 </td>
               </tr>
             ) : (
               works.map((work) => (
-                <tr key={work.id} className="hover:bg-gray-50">
+                <tr className="hover:bg-gray-50" key={work.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Link
-                      href={`/admin/works/${work.id}`}
                       className="text-blue-600 hover:text-blue-800 font-medium"
+                      href={`/admin/works/${work.id}`}
                     >
                       {work.title}
                     </Link>
@@ -107,8 +82,8 @@ export default async function WorksPage(props: WorksPageProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Link
-                      href={`/admin/works/${work.id}`}
                       className="text-blue-600 hover:text-blue-900"
+                      href={`/admin/works/${work.id}`}
                     >
                       View
                     </Link>

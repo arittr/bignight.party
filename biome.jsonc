@@ -85,6 +85,12 @@
         "noUnusedVariables": "error",
         "recommended": true
       },
+      "nursery": {
+        "noNextAsyncClientComponent": "error",
+        "noSecrets": "error",
+        "useExhaustiveSwitchCases": "error",
+        "useReactFunctionComponents": "error"
+      },
       "performance": {
         "noBarrelFile": "off",
         "noDelete": "error",
