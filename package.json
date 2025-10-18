@@ -21,6 +21,7 @@
     "husky": "^9.1.7",
     "prisma": "^6.17.1",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   },
   "name": "bignight.party",
@@ -32,6 +33,7 @@
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "db:push": "dotenv -e .env.local -- prisma db push",
     "db:reset": "dotenv -e .env.local -- prisma migrate reset",
+    "db:seed": "tsx prisma/seed.ts",
     "db:studio": "dotenv -e .env.local -- prisma studio",
     "db:validate": "dotenv -e .env.local -- prisma validate",
     "dev": "NODE_ENV=development next dev --turbopack",
