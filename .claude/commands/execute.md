@@ -23,47 +23,45 @@ Example: `/execute @specs/features/magic-link-auth/plan.md`
 
 ### Step 0: Check for Existing Work
 
-Before starting or resuming, check current state:
+Before starting or resuming, delegate git state check to a subagent:
 
+```
+ROLE: Check for existing implementation work
+
+TASK: Determine if work has already started and identify resume point
+
+IMPLEMENTATION:
+
+1. Check current state:
 ```bash
-# Check current branch
 git branch --show-current
-
-# Check recent commits for task markers
 git log --oneline --grep="\[Task" -20
-
-# Check for existing stacked branches
 gs ls
 gs branch tree
-
-# Check working directory status
 git status
 ```
 
-**If work already exists:**
-
-1. **Identify completed tasks:**
+2. Analyze results:
    - Look for commits with `[Task X.Y]` pattern in git log
-   - Check `gs ls` and `gs branch tree` for task branches
-   - Match branch names to plan tasks (e.g., `task-2-1-auth-models`)
+   - Check for task branches in gs ls output
+   - Match branch names to plan tasks
    - Determine which phase and task to resume from
 
-2. **Resume strategy:**
-   - Sequential phases: Resume from next incomplete task in current phase
-   - Parallel phases: Resume incomplete tasks only
-   - If phase complete: Move to next phase
+3. Report:
+   - Current branch name
+   - List of completed tasks (from commit messages)
+   - List of existing task branches
+   - Resume point (next incomplete task)
+   - Whether working directory is clean
+   - Recommendation: resume or start fresh
+```
 
-3. **Report resume point:**
-   ```
-   📍 Resuming execution from existing work
+**Based on subagent report:**
 
-   **Current branch**: {branch-name}
-   **Completed tasks**: Task 1.1, Task 1.2
-   **Resuming at**: Task 1.3 - {task-name}
-   **Remaining**: {count} tasks in {phase-count} phases
-   ```
-
-4. **Skip to Step 2** (Execute Phases) at the resume point
+**If work already exists:**
+- Orchestrator uses the resume point to skip to Step 2 at the appropriate task
+- Sequential phases: Resume from next incomplete task in current phase
+- Parallel phases: Resume incomplete tasks only
 
 **If no existing work:**
 - Continue to Step 1 (Read and Parse Plan)
@@ -96,7 +94,7 @@ For phases where tasks must run in order:
 
 1. For each task in the phase:
 
-   a. **Spawn subagent for task implementation** (use Task tool):
+   **Spawn subagent for task implementation** (use Task tool):
 
    ```
    ROLE: You are implementing Task {task-id} for BigNight.Party.
@@ -126,55 +124,49 @@ For phases where tasks must run in order:
    ```bash
    pnpm format
    pnpm lint
-   pnpm test
    ```
 
-   5. Stage changes (but DO NOT commit):
+   5. Stage changes:
    ```bash
    git add --all
    git status  # Verify changes staged
    ```
 
-   6. Report completion with:
-      - Summary of changes
-      - Files modified
-      - Test results
-      - Any issues encountered
-
-   CRITICAL:
-   - ✅ Stay on current branch
-   - ✅ Run ALL quality checks
-   - ✅ Stage changes with git add
-   - ✅ DO NOT commit (orchestrator will use gs branch create)
-   - ✅ Follow mandatory patterns
-   ```
-
-   b. **Wait for subagent completion**, then verify:
+   6. Create branch and commit with gs branch create:
    ```bash
-   git status  # Confirm changes staged
-   pnpm test   # Verify tests pass
-   ```
+   gs branch create task-{task-id}-{short-name} -m "[Task {task-id}] {task-name}
 
-   c. **Create branch and commit with gs branch create:**
-   ```bash
-   gs branch create task-{task-id}-{short-name}
-   ```
-
-   When prompted for commit message, use:
-   ```
-   [Task {task-id}] {task-name}
-
-   {Brief summary of changes from subagent report}
+   {Brief summary of changes}
 
    Acceptance criteria met:
    - {criterion 1}
    - {criterion 2}
+
+   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+   Co-Authored-By: Claude <noreply@anthropic.com>"
    ```
 
    This will:
    - Create a new branch `task-{task-id}-{short-name}`
    - Commit all staged changes
    - Stack the branch on current branch automatically
+
+   7. Report completion with:
+      - Summary of changes
+      - Files modified
+      - Test results
+      - Branch name created
+      - Commit hash
+      - Any issues encountered
+
+   CRITICAL:
+   - ✅ Stay on current branch (will move to new branch after commit)
+   - ✅ Run ALL quality checks
+   - ✅ Stage changes with git add
+   - ✅ Use gs branch create with -m flag to commit
+   - ✅ Follow mandatory patterns
+   ```
 
 2. After ALL tasks in phase complete:
 
@@ -200,26 +192,50 @@ For phases where tasks are independent:
    - Confirm no file overlaps between tasks
    - Check dependencies are satisfied
 
-2. **For each parallel task, create worktree on current branch**:
+2. **Delegate worktree creation to setup subagent**:
 
+   Spawn a setup subagent to create all worktrees for this phase:
+
+   ```
+   ROLE: Setup parallel worktrees for Phase {phase-id}
+
+   TASK: Create worktrees for {task-count} parallel tasks
+
+   IMPLEMENTATION:
+
+   1. Get current branch:
    ```bash
-   # Get current branch name
    CURRENT_BRANCH=$(git branch --show-current)
-
-   # Create worktree on current branch (do NOT create task branch yet)
-   git worktree add ./.worktrees/task-{task-id} $CURRENT_BRANCH
-   # Example: git worktree add ./.worktrees/task-2-1 task-1-2-install-tsx
+   echo "Base branch: $CURRENT_BRANCH"
    ```
 
-   This creates:
-   - A worktree at `./.worktrees/task-{task-id}` checked out to current branch
-   - Task branch will be created later with `gs branch create` after work is done
+   2. Create worktrees (one per parallel task):
+   ```bash
+   # Create .worktrees directory if needed
+   mkdir -p .worktrees
 
-   Store worktree info:
+   # For each parallel task, create a worktree
+   git worktree add --detach ./.worktrees/task-{task-id-1} $CURRENT_BRANCH
+   git worktree add --detach ./.worktrees/task-{task-id-2} $CURRENT_BRANCH
+   # ... etc for each parallel task
+   ```
+
+   3. Verify worktrees created:
+   ```bash
+   git worktree list
+   ```
+
+   4. Report:
+   - List of worktrees created with their paths
+   - Base branch name
+   - Confirmation all worktrees are ready
+   ```
+
+   Store worktree info for later cleanup:
    ```javascript
    taskWorktrees = {
-     'task-3-1': {path: './.worktrees/task-3-1'},
-     'task-3-2': {path: './.worktrees/task-3-2'}
+     'task-3-1': {path: './.worktrees/task-3-1', baseBranch: 'task-2-3-...'},
+     'task-3-2': {path: './.worktrees/task-3-2', baseBranch: 'task-2-3-...'}
    }
    ```
 
@@ -281,18 +297,17 @@ For phases where tasks are independent:
 
    6. Create branch and commit with gs branch create:
    ```bash
-   gs branch create task-{task-id}-{short-name}
-   ```
-
-   When prompted for commit message, use:
-   ```
-   [Task {task-id}] {task-name}
+   gs branch create task-{task-id}-{short-name} -m "[Task {task-id}] {task-name}
 
    {Brief summary of changes}
 
    Acceptance criteria met:
    - {criterion 1}
    - {criterion 2}
+
+   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+   Co-Authored-By: Claude <noreply@anthropic.com>"
    ```
 
    This will:
@@ -300,12 +315,19 @@ For phases where tasks are independent:
    - Commit all staged changes
    - Stack the branch on base branch automatically
 
-   7. Report completion with:
+   7. Detach HEAD to release branch (critical for worktree cleanup):
+   ```bash
+   git switch --detach
+   ```
+
+   This makes the branch accessible in the parent repo after worktree removal.
+
+   8. Report completion with:
       - Summary of changes
       - Files modified
       - Test results
       - Branch name created
-      - Worktree path for cleanup
+      - Confirmation that HEAD is detached
 
    CRITICAL:
    - ✅ cd into worktree first
@@ -313,8 +335,8 @@ For phases where tasks are independent:
    - ✅ Implement ONLY this task
    - ✅ Run ALL quality checks
    - ✅ Stage changes with git add
-   - ✅ Use gs branch create (NOT git commit)
-   - ❌ DO NOT manually commit (use gs branch create)
+   - ✅ Use gs branch create with -m flag
+   - ✅ MUST detach HEAD after creating branch
    - ❌ DO NOT clean up worktree (orchestrator does this)
    - ❌ DO NOT touch other task files
    ```
@@ -322,56 +344,79 @@ For phases where tasks are independent:
 4. **Wait for all parallel agents to complete**
    (Agents work independently, orchestrator collects results)
 
-5. **After ALL parallel tasks complete, verify each**:
+5. **Delegate cleanup to cleanup subagent**:
+
+   After all parallel agents report completion, spawn a cleanup subagent:
+
+   ```
+   ROLE: Cleanup parallel worktrees and verify branches
+
+   TASK: Clean up worktrees for Phase {phase-id} and verify git-spice stack
+
+   WORKTREES TO CLEAN:
+   - ./.worktrees/task-{task-id-1} (branch: task-{task-id-1}-{short-name})
+   - ./.worktrees/task-{task-id-2} (branch: task-{task-id-2}-{short-name})
+   # ... etc
+
+   IMPLEMENTATION:
+
+   1. Verify all branches exist and are accessible:
    ```bash
-   # For each task worktree
-   cd {worktree-path}
-   pnpm test  # Must pass
-   git log --oneline -1  # Review commit (should be [Task X.Y] message)
-   git branch --show-current  # Should be task-{task-id}-{short-name}
-   cd -  # Return to original directory
+   git branch -v | grep "task-{task-id-1}"
+   git branch -v | grep "task-{task-id-2}"
+   # Should see all task branches listed
    ```
 
-   Note: Branches are already tracked by git-spice since `gs branch create` was used.
-
-6. **Bring branches home and cleanup worktrees**:
+   2. Verify all worktrees have detached HEAD:
    ```bash
-   # For each task worktree:
-   # 1. Detach HEAD to release the branch reference
-   git -C {worktree-path} switch --detach
-
-   # 2. Now safely remove the worktree
-   git worktree remove {worktree-path}
+   git worktree list
+   # All worktrees should show (detached HEAD) not a branch name
    ```
 
-   Why detach first: When `gs branch create` runs in a worktree, that branch becomes
-   "checked out" in that worktree. Detaching releases the ref so the branch is
-   accessible in the parent directory and the worktree can be cleanly removed.
-
-   Note: Commits are already on branches (tracked by git-spice), safe to remove worktrees.
-   The `.worktrees/` directory itself persists (gitignored) for future runs.
-
-7. **Verify git-spice stack**:
-
-   Check that all task branches are properly tracked and stacked:
+   3. Remove all worktrees:
    ```bash
-   gs log short     # Verify all task branches visible
-   gs repo restack  # Restack if needed (shouldn't be necessary)
+   git worktree remove ./.worktrees/task-{task-id-1}
+   git worktree remove ./.worktrees/task-{task-id-2}
+   # ... etc
    ```
 
-   Expected output (all parallel tasks stacked on same base):
+   4. Verify branches are still accessible after cleanup:
+   ```bash
+   git branch -v | grep "task-"
+   # Should still see all task branches
+   ```
+
+   5. Verify git-spice stack structure:
+   ```bash
+   gs log short
+   ```
+
+   Expected: All parallel tasks stacked on same base branch:
    ```
    ┌── task-2-2-validation-schemas (on task-1-2-install-tsx)
    ├── task-2-1-create-models (on task-1-2-install-tsx)
    └── task-1-2-install-tsx
-       ├── task-1-1-add-schema
-       main
    ```
 
-   Note: Since each parallel task used `gs branch create` from the same base branch,
-   all parallel tasks are automatically stacked on that base in parallel.
+   6. Run integration tests:
+   ```bash
+   # Check out one of the parallel task branches
+   git checkout task-{task-id-1}-{short-name}
 
-8. **After verification, use `requesting-code-review` skill:**
+   # Run tests on the branch (includes all previous work)
+   pnpm test
+   pnpm lint
+   ```
+
+   7. Report:
+   - Confirmation all worktrees cleaned up
+   - List of branches created and verified
+   - Git-spice stack structure
+   - Integration test results
+   - Any issues encountered
+   ```
+
+6. **After cleanup verification, use `requesting-code-review` skill:**
 
    Dispatch code-reviewer subagent to review the entire phase:
    - All task branches in this phase
@@ -380,20 +425,9 @@ For phases where tasks are independent:
    - Ensure no file conflicts
    - Review quality and consistency
 
-9. **Address review feedback if needed**
+7. **Address review feedback if needed**
 
-10. **Verify integration** (after review passes):
-    ```bash
-    # Check out one of the parallel task branches
-    git checkout {any-task-branch-from-phase}
-
-    # Run tests on the branch (includes all previous work)
-    pnpm test
-    pnpm lint
-    pnpm build
-    ```
-
-11. Phase is complete when code review passes and integration verified
+8. Phase is complete when code review passes and cleanup verified
 
 ### Step 3: Verify Completion
 
@@ -591,11 +625,14 @@ After fixing, re-run `/execute`
 
 ## Important Notes
 
+- **Orchestrator delegates, never executes** - The orchestrator NEVER runs git commands directly. All git operations are delegated to subagents (setup, implementation, cleanup)
+- **Subagents own their git operations** - Implementation subagents create branches and commit their own work using `gs branch create -m`
 - **Skill-driven execution** - Uses using-git-spice, using-git-worktrees, and other superpowers skills
 - **Automatic orchestration** - Reads plan strategies, executes accordingly
 - **Git-spice stacking** - Sequential tasks stack linearly; parallel tasks branch from same base (per using-git-spice skill)
 - **No feature branch** - The stack of task branches IS the feature; never create empty branch upfront
 - **Worktree isolation** - Parallel tasks run in separate worktrees (per using-git-worktrees skill)
+- **Critical: HEAD detachment** - Parallel task subagents MUST detach HEAD after creating branches to make them accessible in parent repo
 - **Context management** - Each task runs in isolated subagent to avoid token bloat
 - **Mandatory patterns** - All agents enforce BigNight.Party patterns
 - **Quality gates** - Tests and linting after every task, code review after every phase
