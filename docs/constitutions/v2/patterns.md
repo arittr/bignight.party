@@ -168,8 +168,7 @@ export default async function WorkDetailPage({ params }: Props) {
           ...(year && { year: Number(year) }),
         });
 
-        // Handle redirects if needed
-        // redirect() is handled inside updateWorkAction or here
+        // NO redirect() here - see below for redirect pattern
       }}
     >
       <input name="title" defaultValue={work.title} />
@@ -183,7 +182,62 @@ export default async function WorkDetailPage({ params }: Props) {
 - Keeps form handling colocated with UI
 - Still uses centralized next-safe-action for validation
 - Inline wrapper only extracts FormData and calls validated action
-- Redirects can be handled in either wrapper or action
+- Simple mutations without redirects or complex error handling
+
+### Pattern: Standalone Server Actions for Redirects
+
+**IMPORTANT:** If you need to call `redirect()`, use a standalone server action function, NOT an inline form action.
+
+```typescript
+// src/app/(admin)/admin/works/[id]/page.tsx
+export default async function WorkDetailPage({ params }: Props) {
+  const { id } = await params;
+  const work = await workModel.findById(id);
+
+  // Standalone server action for delete with redirect
+  async function handleDelete() {
+    "use server";
+
+    try {
+      await deleteWorkAction({ id });
+      redirect("/admin/works"); // ✅ redirect() in standalone function
+    } catch (error) {
+      // Foreign key constraint error will be caught here
+      throw error;
+    }
+  }
+
+  return (
+    <div>
+      <h1>{work.title}</h1>
+
+      {/* Update form - no redirect needed */}
+      <form action={async (formData: FormData) => {
+        "use server";
+        const title = formData.get("title");
+        await updateWorkAction({ id, title: title as string });
+        // ✅ No redirect - page stays on same route
+      }}>
+        <input name="title" defaultValue={work.title} />
+        <button type="submit">Update</button>
+      </form>
+
+      {/* Delete with redirect - uses standalone function */}
+      <ConfirmDeleteButton
+        onDelete={handleDelete}
+        confirmMessage="Are you sure?"
+        buttonText="Delete Work"
+      />
+    </div>
+  );
+}
+```
+
+**Why redirects need standalone functions:**
+- Next.js redirect() must be at the top level of a server action
+- Inline form actions can't reliably handle redirects
+- Standalone functions provide proper error boundaries
+- Easier to test and reason about
 
 ### Common Mistakes
 
