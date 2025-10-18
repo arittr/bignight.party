@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -26,32 +26,32 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
         <nav className="space-y-2">
           <Link
-            href="/admin"
             className="block px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+            href="/admin"
           >
             Dashboard
           </Link>
           <Link
-            href="/admin/events"
             className="block px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+            href="/admin/events"
           >
             Events
           </Link>
           <Link
-            href="/admin/games"
             className="block px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+            href="/admin/games"
           >
             Games
           </Link>
           <Link
-            href="/admin/works"
             className="block px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+            href="/admin/works"
           >
             Works
           </Link>
           <Link
-            href="/admin/people"
             className="block px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+            href="/admin/people"
           >
             People
           </Link>

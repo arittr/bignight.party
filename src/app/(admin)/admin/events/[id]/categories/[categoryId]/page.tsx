@@ -1,12 +1,12 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
-import * as categoryModel from "@/lib/models/category";
-import * as nominationModel from "@/lib/models/nomination";
+import { redirect } from "next/navigation";
 import {
-  updateCategoryAction,
   deleteCategoryAction,
   deleteNominationAction,
+  updateCategoryAction,
 } from "@/lib/actions/admin-actions";
+import * as categoryModel from "@/lib/models/category";
+import * as nominationModel from "@/lib/models/nomination";
 
 type Props = {
   params: Promise<{ id: string; categoryId: string }>;
@@ -36,10 +36,10 @@ export default async function CategoryDetailPage(props: Props) {
 
     await updateCategoryAction({
       id: params.categoryId,
+      isRevealed,
       name,
       order,
       points,
-      isRevealed,
     });
   }
 
@@ -59,7 +59,7 @@ export default async function CategoryDetailPage(props: Props) {
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
-        <Link href={`/admin/events/${params.id}`} className="text-blue-600 hover:underline text-sm">
+        <Link className="text-blue-600 hover:underline text-sm" href={`/admin/events/${params.id}`}>
           ← Back to {category.event.name}
         </Link>
       </div>
@@ -68,8 +68,8 @@ export default async function CategoryDetailPage(props: Props) {
         <h1 className="text-3xl font-bold">Edit Category</h1>
         <form action={handleDelete}>
           <button
-            type="submit"
             className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            type="submit"
           >
             Delete Category
           </button>
@@ -79,47 +79,47 @@ export default async function CategoryDetailPage(props: Props) {
       {/* Edit Form */}
       <form action={handleUpdate} className="space-y-6 bg-white p-6 rounded-lg shadow mb-8">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
             Category Name
           </label>
           <input
-            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            defaultValue={category.name}
             id="name"
             name="name"
             required
-            defaultValue={category.name}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            type="text"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="order" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="order">
               Display Order
             </label>
             <input
-              type="number"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue={category.order}
               id="order"
+              min="0"
               name="order"
               required
-              min="0"
-              defaultValue={category.order}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="number"
             />
           </div>
 
           <div>
-            <label htmlFor="points" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="points">
               Points
             </label>
             <input
-              type="number"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue={category.points}
               id="points"
+              min="1"
               name="points"
               required
-              min="1"
-              defaultValue={category.points}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="number"
             />
           </div>
         </div>
@@ -127,11 +127,11 @@ export default async function CategoryDetailPage(props: Props) {
         <div>
           <label className="flex items-center space-x-2">
             <input
-              type="checkbox"
+              className="rounded"
+              defaultChecked={category.isRevealed}
               id="isRevealed"
               name="isRevealed"
-              defaultChecked={category.isRevealed}
-              className="rounded"
+              type="checkbox"
             />
             <span className="text-sm font-medium text-gray-700">Is Revealed</span>
           </label>
@@ -141,8 +141,8 @@ export default async function CategoryDetailPage(props: Props) {
         </div>
 
         <button
-          type="submit"
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          type="submit"
         >
           Update Category
         </button>
@@ -165,8 +165,8 @@ export default async function CategoryDetailPage(props: Props) {
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold">Nominations ({nominations.length})</h2>
           <Link
-            href={`/admin/events/${params.id}/categories/${params.categoryId}/nominations/new`}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            href={`/admin/events/${params.id}/categories/${params.categoryId}/nominations/new`}
           >
             Add Nomination
           </Link>
@@ -179,7 +179,7 @@ export default async function CategoryDetailPage(props: Props) {
         ) : (
           <div className="divide-y divide-gray-200">
             {nominations.map((nomination) => (
-              <div key={nomination.id} className="p-6 hover:bg-gray-50">
+              <div className="p-6 hover:bg-gray-50" key={nomination.id}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">{nomination.nominationText}</p>
@@ -204,8 +204,8 @@ export default async function CategoryDetailPage(props: Props) {
                   </div>
                   <form action={handleDeleteNomination.bind(null, nomination.id)}>
                     <button
-                      type="submit"
                       className="ml-4 px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                      type="submit"
                     >
                       Delete
                     </button>

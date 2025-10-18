@@ -1,10 +1,11 @@
+import type { GameStatus } from "@prisma/client";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { deleteGameAction, updateGameAction } from "@/lib/actions/admin-actions";
-import * as gameModel from "@/lib/models/game";
-import * as eventModel from "@/lib/models/event";
 import { match } from "ts-pattern";
-import type { GameStatus } from "@prisma/client";
+import { ConfirmDeleteButton } from "@/app/(admin)/admin/_components/confirm-delete-button";
+import { deleteGameAction, updateGameAction } from "@/lib/actions/admin-actions";
+import * as eventModel from "@/lib/models/event";
+import * as gameModel from "@/lib/models/game";
 
 interface GameDetailPageProps {
   params: Promise<{ id: string }>;
@@ -30,12 +31,12 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     const picksLockAt = formData.get("picksLockAt") as string;
 
     await updateGameAction({
+      accessCode,
+      eventId,
       id,
       name,
-      eventId,
-      accessCode,
-      status,
       picksLockAt: picksLockAt ? new Date(picksLockAt) : undefined,
+      status,
     });
   }
 
@@ -49,30 +50,19 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <Link href="/admin/games" className="text-blue-600 hover:text-blue-800">
+        <Link className="text-blue-600 hover:text-blue-800" href="/admin/games">
           &larr; Back to Games
         </Link>
       </div>
 
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Game Details</h1>
-        <form action={handleDeleteGame}>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-            onClick={(e) => {
-              if (
-                !confirm(
-                  "Are you sure you want to delete this game? This will also delete all associated picks."
-                )
-              ) {
-                e.preventDefault();
-              }
-            }}
-          >
-            Delete Game
-          </button>
-        </form>
+        <ConfirmDeleteButton
+          buttonText="Delete Game"
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          confirmMessage="Are you sure you want to delete this game? This will also delete all associated picks."
+          onDelete={handleDeleteGame}
+        />
       </div>
 
       {/* Game Stats */}
@@ -100,29 +90,29 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
         <h2 className="text-xl font-semibold mb-4">Edit Game</h2>
         <form action={handleUpdateGame} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="name">
               Name *
             </label>
             <input
-              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue={game.name}
               id="name"
               name="name"
               required
-              defaultValue={game.name}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="text"
             />
           </div>
 
           <div>
-            <label htmlFor="eventId" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="eventId">
               Event *
             </label>
             <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue={game.eventId}
               id="eventId"
               name="eventId"
               required
-              defaultValue={game.eventId}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {events.map((event) => (
                 <option key={event.id} value={event.id}>
@@ -133,31 +123,31 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
           </div>
 
           <div>
-            <label htmlFor="accessCode" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="accessCode">
               Access Code *
             </label>
             <input
-              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+              defaultValue={game.accessCode}
               id="accessCode"
               name="accessCode"
-              required
-              defaultValue={game.accessCode}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
               pattern="[A-Z0-9]+"
+              required
               title="Access code must be uppercase letters and numbers only"
+              type="text"
             />
           </div>
 
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="status">
               Status *
             </label>
             <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              defaultValue={game.status}
               id="status"
               name="status"
               required
-              defaultValue={game.status}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="SETUP">Setup</option>
               <option value="OPEN">Open</option>
@@ -168,24 +158,24 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
           </div>
 
           <div>
-            <label htmlFor="picksLockAt" className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="picksLockAt">
               Picks Lock At
             </label>
             <input
-              type="datetime-local"
-              id="picksLockAt"
-              name="picksLockAt"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               defaultValue={
                 game.picksLockAt ? new Date(game.picksLockAt).toISOString().slice(0, 16) : ""
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              id="picksLockAt"
+              name="picksLockAt"
+              type="datetime-local"
             />
           </div>
 
           <div className="pt-4">
             <button
-              type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              type="submit"
             >
               Update Game
             </button>
@@ -200,23 +190,23 @@ function GameStatusBadge({ status }: { status: GameStatus }) {
   const { bgColor, textColor, label } = match(status)
     .with("SETUP", () => ({
       bgColor: "bg-gray-100",
-      textColor: "text-gray-800",
       label: "Setup",
+      textColor: "text-gray-800",
     }))
     .with("OPEN", () => ({
       bgColor: "bg-blue-100",
-      textColor: "text-blue-800",
       label: "Open",
+      textColor: "text-blue-800",
     }))
     .with("LIVE", () => ({
       bgColor: "bg-green-100",
-      textColor: "text-green-800",
       label: "Live",
+      textColor: "text-green-800",
     }))
     .with("COMPLETED", () => ({
       bgColor: "bg-purple-100",
-      textColor: "text-purple-800",
       label: "Completed",
+      textColor: "text-purple-800",
     }))
     .exhaustive();
 
