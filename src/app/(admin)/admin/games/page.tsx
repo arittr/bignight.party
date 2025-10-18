@@ -1,7 +1,7 @@
-import Link from "next/link";
-import * as gameModel from "@/lib/models/game";
-import { match } from "ts-pattern";
 import type { GameStatus } from "@prisma/client";
+import Link from "next/link";
+import { match } from "ts-pattern";
+import * as gameModel from "@/lib/models/game";
 
 export default async function GamesPage() {
   const games = await gameModel.findAll();
@@ -11,8 +11,8 @@ export default async function GamesPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Games</h1>
         <Link
-          href="/admin/games/new"
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          href="/admin/games/new"
         >
           New Game
         </Link>
@@ -45,7 +45,7 @@ export default async function GamesPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {games.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                <td className="px-6 py-4 text-center text-gray-500" colSpan={6}>
                   No games found. Create your first game to get started.
                 </td>
               </tr>
@@ -69,8 +69,8 @@ export default async function GamesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Link
-                      href={`/admin/games/${game.id}`}
                       className="text-blue-600 hover:text-blue-900"
+                      href={`/admin/games/${game.id}`}
                     >
                       View
                     </Link>
@@ -89,23 +89,23 @@ function GameStatusBadge({ status }: { status: GameStatus }) {
   const { bgColor, textColor, label } = match(status)
     .with("SETUP", () => ({
       bgColor: "bg-gray-100",
-      textColor: "text-gray-800",
       label: "Setup",
+      textColor: "text-gray-800",
     }))
     .with("OPEN", () => ({
       bgColor: "bg-blue-100",
-      textColor: "text-blue-800",
       label: "Open",
+      textColor: "text-blue-800",
     }))
     .with("LIVE", () => ({
       bgColor: "bg-green-100",
-      textColor: "text-green-800",
       label: "Live",
+      textColor: "text-green-800",
     }))
     .with("COMPLETED", () => ({
       bgColor: "bg-purple-100",
-      textColor: "text-purple-800",
       label: "Completed",
+      textColor: "text-purple-800",
     }))
     .exhaustive();
 
