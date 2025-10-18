@@ -216,23 +216,23 @@ For phases where tasks are independent:
    - Confirm no file overlaps between tasks
    - Check dependencies are satisfied
 
-2. **For each parallel task, create worktree + branch from current tip**:
+2. **For each parallel task, create worktree on feature branch**:
 
    ```bash
-   # Create worktree and branch in one command (from current feature branch)
-   git worktree add ./.worktrees/task-{task-id} -b task-{task-id}-{short-name}
-   # Example: git worktree add ./.worktrees/task-2-1 -b task-2-1-auth-models
+   # Create worktree on feature branch (do NOT create task branch yet)
+   git worktree add ./.worktrees/task-{task-id} {feature-branch}
+   # Example: git worktree add ./.worktrees/task-2-1 feature/authentication
    ```
 
    This creates:
-   - A new branch `task-{task-id}-{short-name}` from current HEAD
-   - A worktree at `./.worktrees/task-{task-id}` checked out to that branch
+   - A worktree at `./.worktrees/task-{task-id}` checked out to the feature branch
+   - Task branch will be created later with `gs branch create` after work is done
 
    Store worktree info:
    ```javascript
    taskWorktrees = {
-     'task-3-1': {path: './.worktrees/task-3-1', branch: 'task-3-1-name'},
-     'task-3-2': {path: './.worktrees/task-3-2', branch: 'task-3-2-name'}
+     'task-3-1': {path: './.worktrees/task-3-1'},
+     'task-3-2': {path: './.worktrees/task-3-2'}
    }
    ```
 
@@ -247,8 +247,7 @@ For phases where tasks are independent:
 
    TASK: {task-name}
    WORKTREE: {worktree-path}
-   BRANCH: {task-branch}
-   PARENT BRANCH: {feature-branch}
+   FEATURE BRANCH: {feature-branch}
 
    CRITICAL - WORKTREE ISOLATION:
    You are working in an isolated git worktree. This means:
@@ -260,7 +259,7 @@ For phases where tasks are independent:
    SETUP:
    ```bash
    cd {worktree-path}
-   git branch --show-current  # Verify you're on {task-branch}
+   git branch --show-current  # Should be {feature-branch}
    pwd  # Confirm you're in worktree directory
    ```
 
@@ -287,23 +286,38 @@ For phases where tasks are independent:
    pnpm test
    ```
 
-   5. Commit when complete:
+   5. Stage changes (but DO NOT commit):
    ```bash
    git add --all
-   git commit -m "[Task {task-id}] {task-name}
+   git status  # Verify changes staged
+   ```
+
+   6. Create branch and commit with gs branch create:
+   ```bash
+   gs branch create task-{task-id}-{short-name}
+   ```
+
+   When prompted for commit message, use:
+   ```
+   [Task {task-id}] {task-name}
 
    {Brief summary of changes}
 
    Acceptance criteria met:
    - {criterion 1}
    - {criterion 2}
-   "
    ```
 
-   6. Report completion with:
+   This will:
+   - Create a new branch `task-{task-id}-{short-name}`
+   - Commit all staged changes
+   - Stack the branch on feature branch automatically
+
+   7. Report completion with:
       - Summary of changes
       - Files modified
       - Test results
+      - Branch name created
       - Worktree path for cleanup
 
    CRITICAL:
@@ -311,7 +325,9 @@ For phases where tasks are independent:
    - ✅ Stay in worktree directory
    - ✅ Implement ONLY this task
    - ✅ Run ALL quality checks
-   - ✅ Commit before reporting
+   - ✅ Stage changes with git add
+   - ✅ Use gs branch create (NOT git commit)
+   - ❌ DO NOT manually commit (use gs branch create)
    - ❌ DO NOT clean up worktree (orchestrator does this)
    - ❌ DO NOT touch other task files
    ```
@@ -324,27 +340,14 @@ For phases where tasks are independent:
    # For each task worktree
    cd {worktree-path}
    pnpm test  # Must pass
-   git log --oneline -1  # Review commit
+   git log --oneline -1  # Review commit (should be [Task X.Y] message)
+   git branch --show-current  # Should be task-{task-id}-{short-name}
    cd -  # Return to original directory
    ```
 
-6. **Track branches with git-spice**:
+   Note: Branches are already tracked by git-spice since `gs branch create` was used.
 
-   Return to main directory and track all task branches:
-   ```bash
-   cd /Users/drewritter/projects/bignight.party
-   git checkout {feature-branch}
-
-   # Track each task branch, stacking on feature branch
-   gs branch track task-{task-id}-{short-name} --base {feature-branch}
-   # Example: gs branch track task-2-1-auth-models --base feature/authentication
-
-   # Repeat for each parallel task branch
-   ```
-
-   This tells git-spice about the branches and their relationships.
-
-7. **Cleanup worktrees**:
+6. **Cleanup worktrees**:
    ```bash
    # For each task worktree
    git worktree remove {worktree-path}
@@ -357,16 +360,16 @@ For phases where tasks are independent:
    Note: Commits are already on branches (tracked by git-spice), worktrees can be safely removed.
    The `.worktrees/` directory itself persists (gitignored) for future runs.
 
-8. **Verify git-spice stack**:
+7. **Verify git-spice stack**:
 
    Check that all task branches are properly tracked and stacked:
    ```bash
    git checkout {feature-branch}
    gs log short     # Verify all task branches visible
-   gs repo restack  # Restack if needed
+   gs repo restack  # Restack if needed (shouldn't be necessary)
    ```
 
-   Expected output:
+   Expected output (all tasks stacked on feature branch):
    ```
    ┌── task-2-3-magic-link (on feature/authentication)
    ├── task-2-2-email-service (on feature/authentication)
@@ -375,7 +378,10 @@ For phases where tasks are independent:
        main
    ```
 
-9. **After integration, use `requesting-code-review` skill:**
+   Note: Since each task used `gs branch create` from the feature branch,
+   all tasks are automatically stacked on the feature branch in parallel.
+
+8. **After verification, use `requesting-code-review` skill:**
 
    Dispatch code-reviewer subagent to review the entire phase:
    - All task branches in this phase
@@ -384,9 +390,9 @@ For phases where tasks are independent:
    - Ensure no file conflicts
    - Review quality and consistency
 
-10. **Address review feedback if needed**
+9. **Address review feedback if needed**
 
-11. **Verify integration** (after review passes):
+10. **Verify integration** (after review passes):
     ```bash
     git checkout {feature-branch}
 
@@ -396,7 +402,7 @@ For phases where tasks are independent:
     pnpm build
     ```
 
-12. Phase is complete when code review passes and integration verified
+11. Phase is complete when code review passes and integration verified
 
 ### Step 4: Verify Completion
 
@@ -585,9 +591,9 @@ If worktree creation fails:
 **Error**: {error-message}
 
 Common causes:
-- Path already exists: `rm -rf {path}`
-- Branch already exists: `git branch -D {branch}`
-- Uncommitted changes: `git stash`
+- Path already exists: `rm -rf {path}` and `git worktree prune`
+- Uncommitted changes on feature branch: `git stash`
+- Feature branch doesn't exist: Check `gs ls` for branch name
 
 After fixing, re-run `/execute`
 ```
