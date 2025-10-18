@@ -14,67 +14,79 @@ Example: `/spec magic link authentication with Auth.js`
 
 ### Step 1: Brainstorm Requirements
 
-Use the `brainstorming` skill to refine the feature requirements:
-- Clarify scope and boundaries
-- Identify architectural decisions needed
-- Define acceptance criteria
-- Explore alternatives if applicable
+Use the `brainstorming` skill for Phases 1-3 ONLY:
+- Phase 1: Understanding - Clarify scope and boundaries
+- Phase 2: Exploration - Explore alternatives, identify architectural decisions
+- Phase 3: Design Presentation - Present design incrementally
 
-### Step 2: Analyze Codebase Context
+**IMPORTANT**: STOP after Phase 3 (Design Presentation). Do NOT continue to:
+- Phase 4: Worktree Setup
+- Phase 5: Planning Handoff (which launches writing-plans skill)
 
-Use the Task tool to spawn an agent that analyzes relevant codebase context:
+Return to this /spec workflow after design is validated.
+
+### Step 2: Analyze Task-Specific Context
+
+Use the Task tool to spawn an agent that analyzes task-specific integration points:
 
 ```
 ROLE: You are a codebase analysis agent for BigNight.Party.
 
-TASK: Analyze the codebase to provide architectural context for: {feature-description}
+TASK: Analyze task-specific context for: {feature-description}
 
-REQUIRED READING:
-- @docs/constitutions/current/architecture.md - Mandatory patterns and tech stack
-- @docs/constitutions/current/patterns.md - Required libraries (ts-pattern, next-safe-action)
-- @docs/constitutions/current/schema-rules.md - Database design philosophy
+REQUIRED READING (architectural rules - do NOT recreate these):
+- @docs/constitutions/current/architecture.md - Layer boundaries and tech stack
+- @docs/constitutions/current/patterns.md - Mandatory patterns (ts-pattern, next-safe-action)
+- @docs/constitutions/current/schema-rules.md - Database design rules
+- @docs/constitutions/current/tech-stack.md - Required and prohibited libraries
+- @docs/constitutions/current/testing.md - TDD requirements
 
-ANALYSIS TASKS:
+FOCUS: Analyze ONLY task-specific details, NOT general architecture (that's in constitutions).
 
-1. **Identify Integration Points**:
-   - Which existing files/modules will be affected?
-   - What patterns should be followed?
-   - Where does this feature fit in the architecture?
+TASK-SPECIFIC ANALYSIS:
 
-2. **Technology Stack**:
-   - Next.js 15 App Router
-   - Auth.js v5 for authentication
-   - Prisma + PostgreSQL
-   - Socket.io for real-time
-   - ts-pattern for discriminated unions
-   - next-safe-action for server actions
+1. **Existing Files Scan**:
+   - What files currently exist in the codebase?
+   - Which existing files will this feature integrate with?
+   - What directories need to be created?
+   - Are there similar features to reference?
 
-3. **Required Components**:
-   - Model layer files (src/lib/models/)
-   - Service layer files (src/lib/services/)
-   - Action layer files (src/lib/actions/)
-   - UI components (src/components/)
-   - Schemas (src/schemas/)
-   - Types (src/types/)
+2. **Dependencies Check**:
+   - What npm packages are currently installed?
+   - What new dependencies are needed for THIS task?
+   - Check package.json, pnpm-lock.yaml
 
-4. **Mandatory Patterns** (from patterns.md):
-   - ALL server actions use next-safe-action
-   - ALL discriminated unions use ts-pattern with .exhaustive()
-   - Models only import Prisma
-   - Services call models, contain business logic
-   - Actions only call services
-   - No Prisma outside models layer
+3. **Schema State**:
+   - Does prisma/schema.prisma exist?
+   - What migrations exist in prisma/migrations/?
+   - Does this task need schema changes?
 
-OUTPUT: Create a codebase context document with:
-- Integration points (specific file paths)
-- Components needed (with layer assignments)
-- Patterns to follow (with examples)
-- Dependencies and ordering
+4. **File Path Mapping**:
+   Map exactly where new files go (following architecture.md):
+   - Models: src/lib/models/{name}.ts
+   - Services: src/lib/services/{name}-service.ts
+   - Actions: src/lib/actions/{name}-actions.ts
+   - Components: src/components/{name}/
+   - Schemas: src/schemas/{name}-schema.ts
+   - Types: src/types/{name}.ts
+
+OUTPUT (focused on THIS task only):
+- List of existing files that will be modified (exact paths)
+- List of new files to create (exact paths with layer assignment)
+- New dependencies to install (if any)
+- Schema changes needed (if any)
+- Implementation order based on dependencies
+- References to similar existing code (if any)
+
+DO NOT include:
+- General architecture explanations (already in constitutions)
+- Pattern examples (already in patterns.md)
+- Layer boundary rules (already in architecture.md)
 ```
 
 ### Step 3: Generate Feature Specification
 
-Create a comprehensive spec document at `specs/features/{feature-name}.md`:
+Create a comprehensive spec document at `specs/{feature-name}/spec.md`:
 
 ```markdown
 # Feature: {Feature Name}
@@ -88,138 +100,80 @@ Create a comprehensive spec document at `specs/features/{feature-name}.md`:
 
 ## Requirements
 
+> **Note**: All features must follow architecture patterns defined in @docs/constitutions/current/
+
 ### Functional Requirements
-- FR1: {requirement}
-- FR2: {requirement}
-- FR3: {requirement}
+- FR1: {specific requirement for this task}
+- FR2: {specific requirement for this task}
+- FR3: {specific requirement for this task}
 
 ### Non-Functional Requirements
-- NFR1: Must use next-safe-action for all server actions
-- NFR2: Must use ts-pattern for all discriminated unions
-- NFR3: Must follow model/service/action layer boundaries
-- NFR4: {performance/security requirement}
+- NFR1: {performance requirement specific to this task}
+- NFR2: {security requirement specific to this task}
+- NFR3: {DX requirement specific to this task}
 
 ## Architecture
 
-### Components
+> **See**: @docs/constitutions/current/architecture.md for layer boundaries and patterns
 
-#### 1. Model Layer (src/lib/models/{feature}.ts)
-**Purpose**: Database access only
+### Task-Specific Components
 
-**Files**:
-- `src/lib/models/{model}.ts`
+{List files from codebase analysis - existing files to modify, new files to create}
 
-**Responsibilities**:
-- Prisma queries only
-- No business logic
-- Return Prisma types
+**Example:**
+- **New**: `src/lib/db/prisma.ts` - Prisma client singleton
+- **New**: `docker-compose.yml` - PostgreSQL container
+- **New**: `prisma/schema.prisma` - Database schema
+- **Modify**: `package.json` - Add Prisma dependencies and scripts
 
-#### 2. Service Layer (src/lib/services/{feature}-service.ts)
-**Purpose**: Business logic and orchestration
+### Dependencies
 
-**Files**:
-- `src/lib/services/{service}.ts`
+{From codebase analysis}
 
-**Responsibilities**:
-- Call model layer for data
-- Implement business rules using ts-pattern
-- Emit WebSocket events if needed
-- No direct Prisma imports
+**New packages to install:**
+- `@prisma/client` - Prisma ORM client
+- `prisma` (dev) - Schema management
+- `tsx` (dev) - TypeScript script runner
 
-#### 3. Action Layer (src/lib/actions/{feature}-actions.ts)
-**Purpose**: Server actions with validation
+### Schema Changes
 
-**Files**:
-- `src/lib/actions/{feature}-actions.ts`
+{If applicable from codebase analysis}
 
-**Responsibilities**:
-- Use next-safe-action for all actions
-- Zod schema validation
-- Call service layer only
-- Auth checks via middleware
-
-#### 4. UI Components (src/components/{feature}/)
-**Purpose**: React components
-
-**Files**:
-- `src/components/{feature}/{Component}.tsx`
-
-**Responsibilities**:
-- Use useAction hook from next-safe-action
-- Call server actions
-- Display loading/error states
-
-#### 5. Schemas (src/schemas/{feature}-schema.ts)
-**Purpose**: Zod validation schemas
-
-**Files**:
-- `src/schemas/{feature}-schema.ts`
-
-**Responsibilities**:
-- Define all input validation schemas
-- Export types inferred from schemas
-
-#### 6. Types (src/types/{feature}.ts)
-**Purpose**: Shared TypeScript types
-
-**Files**:
-- `src/types/{feature}.ts`
-
-**Responsibilities**:
-- Client/server shared types
-- Domain types
+**Migrations needed:**
+1. Migration name: `init` - Create enums
+2. Migration name: `auth` - Add auth models
+3. Migration name: `game` - Add game models
 
 ### Implementation Order
 
-1. **Database/Types** (if schema changes needed)
-   - Update Prisma schema
-   - Run migrations
-   - Define types
+{From codebase analysis - task-specific order based on dependencies}
 
-2. **Model Layer**
-   - Implement data access functions
-
-3. **Service Layer**
-   - Implement business logic with ts-pattern
-   - Add WebSocket events if needed
-
-4. **Schemas**
-   - Define Zod validation schemas
-
-5. **Action Layer**
-   - Create next-safe-action actions
-   - Add auth middleware
-
-6. **UI Components**
-   - Build React components
-   - Connect to actions via useAction
+**Example:**
+1. Docker & environment setup
+2. Install dependencies
+3. Create Prisma schema
+4. Run migrations
+5. Create Prisma client singleton
+6. Create validation script
+7. Update package scripts
 
 ## Acceptance Criteria
 
-- [ ] All server actions use next-safe-action
-- [ ] All discriminated unions use ts-pattern with .exhaustive()
-- [ ] Layer boundaries respected (no Prisma in services/actions)
-- [ ] All inputs validated with Zod
-- [ ] Tests pass
+**Must follow constitution patterns:**
+- [ ] All server actions use next-safe-action (see patterns.md)
+- [ ] All discriminated unions use ts-pattern with .exhaustive() (see patterns.md)
+- [ ] Layer boundaries respected: no Prisma outside models/ (see architecture.md)
+- [ ] All inputs validated with Zod (see patterns.md)
+
+**Task-specific criteria:**
+- [ ] {criterion specific to this task}
+- [ ] {criterion specific to this task}
+- [ ] {criterion specific to this task}
+
+**Verification:**
+- [ ] Tests pass (if tests exist)
 - [ ] Biome linting passes
 - [ ] Feature works end-to-end
-
-## Implementation Plan
-
-### Task 1: {Task Name}
-**Complexity**: M (2-4 hours)
-**Files**:
-- `{file-1}`
-- `{file-2}`
-
-**Description**: {what to implement}
-
-**Acceptance**:
-- [ ] {criterion 1}
-- [ ] {criterion 2}
-
-### Task 2: {Task Name}
-{Similar structure...}
 
 ## References
 
@@ -243,7 +197,7 @@ Report to user:
 ```
 ✅ Feature Specification Complete
 
-Location: specs/features/{feature-name}.md
+Location: specs/{feature-name}/spec.md
 
 Components:
 - {count} model files
@@ -254,8 +208,8 @@ Components:
 Estimated Complexity: {total}
 
 Next Steps:
-1. Review spec: specs/features/{feature-name}.md
-2. Implement: /implement-feature @specs/features/{feature-name}.md
+1. Review spec: specs/{feature-name}/spec.md
+2. Create implementation plan: /plan @specs/{feature-name}/spec.md
 ```
 
 Now generate the specification for: {feature-description}
