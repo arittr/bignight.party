@@ -4,6 +4,15 @@ description: Execute implementation plan with automatic sequential/parallel orch
 
 You are executing an implementation plan for BigNight.Party.
 
+## Required Skills
+
+Before starting, you MUST read these skills:
+- `using-git-spice` - For managing stacked branches (~/.claude/skills/using-git-spice/SKILL.md)
+- `using-git-worktrees` - For parallel task isolation (superpowers skill)
+- `requesting-code-review` - For phase review gates (superpowers skill)
+- `verification-before-completion` - For final verification (superpowers skill)
+- `finishing-a-development-branch` - For completion workflow (superpowers skill)
+
 ## Input
 
 User will provide: `/execute {plan-path}`
@@ -105,14 +114,15 @@ For phases where tasks must run in order:
 
    a. **Create stacked branch for task:**
    ```bash
-   gs branch create --parent {current-branch}
+   gs branch create
    ```
 
    Prompt for:
    - **Branch name**: `task-{task-id}-{short-name}`
    - **Description**: Task name from plan
+   - This stacks on current branch automatically (per using-git-spice skill)
 
-   b. **Spawn subagent for task implementation:**
+   b. **Spawn subagent for task implementation** (use Task tool):
 
    ```
    ROLE: You are implementing Task {task-id} for BigNight.Party.
@@ -120,37 +130,61 @@ For phases where tasks must run in order:
    TASK: {task-name}
    BRANCH: {task-branch}
 
+   CRITICAL - CONTEXT MANAGEMENT:
+   You are a subagent with isolated context. Complete this task independently.
+
    IMPLEMENTATION:
 
-   Read task details from: {plan-path}
-   Find: "Task {task-id}: {task-name}"
+   1. Verify you're on the correct branch:
+   ```bash
+   git branch --show-current  # Should be {task-branch}
+   ```
 
-   Implement according to:
-   - Files specified in task
-   - Acceptance criteria in task
-   - BigNight.Party mandatory patterns (see @docs/constitutions/current/)
+   2. Read task details from: /Users/drewritter/projects/bignight.party/{plan-path}
+      Find: "Task {task-id}: {task-name}"
 
-   Quality checks:
+   3. Implement according to:
+      - Files specified in task
+      - Acceptance criteria in task
+      - BigNight.Party mandatory patterns (see @docs/constitutions/current/)
+
+   4. Quality checks (MUST run all):
    ```bash
    pnpm format
    pnpm lint
    pnpm test
    ```
 
-   Commit and create next stacked branch when complete:
+   5. Commit when complete:
    ```bash
    git add --all
-   gs branch create -m "[Task {task-id}] {task-name}"
+   git commit -m "[Task {task-id}] {task-name}
+
+   {Brief summary of changes}
+
+   Acceptance criteria met:
+   - {criterion 1}
+   - {criterion 2}
+   "
    ```
 
-   Report completion with summary of changes.
+   6. Report completion with:
+      - Summary of changes
+      - Files modified
+      - Test results
+      - Any issues encountered
+
+   CRITICAL:
+   - ✅ Stay on task branch
+   - ✅ Run ALL quality checks
+   - ✅ Commit before reporting completion
+   - ✅ Follow mandatory patterns
    ```
 
-   c. **Verify task completion:**
+   c. **Wait for subagent completion**, then verify:
    ```bash
-   pnpm test
-   pnpm lint
-   git log --oneline -1
+   git log --oneline -1  # Confirm commit
+   pnpm test            # Verify tests pass
    ```
 
 2. After ALL tasks in phase complete:
@@ -171,30 +205,33 @@ For phases where tasks must run in order:
 
 For phases where tasks are independent:
 
-**Create stacked branches and spawn parallel agents:**
+**Use git worktrees for true parallel isolation (per using-git-worktrees skill):**
 
 1. **Verify independence** (from plan's dependency analysis):
    - Confirm no file overlaps between tasks
    - Check dependencies are satisfied
 
-2. **Create stacked branch per task**:
+2. **For each parallel task, create worktree + branch from current tip**:
 
-   For each task in parallel phase:
    ```bash
-   gs branch create --parent {feature-branch}
+   # Create worktree and branch in one command (from current feature branch)
+   git worktree add ./.worktrees/task-{task-id} -b task-{task-id}-{short-name}
+   # Example: git worktree add ./.worktrees/task-2-1 -b task-2-1-auth-models
    ```
 
-   Prompt for:
-   - **Branch name**: `task-{task-id}-{short-name}`
-   - **Description**: Task name from plan
+   This creates:
+   - A new branch `task-{task-id}-{short-name}` from current HEAD
+   - A worktree at `./.worktrees/task-{task-id}` checked out to that branch
 
-   Store branch info:
+   Store worktree info:
    ```javascript
-   taskBranches = {
-     'task-3-magic-link-service': 'task-3-magic-link-service',
-     'task-4-email-service': 'task-4-email-service'
+   taskWorktrees = {
+     'task-3-1': {path: './.worktrees/task-3-1', branch: 'task-3-1-name'},
+     'task-3-2': {path: './.worktrees/task-3-2', branch: 'task-3-2-name'}
    }
    ```
+
+   Note: `.worktrees/` is gitignored to prevent contamination.
 
 3. **Spawn parallel agents** (CRITICAL: Single message with multiple Task tools):
 
@@ -204,68 +241,136 @@ For phases where tasks are independent:
    ROLE: You are implementing Task {task-id} for BigNight.Party.
 
    TASK: {task-name}
+   WORKTREE: {worktree-path}
    BRANCH: {task-branch}
    PARENT BRANCH: {feature-branch}
 
-   CRITICAL - BRANCH ISOLATION:
-   1. You are on branch: {task-branch} (stacked on {feature-branch})
-   2. Implement ONLY this task
-   3. DO NOT touch files outside this task's scope
+   CRITICAL - WORKTREE ISOLATION:
+   You are working in an isolated git worktree. This means:
+   - You have your own working directory: {worktree-path}
+   - Other parallel tasks cannot interfere with your files
+   - You must cd into your worktree before starting
+   - When done, report completion and do NOT clean up worktree
+
+   SETUP:
+   ```bash
+   cd {worktree-path}
+   git branch --show-current  # Verify you're on {task-branch}
+   pwd  # Confirm you're in worktree directory
+   ```
 
    IMPLEMENTATION:
 
-   Read plan from: /Users/drewritter/projects/bignight.party/{plan-path}
-   Find: "Task {task-id}: {task-name}"
+   1. Read plan from: {plan-path}
+      Find: "Task {task-id}: {task-name}"
 
-   Implement according to:
-   - Files specified in task
-   - Acceptance criteria in task
-   - BigNight.Party mandatory patterns (see @docs/constitutions/current/)
+   2. Implement according to:
+      - Files specified in task
+      - Acceptance criteria in task
+      - BigNight.Party mandatory patterns (see @docs/constitutions/current/)
 
-   Follow mandatory patterns:
-   - Server actions: Use next-safe-action ONLY
-   - Discriminated unions: Use ts-pattern with .exhaustive()
-   - Layer boundaries: Models (Prisma) → Services → Actions
-   - No Prisma imports outside models layer
+   3. Follow mandatory patterns:
+      - Server actions: Use next-safe-action ONLY
+      - Discriminated unions: Use ts-pattern with .exhaustive()
+      - Layer boundaries: Models (Prisma) → Services → Actions
+      - No Prisma imports outside models layer
 
-   Quality checks:
+   4. Quality checks (MUST run all):
    ```bash
    pnpm format
    pnpm lint
    pnpm test
    ```
 
-   Commit and create next stacked branch when complete:
+   5. Commit when complete:
    ```bash
    git add --all
-   gs branch create -m "[Task {task-id}] {task-name}"
+   git commit -m "[Task {task-id}] {task-name}
+
+   {Brief summary of changes}
+
+   Acceptance criteria met:
+   - {criterion 1}
+   - {criterion 2}
+   "
    ```
+
+   6. Report completion with:
+      - Summary of changes
+      - Files modified
+      - Test results
+      - Worktree path for cleanup
 
    CRITICAL:
-   - ✅ Stay on task branch
+   - ✅ cd into worktree first
+   - ✅ Stay in worktree directory
    - ✅ Implement ONLY this task
-   - ✅ Follow mandatory patterns
+   - ✅ Run ALL quality checks
+   - ✅ Commit before reporting
+   - ❌ DO NOT clean up worktree (orchestrator does this)
    - ❌ DO NOT touch other task files
-
-   Execute: Task {task-id}
    ```
 
-4. **Monitor parallel execution**:
-   - Track progress of each agent
-   - Watch for errors or blockers
-   - Note when agents complete
+4. **Wait for all parallel agents to complete**
+   (Agents work independently, orchestrator collects results)
 
-5. **Verify each task after completion**:
+5. **After ALL parallel tasks complete, verify each**:
    ```bash
-   git checkout {task-branch}
+   # For each task worktree
+   cd {worktree-path}
    pnpm test  # Must pass
-   pnpm lint  # Must be clean
    git log --oneline -1  # Review commit
+   cd -  # Return to original directory
    ```
 
-6. **After ALL parallel tasks complete:**
+6. **Track branches with git-spice**:
 
-   **Use `requesting-code-review` skill:**
+   Return to main directory and track all task branches:
+   ```bash
+   cd /Users/drewritter/projects/bignight.party
+   git checkout {feature-branch}
+
+   # Track each task branch, stacking on feature branch
+   gs branch track task-{task-id}-{short-name} --base {feature-branch}
+   # Example: gs branch track task-2-1-auth-models --base feature/authentication
+
+   # Repeat for each parallel task branch
+   ```
+
+   This tells git-spice about the branches and their relationships.
+
+7. **Cleanup worktrees**:
+   ```bash
+   # For each task worktree
+   git worktree remove {worktree-path}
+
+   # Or clean all at once
+   rm -rf ./.worktrees/*
+   git worktree prune
+   ```
+
+   Note: Commits are already on branches (tracked by git-spice), worktrees can be safely removed.
+   The `.worktrees/` directory itself persists (gitignored) for future runs.
+
+8. **Verify git-spice stack**:
+
+   Check that all task branches are properly tracked and stacked:
+   ```bash
+   git checkout {feature-branch}
+   gs log short     # Verify all task branches visible
+   gs repo restack  # Restack if needed
+   ```
+
+   Expected output:
+   ```
+   ┌── task-2-3-magic-link (on feature/authentication)
+   ├── task-2-2-email-service (on feature/authentication)
+   ├── task-2-1-auth-models (on feature/authentication)
+   └── feature/authentication
+       main
+   ```
+
+9. **After integration, use `requesting-code-review` skill:**
 
    Dispatch code-reviewer subagent to review the entire phase:
    - All task branches in this phase
@@ -274,21 +379,19 @@ For phases where tasks are independent:
    - Ensure no file conflicts
    - Review quality and consistency
 
-7. **Address review feedback if needed**
+10. **Address review feedback if needed**
 
-8. **Verify integration** (after review passes):
-   ```bash
-   git checkout {feature-branch}
+11. **Verify integration** (after review passes):
+    ```bash
+    git checkout {feature-branch}
 
-   # Git-spice will handle stacking - verify all tasks visible
-   gs branch tree
+    # Run tests on integrated feature branch
+    pnpm test
+    pnpm lint
+    pnpm build
+    ```
 
-   # Test integration
-   pnpm test
-   pnpm lint
-   ```
-
-9. Phase is complete when code review passes and integration verified
+12. Phase is complete when code review passes and integration verified
 
 ### Step 4: Verify Completion
 
@@ -322,9 +425,9 @@ After verification passes:
 Use the `finishing-a-development-branch` skill to:
 1. Review all changes
 2. Choose next action:
-   - Submit PR: `gs branch submit`
-   - Continue with dependent feature
-   - Mark complete
+   - Submit stack as PRs: `gs stack submit` (per using-git-spice skill)
+   - Continue with dependent feature: `gs branch create`
+   - Mark complete and sync: `gs repo sync`
 
 ### Step 6: Final Report
 
@@ -364,18 +467,19 @@ Use the `finishing-a-development-branch` skill to:
 
 ### Review Changes
 ```bash
+gs log long               # View all branches and commits in stack
 git log --oneline {feature-branch}
 git diff main..{feature-branch}
 ```
 
 ### Submit for Review
 ```bash
-gs branch submit
+gs stack submit  # Submits entire stack as PRs (per using-git-spice skill)
 ```
 
 ### Or Continue with Dependent Feature
 ```bash
-gs branch create  # Stack on current branch
+gs branch create  # Creates new branch stacked on current
 ```
 ```
 
@@ -485,11 +589,13 @@ After fixing, re-run `/execute`
 
 ## Important Notes
 
+- **Skill-driven execution** - Uses using-git-spice, using-git-worktrees, and other superpowers skills
 - **Automatic orchestration** - Reads plan strategies, executes accordingly
-- **Git-spice stacking** - All work stacks on feature branch
-- **Worktree isolation** - Parallel tasks cannot interfere
+- **Git-spice stacking** - All task branches stack on feature branch (per using-git-spice skill)
+- **Worktree isolation** - Parallel tasks run in separate worktrees (per using-git-worktrees skill)
+- **Context management** - Each task runs in isolated subagent to avoid token bloat
 - **Mandatory patterns** - All agents enforce BigNight.Party patterns
-- **Quality gates** - Tests and linting after every task
-- **Continuous commits** - Small, focused commits throughout
+- **Quality gates** - Tests and linting after every task, code review after every phase
+- **Continuous commits** - Small, focused commits with [Task X.Y] markers throughout
 
 Now execute the plan from: {plan-path}
