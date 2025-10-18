@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createNominationAction } from "@/lib/actions/admin-actions";
 import * as categoryModel from "@/lib/models/category";
-import * as workModel from "@/lib/models/work";
 import * as personModel from "@/lib/models/person";
+import * as workModel from "@/lib/models/work";
 
 type PageProps = {
   params: Promise<{
@@ -36,8 +36,8 @@ export default async function NewNominationPage({ params }: PageProps) {
     const result = await createNominationAction({
       categoryId,
       nominationText,
-      workId: workId || undefined,
       personId: personId || undefined,
+      workId: workId || undefined,
     });
 
     if (result?.data) {
@@ -49,8 +49,8 @@ export default async function NewNominationPage({ params }: PageProps) {
     <div className="max-w-2xl">
       <div className="mb-6">
         <Link
-          href={`/admin/events/${eventId}/categories/${categoryId}`}
           className="text-blue-600 hover:text-blue-800 text-sm"
+          href={`/admin/events/${eventId}/categories/${categoryId}`}
         >
           ← Back to Category
         </Link>
@@ -63,28 +63,28 @@ export default async function NewNominationPage({ params }: PageProps) {
 
       <form action={handleCreateNomination} className="space-y-6">
         <div>
-          <label htmlFor="nominationText" className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="nominationText">
             Nomination Text *
           </label>
           <input
-            type="text"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             id="nominationText"
             name="nominationText"
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="e.g., Christopher Nolan for Oppenheimer"
+            required
+            type="text"
           />
           <p className="text-sm text-gray-500 mt-1">Enter the display text for this nomination</p>
         </div>
 
         <div>
-          <label htmlFor="workId" className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="workId">
             Work (Optional)
           </label>
           <select
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             id="workId"
             name="workId"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">-- Select Work --</option>
             {works.map((work) => (
@@ -99,13 +99,13 @@ export default async function NewNominationPage({ params }: PageProps) {
         </div>
 
         <div>
-          <label htmlFor="personId" className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="personId">
             Person (Optional)
           </label>
           <select
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             id="personId"
             name="personId"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">-- Select Person --</option>
             {people.map((person) => (
@@ -128,14 +128,14 @@ export default async function NewNominationPage({ params }: PageProps) {
 
         <div className="flex gap-4">
           <button
-            type="submit"
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            type="submit"
           >
             Create Nomination
           </button>
           <Link
-            href={`/admin/events/${eventId}/categories/${categoryId}`}
             className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+            href={`/admin/events/${eventId}/categories/${categoryId}`}
           >
             Cancel
           </Link>

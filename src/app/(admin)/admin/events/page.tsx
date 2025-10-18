@@ -9,8 +9,8 @@ export default async function EventsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Events</h1>
         <Link
-          href="/admin/events/new"
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          href="/admin/events/new"
         >
           New Event
         </Link>
@@ -43,13 +43,13 @@ export default async function EventsPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {events.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                <td className="px-6 py-4 text-center text-gray-500" colSpan={6}>
                   No events found. Create your first event to get started.
                 </td>
               </tr>
             ) : (
               events.map((event) => (
-                <tr key={event.id} className="hover:bg-gray-50">
+                <tr className="hover:bg-gray-50" key={event.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{event.name}</div>
                   </td>
@@ -69,8 +69,8 @@ export default async function EventsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <Link
-                      href={`/admin/events/${event.id}`}
                       className="text-blue-600 hover:text-blue-900"
+                      href={`/admin/events/${event.id}`}
                     >
                       View
                     </Link>
