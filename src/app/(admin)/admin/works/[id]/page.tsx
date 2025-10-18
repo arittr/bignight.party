@@ -1,0 +1,220 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { WorkType } from "@prisma/client";
+import { deleteWorkAction, updateWorkAction } from "@/lib/actions/admin-actions";
+import * as workModel from "@/lib/models/work";
+
+interface WorkDetailPageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default async function WorkDetailPage(props: WorkDetailPageProps) {
+  const params = await props.params;
+  const work = await workModel.findById(params.id);
+
+  if (!work) {
+    notFound();
+  }
+
+  // Delete action with error handling
+  async function handleDelete() {
+    "use server";
+
+    try {
+      await deleteWorkAction({ id: params.id });
+      redirect("/admin/works");
+    } catch (error) {
+      // Foreign key constraint error will be caught here
+      throw error;
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-8">
+        <Link href="/admin/works" className="text-blue-600 hover:text-blue-800 mb-4 inline-block">
+          ← Back to Works
+        </Link>
+        <h1 className="text-3xl font-bold">{work.title}</h1>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Edit form */}
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Edit Work</h2>
+
+          <form
+            action={async (formData: FormData) => {
+              "use server";
+
+              const title = formData.get("title");
+              const type = formData.get("type");
+              const year = formData.get("year");
+              const posterUrl = formData.get("posterUrl");
+              const externalId = formData.get("externalId");
+
+              await updateWorkAction({
+                id: params.id,
+                ...(title && { title: title as string }),
+                ...(type && { type: type as WorkType }),
+                ...(year && { year: Number(year) }),
+                ...(posterUrl && { posterUrl: posterUrl as string }),
+                ...(externalId && { externalId: externalId as string }),
+              });
+            }}
+          >
+            <input type="hidden" name="id" value={work.id} />
+
+            {/* Title */}
+            <div className="mb-4">
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                Title
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                defaultValue={work.title}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Type */}
+            <div className="mb-4">
+              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+                Type
+              </label>
+              <select
+                id="type"
+                name="type"
+                defaultValue={work.type}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value={WorkType.FILM}>Film</option>
+                <option value={WorkType.TV_SHOW}>TV Show</option>
+                <option value={WorkType.ALBUM}>Album</option>
+                <option value={WorkType.SONG}>Song</option>
+                <option value={WorkType.PLAY}>Play</option>
+                <option value={WorkType.BOOK}>Book</option>
+              </select>
+            </div>
+
+            {/* Year */}
+            <div className="mb-4">
+              <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-2">
+                Year
+              </label>
+              <input
+                type="number"
+                id="year"
+                name="year"
+                defaultValue={work.year ?? ""}
+                min="1900"
+                max={new Date().getFullYear() + 10}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Poster URL */}
+            <div className="mb-4">
+              <label htmlFor="posterUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                Poster URL
+              </label>
+              <input
+                type="url"
+                id="posterUrl"
+                name="posterUrl"
+                defaultValue={work.posterUrl ?? ""}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* External ID */}
+            <div className="mb-6">
+              <label htmlFor="externalId" className="block text-sm font-medium text-gray-700 mb-2">
+                External ID
+              </label>
+              <input
+                type="text"
+                id="externalId"
+                name="externalId"
+                defaultValue={work.externalId ?? ""}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Submit button */}
+            <button
+              type="submit"
+              className="w-full px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Update Work
+            </button>
+          </form>
+        </div>
+
+        {/* Work details and nominations */}
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">Work Details</h2>
+
+          <dl className="space-y-2 mb-6">
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Type</dt>
+              <dd className="mt-1 text-sm text-gray-900">{work.type.replace("_", " ")}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Year</dt>
+              <dd className="mt-1 text-sm text-gray-900">{work.year || "Not specified"}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">External ID</dt>
+              <dd className="mt-1 text-sm text-gray-900">{work.externalId || "Not specified"}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Created</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                {new Date(work.createdAt).toLocaleDateString()}
+              </dd>
+            </div>
+          </dl>
+
+          {/* Nominations */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-semibold mb-3">Nominations ({work.nominations.length})</h3>
+            {work.nominations.length === 0 ? (
+              <p className="text-sm text-gray-500">No nominations yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {work.nominations.map((nomination) => (
+                  <li key={nomination.id} className="text-sm text-gray-700 p-2 bg-gray-50 rounded">
+                    {nomination.nominationText}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Delete button */}
+          <div className="border-t pt-4 mt-6">
+            <form action={handleDelete}>
+              <button
+                type="submit"
+                className="w-full px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                disabled={work.nominations.length > 0}
+              >
+                {work.nominations.length > 0 ? "Cannot Delete (Has Nominations)" : "Delete Work"}
+              </button>
+            </form>
+            {work.nominations.length > 0 && (
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                Remove all nominations before deleting this work.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
