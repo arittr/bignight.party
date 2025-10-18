@@ -5,22 +5,20 @@ import { auth } from "@/lib/auth/config";
 export const action = createSafeActionClient();
 
 // Authenticated action client - requires valid session
-export const authenticatedAction = createSafeActionClient().use(
-  async ({ next }) => {
-    const session = await auth();
+export const authenticatedAction = createSafeActionClient().use(async ({ next }) => {
+  const session = await auth();
 
-    if (!session?.user) {
-      throw new Error("Unauthorized: You must be logged in to perform this action");
-    }
+  if (!session?.user) {
+    throw new Error("Unauthorized: You must be logged in to perform this action");
+  }
 
-    return next({
-      ctx: {
-        userId: session.user.id,
-        userRole: session.user.role,
-      },
-    });
-  },
-);
+  return next({
+    ctx: {
+      userId: session.user.id,
+      userRole: session.user.role,
+    },
+  });
+});
 
 // Admin action client - requires ADMIN role
 export const adminAction = createSafeActionClient().use(async ({ next }) => {

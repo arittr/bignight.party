@@ -12,11 +12,6 @@
       "command": "npm run dev",
       "name": "Next.js: debug server-side",
       "request": "launch",
-      "serverReadyAction": {
-        "action": "debugWithChrome",
-        "pattern": "Local:.+(https?://.+)",
-        "uriFormat": "%s"
-      },
       "type": "node-terminal"
     },
     {
@@ -36,11 +31,6 @@
       "console": "integratedTerminal",
       "name": "Next.js: debug full stack",
       "request": "launch",
-      "serverReadyAction": {
-        "action": "debugWithChrome",
-        "pattern": "Local:.+(https?://.+)",
-        "uriFormat": "%s"
-      },
       "type": "node-terminal"
     },
     {

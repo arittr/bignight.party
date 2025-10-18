@@ -3,6 +3,7 @@ import type { Role } from "@prisma/client";
 import NextAuth from "next-auth";
 import Resend from "next-auth/providers/resend";
 import prisma from "@/lib/db/prisma";
+import MailpitProvider from "./mailpit-provider";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -27,10 +28,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   providers: [
-    Resend({
-      apiKey: process.env.RESEND_API_KEY,
-      from: process.env.EMAIL_FROM ?? "dev@bignight.party",
-    }),
+    ...(process.env.NODE_ENV === "development"
+      ? [MailpitProvider()]
+      : [
+          Resend({
+            apiKey: process.env.RESEND_API_KEY,
+            from: process.env.EMAIL_FROM ?? "dev@bignight.party",
+          }),
+        ]),
   ],
   session: {
     strategy: "jwt",
