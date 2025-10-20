@@ -183,6 +183,30 @@ return match(event.status)
 
 All Zod schemas live in `src/schemas/`. Server actions validate inputs using these schemas via next-safe-action.
 
+### 6. Proper Typing (Avoid Type Assertions)
+
+**Never** use `as` for type assertions without validation:
+
+```typescript
+// ❌ BAD
+const title = formData.get("title") as string;
+const year = formData.get("year") as number;
+
+// ✅ GOOD - Validate with Zod
+const validated = schema.parse({
+  title: formData.get("title"),
+  year: formData.get("year"),
+});
+
+// ✅ GOOD - Type guard
+if (typeof value !== "string") throw new Error("Invalid type");
+```
+
+**Why:** Type assertions bypass TypeScript's safety. Use Zod validation or type guards instead. The only acceptable uses of `as` are:
+- `as const` for readonly values
+- After Zod validation when narrowing to subtypes
+- External library types that return `any`
+
 ## Authentication & Authorization
 
 ### Admin Access
@@ -280,13 +304,14 @@ The app uses Socket.io for real-time updates:
 
 1. **Don't hardcode route strings** - Always use routes from `src/lib/routes.ts`
 2. **Don't check auth in pages** - Middleware handles authentication redirects
-3. **Don't import Prisma in services** - Services call models, never Prisma directly
-4. **Don't use switch on discriminated unions** - Always use ts-pattern with .exhaustive()
-5. **Don't put business logic in models** - Models are data access only
-6. **Don't put event handlers in Server Components** - Extract to client components
-7. **Don't call redirect() in inline form actions** - Use standalone server action functions
-8. **Don't skip next-safe-action** - All server actions must use it
-9. **Don't forget ADMIN_EMAILS** - Admin routes won't work without it in .env.local
+3. **Don't use type assertions (`as`)** - Use Zod validation or type guards instead
+4. **Don't import Prisma in services** - Services call models, never Prisma directly
+5. **Don't use switch on discriminated unions** - Always use ts-pattern with .exhaustive()
+6. **Don't put business logic in models** - Models are data access only
+7. **Don't put event handlers in Server Components** - Extract to client components
+8. **Don't call redirect() in inline form actions** - Use standalone server action functions
+9. **Don't skip next-safe-action** - All server actions must use it
+10. **Don't forget ADMIN_EMAILS** - Admin routes won't work without it in .env.local
 
 ## Environment Setup
 
