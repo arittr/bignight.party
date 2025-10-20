@@ -220,7 +220,67 @@ Clients update leaderboard UI
 
 ### Authorization
 
-**Middleware Protection:**
+**Middleware Protection (MANDATORY):**
+
+All authentication redirects MUST happen in middleware (`src/middleware.ts`), NOT in individual pages.
+
+**Why:**
+- Centralized auth logic (single source of truth)
+- Runs before page even loads (faster)
+- No duplication across pages
+- Follows Next.js best practices
+
+**Pattern:**
+```typescript
+// src/middleware.ts
+import { auth } from "@/lib/auth/config";
+import { protectedRoutePrefixes } from "@/lib/routes";
+
+export default auth((req) => {
+  const isAuthenticated = !!req.auth;
+
+  // Check if route requires authentication
+  const isProtectedRoute = protectedRoutePrefixes.some((prefix) =>
+    req.nextUrl.pathname.startsWith(prefix)
+  );
+
+  // Redirect unauthenticated users to sign-in
+  if (!isProtectedRoute && isProtectedRoute) {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
+
+  return NextResponse.next();
+});
+```
+
+**Pages should NOT check auth:**
+```typescript
+// ❌ BAD - Don't do auth checks in pages
+export default async function Page() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/sign-in"); // Middleware should handle this!
+  }
+  // ...
+}
+```
+
+**Exception: Business Logic Checks**
+Pages CAN check authorization for business logic (not authentication):
+```typescript
+// ✅ GOOD - Business logic checks in pages
+export default async function PickWizardPage({ params }) {
+  const session = await auth(); // Already know user is authenticated
+
+  // Check if user is a member of THIS specific game
+  const isMember = await gameParticipantModel.exists(session.user.id, gameId);
+  if (!isMember) {
+    redirect(routes.dashboard()); // Business logic, not auth
+  }
+}
+```
+
+**Role-Based Access Control:**
 - Middleware checks authentication on protected routes
 - Role-based access control (USER vs ADMIN)
 - Server Actions validate user permissions
