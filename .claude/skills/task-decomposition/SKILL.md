@@ -20,9 +20,101 @@ This skill transforms a feature specification into a structured implementation p
 4. Validating task quality
 5. Outputting executable plan.md
 
+## PR-Sized Chunks Philosophy
+
+**Tasks should be PR-sized, thematically coherent units** - not mechanical file-by-file splits.
+
+**Think like a senior engineer:**
+- ❌ "Add schema" + "Install dependency" + "Add routes" (3 tiny tasks)
+- ✅ "Database Foundation" (schema + migration + dependencies as one unit)
+
+**Task chunking principles:**
+
+1. **Thematic Coherence** - Task represents a complete "thing"
+   - Complete subsystem (agent system with tools + config + types)
+   - Complete layer (all service methods for a feature)
+   - Complete feature slice (UI flow from form to preview to confirm)
+
+2. **Natural PR Size** - Reviewable in one sitting (4-7h)
+   - M (3-5h): Sweet spot for most tasks
+   - L (5-7h): Complex but coherent units (full UI layer, complete API surface)
+   - S (1-2h): Rare - only for truly standalone work
+
+3. **Logical Boundaries** - Clear separation points
+   - Layer boundaries (Models, Services, Actions, UI)
+   - Subsystem boundaries (Agent, Import Service, API)
+   - Feature boundaries (Auth, Import, Dashboard)
+
+4. **Stackable** - Dependencies flow cleanly
+   - Database → Logic → API → UI
+   - Foundation → Core → Integration
+
+**Good chunking examples:**
+
+```
+✅ GOOD: PR-sized, thematic chunks
+- Task 1: Database Foundation (M - 4h)
+  - Schema changes + migration + dependency install
+  - One coherent "foundation" PR
+
+- Task 2: Agent System (L - 6h)
+  - Agent config + tools + schemas + types
+  - Complete agent subsystem as a unit
+
+- Task 3: Import Service Layer (M - 4h)
+  - All service methods + business logic
+  - Clean layer boundary
+
+- Task 4: API Surface (L - 6h)
+  - Server actions + SSE route
+  - Complete API interface
+
+- Task 5: Import UI (L - 7h)
+  - All components + page + integration
+  - Complete user-facing feature
+
+Total: 5 tasks, 27h
+Each task is a reviewable PR that adds value
+```
+
+```
+❌ BAD: Too granular, mechanical splits
+- Task 1: Add schema fields (S - 2h)
+- Task 2: Create migration (S - 1h)
+- Task 3: Install dependency (S - 1h)
+- Task 4: Create agent config (M - 3h)
+- Task 5: Create fetch tool (S - 1h)
+- Task 6: Create schemas (S - 2h)
+- Task 7: Create service (M - 4h)
+- Task 8: Create actions (M - 3h)
+- Task 9: Create SSE route (M - 3h)
+- Task 10: Create form component (S - 2h)
+- Task 11: Create progress component (S - 2h)
+- Task 12: Create preview component (M - 2h)
+- Task 13: Add routes (S - 1h)
+- Task 14: Integrate components (S - 1h)
+
+Total: 14 tasks, 28h
+Too many tiny PRs, no coherent units
+```
+
+**Bundling heuristics:**
+
+If you're creating S tasks, ask:
+- Can this bundle with a related M task?
+- Does this complete a subsystem or layer?
+- Would a senior engineer create a separate PR for this?
+
+**Common bundling patterns:**
+- Schema + migration + dependencies → "Database Foundation"
+- Agent + tools + schemas → "Agent System"
+- Service + helper functions → "Service Layer"
+- Actions + API routes → "API Layer"
+- All UI components for a flow → "UI Layer"
+
 ## The Process
 
-### Step 1: Read and Extract Tasks
+### Step 1: Read Spec and Design Chunks
 
 Read the spec file and extract all tasks from the "Implementation Plan" section.
 
@@ -61,26 +153,39 @@ Extract to:
 }
 ```
 
-### Step 2: Validate Task Quality
+### Step 2: Validate Task Quality & Chunking
 
 For each task, check for quality issues:
 
 **CRITICAL (must fix):**
-- ❌ XL complexity (>8h) → Must split into M tasks
+- ❌ XL complexity (>8h) → Must split into M/L tasks
 - ❌ No files specified → Must add explicit file paths
 - ❌ No acceptance criteria → Must add 3-5 testable criteria
 - ❌ Wildcard patterns (`src/**/*.ts`) → Must use explicit paths
+- ❌ Too many S tasks (>30% of total) → Bundle into thematic M/L tasks
 
 **HIGH (strongly recommend):**
-- ⚠️ L complexity (4-8h) → Consider splitting to M
-- ⚠️ >10 files → Likely too large, consider splitting
-- ⚠️ <50 char description → Add more detail
+- ⚠️ Standalone S task that could bundle with related work
+- ⚠️ L complexity (5-8h) → Verify it's a coherent unit, not arbitrary split
+- ⚠️ >10 files → Likely too large, consider splitting by subsystem
+- ⚠️ <50 char description → Add more detail about what subsystem/layer this completes
 - ⚠️ <3 acceptance criteria → Add more specific criteria
+
+**Chunking validation:**
+- If task is S (1-2h), verify it's truly standalone:
+  - Can't be bundled with schema/migration/dependencies?
+  - Can't be bundled with related service/action/component?
+  - Would a senior engineer create a separate PR for this?
+
+- If >50% of tasks are S, that's a red flag:
+  - Likely too granular
+  - Missing thematic coherence
+  - Bundle related S tasks into M tasks
 
 **If CRITICAL issues found:**
 - STOP and report issues to user
-- User must update spec
-- Re-run skill after spec update
+- User must update spec or adjust chunking
+- Re-run skill after fixes
 
 **If only HIGH issues:**
 - Report warnings
@@ -219,11 +324,13 @@ Write plan to `{spec-directory}/plan.md`:
 - [ ] {criterion-2}
 - [ ] {criterion-3}
 
-**Mandatory Patterns** (BigNight.Party):
-- Server actions: Use next-safe-action
-- Discriminated unions: Use ts-pattern with .exhaustive()
-- Layer boundaries: {specific guidance}
-- **TDD**: Follow `test-driven-development` skill (write test first, watch fail, minimal code, watch pass)
+**Mandatory Patterns**:
+
+> **Constitution**: All code must follow @docs/constitutions/current/
+
+See architecture.md for layer boundaries and patterns.md for required patterns.
+
+**TDD**: Follow `test-driven-development` skill (write test first, watch fail, minimal code, watch pass)
 
 **Quality Gates**:
 ```bash
@@ -274,11 +381,25 @@ Execute plan:
 
 ## Quality Rules
 
-**Task Sizing:**
-- ✅ S (1-2h): Simple, focused tasks
-- ✅ M (2-4h): Standard task size (most common)
-- ✅ L (4-8h): Complex tasks (use sparingly)
-- ❌ XL (>8h): NEVER - always split into M tasks
+**Task Sizing (PR-focused):**
+- ⚠️ S (1-2h): Rare - only truly standalone work (e.g., config-only changes)
+  - Most S tasks should bundle into M
+  - Ask: "Would a senior engineer PR this alone?"
+- ✅ M (3-5h): Sweet spot - most tasks should be this size
+  - Complete subsystem, layer, or feature slice
+  - Reviewable in one sitting
+  - Thematically coherent unit
+- ✅ L (5-7h): Complex coherent units (use for major subsystems)
+  - Full UI layer with all components
+  - Complete API surface (actions + routes)
+  - Major feature integration
+- ❌ XL (>8h): NEVER - always split into M/L tasks
+
+**Chunking Standards:**
+- ❌ <30% S tasks is a red flag (too granular)
+- ✅ Most tasks should be M (60-80%)
+- ✅ Some L tasks for major units (10-30%)
+- ✅ Rare S tasks for truly standalone work (<10%)
 
 **File Specificity:**
 - ✅ `src/lib/models/auth.ts`
@@ -352,31 +473,18 @@ This is impossible to execute. Review task organization.
 - `subagent-driven-development` - Executes individual tasks
 - `finishing-a-development-branch` - Completes implementation
 
-## BigNight.Party Specific
+## Project-Specific Configuration
 
-For BigNight.Party projects, enforce these patterns in task validation:
+For projects with a constitution, reference it in every task:
 
-**Layer order dependencies:**
-```
-Database (Prisma schema)
-  ↓
-Models (src/lib/models/)
-  ↓
-Services (src/lib/services/)
-  ↓
-Actions (src/lib/actions/)
-  ↓
-Components (src/components/)
-```
+> **Constitution**: All tasks MUST follow @docs/constitutions/current/
 
-**Mandatory patterns reminder:**
-Every task must include reminders about:
-- next-safe-action for server actions
-- ts-pattern for discriminated unions
-- No Prisma imports outside models layer
+Every task must include:
+- Reference to constitution for architecture (layer boundaries, dependencies)
+- Reference to constitution for patterns (validation, state management, etc.)
+- Quality gates (linting, testing, building)
 
 **Quality gates:**
-Every task must include:
 ```bash
 pnpm biome check --write .
 pnpm test
