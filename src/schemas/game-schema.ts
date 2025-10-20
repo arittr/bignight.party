@@ -37,7 +37,7 @@ export const gameUpdateSchema = z.object({
 });
 
 export const joinGameSchema = z.object({
-  gameId: z.string().cuid(),
+  gameId: z.string().cuid("Invalid game ID"),
 });
 
 export const resolveAccessCodeSchema = z.object({
