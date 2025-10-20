@@ -69,7 +69,11 @@ function getUpstreamOf(branch: string): string | null {
   const upstream = execQuiet(
     `git rev-parse --abbrev-ref --symbolic-full-name "${branch}@{upstream}" 2>/dev/null`
   );
-  return upstream || null;
+  if (!upstream) return null;
+
+  // Strip remote prefix (e.g., "origin/" from "origin/main")
+  const stripped = upstream.replace(/^[^/]+\//, "");
+  return stripped || null;
 }
 
 function buildStackBottomToTop(topBranch: string, trunk: string): Branch[] {
