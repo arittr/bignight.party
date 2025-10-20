@@ -68,3 +68,87 @@ export async function deleteById(id: string) {
     where: { id },
   });
 }
+
+/**
+ * Upsert a pick using the unique constraint (gameId + userId + categoryId)
+ * Creates if doesn't exist, updates if it does
+ */
+export async function upsert(data: {
+  gameId: string;
+  userId: string;
+  categoryId: string;
+  nominationId: string;
+}) {
+  return prisma.pick.upsert({
+    where: {
+      gameId_userId_categoryId: {
+        gameId: data.gameId,
+        userId: data.userId,
+        categoryId: data.categoryId,
+      },
+    },
+    update: {
+      nominationId: data.nominationId,
+    },
+    create: {
+      gameId: data.gameId,
+      userId: data.userId,
+      categoryId: data.categoryId,
+      nominationId: data.nominationId,
+    },
+    include: {
+      category: true,
+      nomination: true,
+    },
+  });
+}
+
+/**
+ * Get all picks for a user in a specific game
+ * Includes category and nomination data for UI display
+ */
+export async function getPicksByGameAndUser(gameId: string, userId: string) {
+  return prisma.pick.findMany({
+    where: {
+      gameId,
+      userId,
+    },
+    include: {
+      category: true,
+      nomination: {
+        include: {
+          work: true,
+          person: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+}
+
+/**
+ * Get count of picks for a user in a game
+ * Returns raw count only - business logic should be in services layer
+ */
+export async function getPicksCountByGameAndUser(gameId: string, userId: string) {
+  return prisma.pick.count({
+    where: {
+      gameId,
+      userId,
+    },
+  });
+}
+
+/**
+ * Delete all picks for a user in a specific game
+ */
+export async function deleteByUserAndGame(gameId: string, userId: string) {
+  return prisma.pick.deleteMany({
+    where: {
+      gameId,
+      userId,
+    },
+  });
+}
