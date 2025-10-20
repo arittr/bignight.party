@@ -9,6 +9,7 @@ This document defines the required patterns and libraries that **must** be used 
 3. **Validated Inputs** - All user inputs validated with Zod
 4. **Clear Boundaries** - Respect layered architecture
 5. **Server/Client Separation** - Explicit boundary between Server and Client Components
+6. **No Type Assertions** - Avoid `as` keyword; use proper typing and validation instead
 
 ---
 
@@ -336,6 +337,187 @@ Add Biome rules to catch Server/Client violations:
 
 ---
 
+## Required Pattern: Centralized Routes
+
+**When:** ANY navigation, redirect, or URL generation
+
+**Why:**
+- Single source of truth for all URLs
+- Type-safe route parameters
+- Easy refactoring (change route in one place)
+- Prevents typos in route strings
+- Makes URL structure explicit and discoverable
+
+### Setup
+
+```typescript
+// src/lib/routes.ts
+export const routes = {
+  home: () => "/",
+  signIn: () => "/sign-in",
+  dashboard: () => "/dashboard",
+
+  game: {
+    pick: (gameId: string, categoryId?: string) =>
+      categoryId ? `/game/${gameId}/pick?category=${categoryId}` : `/game/${gameId}/pick`,
+    leaderboard: (gameId: string) => `/game/${gameId}/leaderboard`,
+  },
+
+  admin: {
+    events: {
+      index: () => "/admin/events",
+      detail: (eventId: string) => `/admin/events/${eventId}`,
+    },
+  },
+} as const;
+```
+
+### Usage in Server Components
+
+```typescript
+// ❌ BAD - hardcoded route string
+import { redirect } from "next/navigation";
+
+export default async function Page() {
+  const session = await auth();
+  if (!session) {
+    redirect("/sign-in"); // Hardcoded!
+  }
+
+  const game = await getGame();
+  if (!game) {
+    redirect("/dashboard"); // Hardcoded!
+  }
+
+  return <div>...</div>;
+}
+```
+
+```typescript
+// ✅ GOOD - centralized routes
+import { redirect } from "next/navigation";
+import { routes } from "@/lib/routes";
+
+export default async function Page() {
+  const session = await auth();
+  if (!session) {
+    redirect(routes.signIn());
+  }
+
+  const game = await getGame();
+  if (!game) {
+    redirect(routes.dashboard());
+  }
+
+  return <div>...</div>;
+}
+```
+
+### Usage in Client Components
+
+```typescript
+// ❌ BAD - hardcoded route string
+"use client";
+import { useRouter } from "next/navigation";
+
+export function GameButton({ gameId }: { gameId: string }) {
+  const router = useRouter();
+
+  return (
+    <button onClick={() => router.push(`/game/${gameId}/pick`)}>
+      Start Picks
+    </button>
+  );
+}
+```
+
+```typescript
+// ✅ GOOD - centralized routes
+"use client";
+import { useRouter } from "next/navigation";
+import { routes } from "@/lib/routes";
+
+export function GameButton({ gameId }: { gameId: string }) {
+  const router = useRouter();
+
+  return (
+    <button onClick={() => router.push(routes.game.pick(gameId))}>
+      Start Picks
+    </button>
+  );
+}
+```
+
+### Usage in Server Actions
+
+```typescript
+// ❌ BAD - hardcoded route string
+export const deleteGameAction = adminAction
+  .schema(z.object({ id: z.string() }))
+  .action(async ({ parsedInput }) => {
+    await gameService.deleteGame(parsedInput.id);
+    redirect("/admin/games");
+  });
+```
+
+```typescript
+// ✅ GOOD - centralized routes
+import { routes } from "@/lib/routes";
+
+export const deleteGameAction = adminAction
+  .schema(z.object({ id: z.string() }))
+  .action(async ({ parsedInput }) => {
+    await gameService.deleteGame(parsedInput.id);
+    redirect(routes.admin.games.index());
+  });
+```
+
+### Usage in Links
+
+```typescript
+// ❌ BAD - hardcoded route string
+<Link href={`/game/${game.id}/pick`}>
+  Make Picks
+</Link>
+```
+
+```typescript
+// ✅ GOOD - centralized routes
+import { routes } from "@/lib/routes";
+
+<Link href={routes.game.pick(game.id)}>
+  Make Picks
+</Link>
+```
+
+### Benefits
+
+- **Refactoring**: Change `/game/[gameId]/pick` to `/games/[id]/picks` in one place
+- **Type Safety**: TypeScript ensures you provide required parameters
+- **Autocomplete**: IDE suggests available routes
+- **No Typos**: Compile error if route doesn't exist
+- **Discoverability**: New developers can explore routes by reading routes.ts
+
+### Migration Guide
+
+**Before:**
+```typescript
+redirect("/game/" + gameId + "/pick");
+router.push(`/admin/events/${eventId}`);
+<Link href={`/dashboard`}>Dashboard</Link>
+```
+
+**After:**
+```typescript
+import { routes } from "@/lib/routes";
+
+redirect(routes.game.pick(gameId));
+router.push(routes.admin.events.detail(eventId));
+<Link href={routes.dashboard()}>Dashboard</Link>
+```
+
+---
+
 ## Required Pattern: next-safe-action
 
 **When:** ALL server actions without exception
@@ -500,7 +682,247 @@ export function getEventMessage(event: Event): string {
 
 ---
 
+## Required Pattern: Proper Typing (No Type Assertions)
+
+**When:** ALL code that handles data
+
+**Why:**
+- Type assertions (`as`) bypass TypeScript's type checking
+- Silent runtime errors when assertions are wrong
+- Masks underlying type issues
+- Validation ensures runtime safety
+- Proper types document expected data shape
+
+### The Rule
+
+**Avoid `as` keyword** - Use proper typing, validation, or type guards instead.
+
+### Pattern: Zod for Runtime Validation
+
+```typescript
+// ❌ BAD - Type assertion without validation
+const formData = new FormData();
+const title = formData.get("title") as string; // Could be null!
+const year = formData.get("year") as number;   // Actually a string!
+
+await updateWork({ title, year });
+```
+
+```typescript
+// ✅ GOOD - Validate with Zod
+import { z } from "zod";
+
+const formDataSchema = z.object({
+  title: z.string().min(1),
+  year: z.coerce.number().int().min(1900),
+});
+
+const rawData = {
+  title: formData.get("title"),
+  year: formData.get("year"),
+};
+
+const validated = formDataSchema.parse(rawData); // Throws if invalid
+await updateWork(validated); // TypeScript knows types are correct
+```
+
+### Pattern: Type Guards
+
+```typescript
+// ❌ BAD - Type assertion
+function processValue(value: unknown) {
+  const str = value as string; // Unsafe!
+  return str.toUpperCase();
+}
+```
+
+```typescript
+// ✅ GOOD - Type guard
+function processValue(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new Error("Expected string");
+  }
+  // TypeScript knows value is string here
+  return value.toUpperCase();
+}
+```
+
+### Pattern: Discriminated Unions with ts-pattern
+
+```typescript
+// ❌ BAD - Type assertion to narrow
+type Result = { success: true; data: string } | { success: false; error: string };
+
+function handleResult(result: Result) {
+  if (result.success) {
+    // TypeScript doesn't narrow automatically with just if
+    const data = (result as { success: true; data: string }).data;
+    return data;
+  }
+}
+```
+
+```typescript
+// ✅ GOOD - ts-pattern automatically narrows
+import { match } from "ts-pattern";
+
+function handleResult(result: Result) {
+  return match(result)
+    .with({ success: true }, ({ data }) => data) // TypeScript knows data exists
+    .with({ success: false }, ({ error }) => {
+      throw new Error(error);
+    })
+    .exhaustive();
+}
+```
+
+### Pattern: Proper Function Return Types
+
+```typescript
+// ❌ BAD - Force type with assertion
+function getUser(id: string) {
+  const user = db.findUser(id); // Could be null
+  return user as User; // Lying to TypeScript!
+}
+```
+
+```typescript
+// ✅ GOOD - Honest return type
+function getUser(id: string): User | null {
+  return db.findUser(id); // Caller handles null case
+}
+
+// Or throw if null not expected
+function getUserOrThrow(id: string): User {
+  const user = db.findUser(id);
+  if (!user) {
+    throw new Error(`User ${id} not found`);
+  }
+  return user; // TypeScript knows it's User
+}
+```
+
+### Pattern: Prisma Generated Types
+
+```typescript
+// ❌ BAD - Recreating types
+async function getGame(id: string) {
+  const game = await prisma.game.findUnique({ where: { id } });
+  return game as { id: string; name: string; status: string }; // Duplication!
+}
+```
+
+```typescript
+// ✅ GOOD - Use Prisma types
+import type { Game } from "@prisma/client";
+
+async function getGame(id: string): Promise<Game | null> {
+  return prisma.game.findUnique({ where: { id } });
+}
+
+// For partial selects
+import type { Prisma } from "@prisma/client";
+
+async function getGameSummary(id: string) {
+  return prisma.game.findUnique({
+    where: { id },
+    select: { id: true, name: true, status: true },
+  });
+}
+
+// Return type is automatically: { id: string; name: string; status: GameStatus } | null
+```
+
+### Pattern: FormData Handling
+
+```typescript
+// ❌ BAD - Direct assertion
+async function handleSubmit(formData: FormData) {
+  "use server";
+
+  const title = formData.get("title") as string;
+  const year = formData.get("year") as string;
+
+  await updateAction({ title, year: Number(year) }); // year could be null!
+}
+```
+
+```typescript
+// ✅ GOOD - Validate before using
+async function handleSubmit(formData: FormData) {
+  "use server";
+
+  const title = formData.get("title");
+  const year = formData.get("year");
+
+  // Let action validate via Zod schema
+  await updateAction({
+    title: title ?? "",
+    year: year ? Number(year) : 0,
+  });
+  // Or validate here with Zod first
+}
+```
+
+### When `as` is Acceptable
+
+There are rare cases where `as` is acceptable:
+
+1. **Type narrowing when you have external guarantees:**
+```typescript
+// Library types that are too narrow
+const response = await fetch(url);
+const data = await response.json() as ApiResponse; // json() returns 'any'
+```
+
+2. **`as const` for readonly values:**
+```typescript
+// ✅ GOOD - as const is fine
+const routes = {
+  home: "/",
+  dashboard: "/dashboard",
+} as const;
+```
+
+3. **When TypeScript type system limitation requires it AND you have validation:**
+```typescript
+// After Zod validation, narrowing to more specific type
+const validated = schema.parse(data);
+const specific = validated as SpecificSubtype; // Only if validated and necessary
+```
+
+**Rule of thumb:** If you're using `as`, ask:
+1. Can I validate this with Zod instead?
+2. Can I use a type guard instead?
+3. Can I fix the source to have proper types?
+4. Am I 100% certain this assertion is safe?
+
+If you can't answer "yes" to #4, don't use `as`.
+
+---
+
 ## Prohibited Patterns
+
+### ❌ NO: Type assertions without validation
+
+```typescript
+// ❌ BAD - Unsafe type assertions
+const title = formData.get("title") as string;
+const user = getUser() as User;
+const data = response.json() as ApiResponse;
+```
+
+```typescript
+// ✅ GOOD - Validate or use type guards
+const title = formData.get("title");
+if (typeof title !== "string") throw new Error("Invalid title");
+
+const user = getUser();
+if (!user) throw new Error("User not found");
+
+const rawData = await response.json();
+const data = apiResponseSchema.parse(rawData);
+```
 
 ### ❌ NO: Switch statements on unions
 
@@ -773,9 +1195,12 @@ When reviewing PRs, verify:
 
 ### Type Safety
 - [ ] No `any` types (Biome enforces this)
-- [ ] No type assertions without validation
+- [ ] No type assertions (`as`) without validation
+- [ ] All `as` usage has clear justification comment
 - [ ] All inputs validated with Zod
 - [ ] All outputs properly typed
+- [ ] Function return types explicitly declared
+- [ ] No hardcoded route strings (use `src/lib/routes.ts`)
 
 ---
 
