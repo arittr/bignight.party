@@ -5,6 +5,9 @@
   "[javascript]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
+  "[shellscript]": {
+    "editor.defaultFormatter": "mkhl.shfmt"
+  },
   "[typescript]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
