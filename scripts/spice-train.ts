@@ -71,9 +71,13 @@ function getUpstreamOf(branch: string): string | null {
   );
   if (!upstream) return null;
 
-  // Strip remote prefix (e.g., "origin/" from "origin/main")
-  const stripped = upstream.replace(/^[^/]+\//, "");
-  return stripped || null;
+  // Strip remote prefix only if it exists (e.g., "origin/main" → "main")
+  // But keep local branch names as-is (e.g., "task-1-1-schema" stays as-is)
+  if (upstream.startsWith("origin/")) {
+    return upstream.replace(/^origin\//, "");
+  }
+
+  return upstream;
 }
 
 function buildStackBottomToTop(topBranch: string, trunk: string): Branch[] {
