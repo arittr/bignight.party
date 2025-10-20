@@ -3,20 +3,21 @@ import { auth } from "@/lib/auth/config";
 import { SignupForm } from "./signup-form";
 
 interface SignupPageProps {
-  searchParams: {
+  searchParams: Promise<{
     code?: string;
-  };
+  }>;
 }
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
   const session = await auth();
+  const params = await searchParams;
 
   // If already authenticated, redirect to dashboard
   // The dashboard or a separate callback handler will handle joining the game
   if (session?.user?.id) {
     // If there's a code, store it in the redirect URL
-    if (searchParams.code) {
-      redirect(`/signup/callback?code=${searchParams.code}`);
+    if (params.code) {
+      redirect(`/signup/callback?code=${params.code}`);
     }
     redirect("/dashboard");
   }
@@ -28,12 +29,12 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
             Join BigNight.Party
           </h2>
-          {searchParams.code ? (
+          {params.code ? (
             <div className="mt-4 rounded-md bg-indigo-50 p-4">
               <p className="text-sm text-indigo-800">
                 You've been invited to join a game! Sign in to continue.
               </p>
-              <p className="mt-1 text-xs text-indigo-600">Access code: {searchParams.code}</p>
+              <p className="mt-1 text-xs text-indigo-600">Access code: {params.code}</p>
             </div>
           ) : (
             <p className="mt-2 text-center text-sm text-gray-600">
@@ -42,7 +43,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
           )}
         </div>
 
-        <SignupForm code={searchParams.code} />
+        <SignupForm code={params.code} />
       </div>
     </div>
   );
