@@ -104,11 +104,42 @@ function buildStackBottomToTop(topBranch: string, trunk: string): Branch[] {
 
 function getPRInfo(branch: string): PRInfo | null {
   try {
-    const json = execQuiet(`gh pr view --head "${branch}" --json number,state,baseRefName`);
+    const json = execQuiet(
+      `gh pr view --head "${branch}" --json number,state,baseRefName 2>/dev/null`
+    );
+    if (!json) return null;
     return JSON.parse(json);
   } catch {
     return null;
   }
+}
+
+function getAllPRInfo(branches: string[]): Map<string, PRInfo | null> {
+  const prMap = new Map<string, PRInfo | null>();
+
+  // Fetch all PRs in one batch query for better performance
+  try {
+    const branchList = branches.map((b) => `head:${b}`).join(" ");
+    const json = execQuiet(`gh pr list --json number,headRefName,state,baseRefName --search "${branchList}"`);
+    if (json) {
+      const prs = JSON.parse(json) as Array<PRInfo & { headRefName: string }>;
+      for (const pr of prs) {
+        prMap.set(pr.headRefName, pr);
+      }
+    }
+  } catch (error) {
+    // Fallback to individual queries if batch fails
+    console.log("  (Batch PR lookup failed, using slower individual queries...)");
+  }
+
+  // Fill in any missing branches with individual queries or null
+  for (const branch of branches) {
+    if (!prMap.has(branch)) {
+      prMap.set(branch, getPRInfo(branch));
+    }
+  }
+
+  return prMap;
 }
 
 async function confirm(message: string): Promise<boolean> {
@@ -215,10 +246,18 @@ function showStackPreview(stack: Branch[], trunk: string): void {
   console.log("════════════════════════════════════════════════════════════════════════════");
   console.log(`  Stack Preview (${stack.length} branches, bottom → top → ${trunk})`);
   console.log("════════════════════════════════════════════════════════════════════════════");
+  console.log("");
+  console.log("  Fetching PR information...");
+
+  // Batch fetch all PR info for better performance
+  const branchNames = stack.map((b) => b.name);
+  const prInfoMap = getAllPRInfo(branchNames);
+
+  console.log("");
 
   for (let i = 0; i < stack.length; i++) {
     const { name, parent } = stack[i];
-    const prInfo = getPRInfo(name);
+    const prInfo = prInfoMap.get(name);
 
     console.log(`  ${i + 1}. ${name} → ${parent}`);
 
