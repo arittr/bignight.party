@@ -20,7 +20,7 @@ Use the `task-decomposition` skill to analyze the spec and create a plan.
 
 **What the skill does:**
 1. Reads the spec and extracts tasks from "Implementation Plan" section
-2. Validates task quality (no XL tasks, explicit files, acceptance criteria)
+2. Validates task quality (no XL tasks, explicit files, acceptance criteria, proper chunking)
 3. Analyzes file dependencies between tasks
 4. Groups tasks into phases (sequential or parallel)
 5. Calculates execution time estimates with parallelization savings
@@ -31,6 +31,13 @@ Use the `task-decomposition` skill to analyze the spec and create a plan.
 - ❌ Missing files → Must specify exact paths
 - ❌ Missing acceptance criteria → Must add 3-5 criteria
 - ❌ Wildcard patterns (`src/**/*.ts`) → Must be explicit
+- ❌ Too many S tasks (>30%) → Bundle into thematic M/L tasks
+
+**Chunking Philosophy:**
+Tasks should be PR-sized, thematically coherent units - not mechanical file splits.
+- M (3-5h): Sweet spot - complete subsystem/layer/slice
+- L (5-7h): Major units - full UI layer, complete API surface
+- S (1-2h): Rare - only truly standalone work
 
 **If validation fails:**
 The skill will report issues and STOP. User must fix spec and re-run `/plan`.
@@ -118,20 +125,23 @@ If the skill finds quality issues:
 The spec has issues that prevent task decomposition:
 
 **CRITICAL Issues** (must fix):
-- Task 3: XL complexity (12h estimated) - split into M tasks
+- Task 3: XL complexity (12h estimated) - split into M/L tasks
 - Task 5: No files specified - add explicit file paths
 - Task 7: No acceptance criteria - add 3-5 testable criteria
+- Too many S tasks (5 of 8 = 63%) - bundle into thematic M/L tasks
 
 **HIGH Issues** (strongly recommend):
-- Task 2: L complexity (6h) - consider splitting to M tasks
-- Task 4: Wildcard pattern `src/**/*.ts` - specify exact files
+- Task 2 (S - 1h): "Add routes" - bundle with UI components task
+- Task 4 (S - 2h): "Create schemas" - bundle with agent or service task
+- Task 6: Wildcard pattern `src/**/*.ts` - specify exact files
 
 ## Fix These Issues
 
 1. Edit the spec at {spec-path}
 2. Address all CRITICAL issues (required)
 3. Consider fixing HIGH issues (recommended)
-4. Re-run: `/plan @{spec-path}`
+4. Bundle S tasks into thematic M/L tasks for better PR structure
+5. Re-run: `/plan @{spec-path}`
 ```
 
 ### No Tasks Found
@@ -179,8 +189,7 @@ Review the task file dependencies in the spec:
 
 - **Automatic strategy selection** - Skill analyzes dependencies and chooses sequential vs parallel
 - **File-based dependencies** - Tasks sharing files must run sequentially
-- **Layer-based dependencies** - Database → Models → Services → Actions → UI
 - **Quality gates** - Validates before generating (prevents bad plans)
-- **BigNight.Party patterns** - Enforces next-safe-action, ts-pattern, layer boundaries
+- **Architecture adherence** - All tasks must follow project constitution at @docs/constitutions/current/
 
 Now generate the plan from: {spec-path}

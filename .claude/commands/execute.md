@@ -118,7 +118,7 @@ For phases where tasks must run in order:
    3. Implement according to:
       - Files specified in task
       - Acceptance criteria in task
-      - BigNight.Party mandatory patterns (see @docs/constitutions/current/)
+      - Project constitution (see @docs/constitutions/current/)
 
    4. Quality checks (MUST run all):
    ```bash
@@ -274,15 +274,9 @@ For phases where tasks are independent:
    2. Implement according to:
       - Files specified in task
       - Acceptance criteria in task
-      - BigNight.Party mandatory patterns (see @docs/constitutions/current/)
+      - Project constitution (see @docs/constitutions/current/)
 
-   3. Follow mandatory patterns:
-      - Server actions: Use next-safe-action ONLY
-      - Discriminated unions: Use ts-pattern with .exhaustive()
-      - Layer boundaries: Models (Prisma) → Services → Actions
-      - No Prisma imports outside models layer
-
-   4. Quality checks (MUST run all):
+   3. Quality checks (MUST run all):
    ```bash
    pnpm format
    pnpm lint
@@ -648,7 +642,7 @@ After fixing, re-run `/execute`
 - **Worktree isolation** - Parallel tasks run in separate worktrees (per using-git-worktrees skill)
 - **Critical: HEAD detachment** - Parallel task subagents MUST detach HEAD after creating branches to make them accessible in parent repo
 - **Context management** - Each task runs in isolated subagent to avoid token bloat
-- **Mandatory patterns** - All agents enforce BigNight.Party patterns
+- **Constitution adherence** - All agents follow project constitution (@docs/constitutions/current/)
 - **Quality gates** - Tests and linting after every task, code review after every phase
 - **Continuous commits** - Small, focused commits with [Task X.Y] markers throughout
 

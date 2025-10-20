@@ -91,17 +91,17 @@ Do NOT use for:
 ## Acceptance Criteria
 
 **Constitution compliance:**
-- [ ] Server actions use next-safe-action (@docs/constitutions/current/patterns.md)
-- [ ] Discriminated unions use ts-pattern with .exhaustive()
-- [ ] Layer boundaries respected (no Prisma outside models/)
-- [ ] All inputs validated with Zod
+- [ ] All patterns followed (@docs/constitutions/current/patterns.md)
+- [ ] Architecture boundaries respected (@docs/constitutions/current/architecture.md)
+- [ ] Testing requirements met (@docs/constitutions/current/testing.md)
 
 **Feature-specific:**
 - [ ] {criterion for this feature}
 - [ ] {criterion for this feature}
+- [ ] {criterion for this feature}
 
 **Verification:**
-- [ ] Tests pass (TDD per @docs/constitutions/current/testing.md)
+- [ ] All tests pass
 - [ ] Linting passes
 - [ ] Feature works end-to-end
 
