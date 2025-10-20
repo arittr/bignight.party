@@ -36,5 +36,15 @@ export const gameUpdateSchema = z.object({
   status: z.nativeEnum(GameStatus).optional(),
 });
 
+export const joinGameSchema = z.object({
+  gameId: z.string().cuid(),
+});
+
+export const resolveAccessCodeSchema = z.object({
+  accessCode: z.string().regex(/^[A-Z0-9]+$/, "Access code must be uppercase alphanumeric"),
+});
+
 export type GameCreateInput = z.infer<typeof gameCreateSchema>;
 export type GameUpdateInput = z.infer<typeof gameUpdateSchema>;
+export type JoinGameInput = z.infer<typeof joinGameSchema>;
+export type ResolveAccessCodeInput = z.infer<typeof resolveAccessCodeSchema>;
