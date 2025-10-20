@@ -57,3 +57,6 @@ export async function deleteById(id: string) {
     where: { id },
   });
 }
+
+// Alias for consistency with naming conventions in user-pick-wizard feature
+export const getNominationsByCategoryId = findByCategoryId;
