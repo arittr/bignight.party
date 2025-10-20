@@ -120,7 +120,9 @@ function getAllPRInfo(branches: string[]): Map<string, PRInfo | null> {
   // Fetch all PRs in one batch query for better performance
   try {
     const branchList = branches.map((b) => `head:${b}`).join(" ");
-    const json = execQuiet(`gh pr list --json number,headRefName,state,baseRefName --search "${branchList}"`);
+    const json = execQuiet(
+      `gh pr list --json number,headRefName,state,baseRefName --search "${branchList}"`
+    );
     if (json) {
       const prs = JSON.parse(json) as Array<PRInfo & { headRefName: string }>;
       for (const pr of prs) {
