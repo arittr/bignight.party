@@ -110,7 +110,43 @@ async function handleDelete() {
 
 ## Mandatory Patterns
 
-### 1. next-safe-action for ALL Server Actions
+### 1. Centralized Routes for ALL Navigation
+
+**Never** hardcode route strings. Always use `src/lib/routes.ts`:
+
+```typescript
+// ❌ BAD
+redirect("/game/" + gameId + "/pick");
+router.push(`/admin/events/${eventId}`);
+
+// ✅ GOOD
+import { routes } from "@/lib/routes";
+redirect(routes.game.pick(gameId));
+router.push(routes.admin.events.detail(eventId));
+```
+
+**Why:** Single source of truth, type-safe parameters, easy refactoring, no typos.
+
+### 2. Middleware Auth for ALL Protected Routes
+
+**Never** check authentication in pages. Always use middleware (`src/middleware.ts`):
+
+```typescript
+// ❌ BAD - Don't do this in pages
+const session = await auth();
+if (!session?.user?.id) {
+  redirect("/sign-in");
+}
+
+// ✅ GOOD - Middleware handles this automatically
+// Pages can trust user is authenticated if middleware allows access
+```
+
+**Exception:** Pages CAN check business logic authorization (e.g., "is user a member of this game?"), but NOT authentication (e.g., "is user logged in?").
+
+**Why:** Centralized logic, runs before page loads (faster), no duplication.
+
+### 3. next-safe-action for ALL Server Actions
 
 ```typescript
 // src/lib/actions/safe-action.ts
@@ -128,7 +164,7 @@ export const submitPickAction = authenticatedAction
 
 **Never** create raw server actions without validation. All actions must use next-safe-action with Zod schemas.
 
-### 2. ts-pattern for ALL Discriminated Unions
+### 4. ts-pattern for ALL Discriminated Unions
 
 ```typescript
 import { match } from 'ts-pattern'
@@ -143,7 +179,7 @@ return match(event.status)
 
 **Never** use switch statements on discriminated unions. Always use ts-pattern with `.exhaustive()` to ensure all cases are handled.
 
-### 3. Zod Schemas for All Inputs
+### 5. Zod Schemas for All Inputs
 
 All Zod schemas live in `src/schemas/`. Server actions validate inputs using these schemas via next-safe-action.
 
@@ -242,13 +278,15 @@ The app uses Socket.io for real-time updates:
 
 ## Common Pitfalls
 
-1. **Don't import Prisma in services** - Services call models, never Prisma directly
-2. **Don't use switch on discriminated unions** - Always use ts-pattern with .exhaustive()
-3. **Don't put business logic in models** - Models are data access only
-4. **Don't put event handlers in Server Components** - Extract to client components
-5. **Don't call redirect() in inline form actions** - Use standalone server action functions
-6. **Don't skip next-safe-action** - All server actions must use it
-7. **Don't forget ADMIN_EMAILS** - Admin routes won't work without it in .env.local
+1. **Don't hardcode route strings** - Always use routes from `src/lib/routes.ts`
+2. **Don't check auth in pages** - Middleware handles authentication redirects
+3. **Don't import Prisma in services** - Services call models, never Prisma directly
+4. **Don't use switch on discriminated unions** - Always use ts-pattern with .exhaustive()
+5. **Don't put business logic in models** - Models are data access only
+6. **Don't put event handlers in Server Components** - Extract to client components
+7. **Don't call redirect() in inline form actions** - Use standalone server action functions
+8. **Don't skip next-safe-action** - All server actions must use it
+9. **Don't forget ADMIN_EMAILS** - Admin routes won't work without it in .env.local
 
 ## Environment Setup
 
@@ -271,7 +309,8 @@ ADMIN_EMAILS=your-email@example.com
 
 - `docs/constitutions/current/` - Architecture patterns and mandatory practices
 - `prisma/schema.prisma` - Database schema
+- `src/lib/routes.ts` - Centralized route definitions (use for ALL navigation)
 - `src/lib/actions/safe-action.ts` - Server action client setup
 - `src/lib/auth/config.ts` - Auth.js configuration with admin role assignment
-- `src/middleware.ts` - Route protection
+- `src/middleware.ts` - Route protection and authentication
 - `.claude/commands/` - Custom slash command definitions
