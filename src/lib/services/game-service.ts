@@ -1,6 +1,9 @@
 import type { GameStatus, Prisma } from "@prisma/client";
 import { match } from "ts-pattern";
 import * as gameModel from "@/lib/models/game";
+import * as gameParticipantModel from "@/lib/models/game-participant";
+import * as pickModel from "@/lib/models/pick";
+import * as categoryModel from "@/lib/models/category";
 
 /**
  * Create a new game
@@ -72,4 +75,75 @@ export async function updateGameStatus(
 
   // Update the game status
   return gameModel.update(id, { status: newStatus });
+}
+
+/**
+ * Join a game as a participant
+ * Validates that the game exists before creating membership
+ */
+export async function joinGame(userId: string, gameId: string) {
+  // Validate game exists
+  const game = await gameModel.findById(gameId);
+
+  if (!game) {
+    throw new Error(`Game with id ${gameId} not found`);
+  }
+
+  // Create participant record
+  return gameParticipantModel.create({ userId, gameId });
+}
+
+/**
+ * Check if a user is a member of a game
+ */
+export async function checkMembership(userId: string, gameId: string): Promise<boolean> {
+  return gameParticipantModel.exists(userId, gameId);
+}
+
+/**
+ * Get all games for a user with completion counts
+ * Returns games with picks count vs total categories
+ */
+export async function getUserGames(userId: string) {
+  const participants = await gameParticipantModel.findByUserId(userId);
+
+  // Build results with completion counts
+  const gamesWithCompletion = await Promise.all(
+    participants.map(async (participant) => {
+      const picksCount = await pickModel.getPicksCountByGameAndUser(participant.gameId, userId);
+      const categories = await categoryModel.getCategoriesByEventId(participant.game.eventId);
+
+      return {
+        game: participant.game,
+        picksCount,
+        totalCategories: categories.length,
+      };
+    })
+  );
+
+  return gamesWithCompletion;
+}
+
+/**
+ * Resolve access code to gameId and check membership status
+ * Returns { gameId, isMember } object
+ */
+export async function resolveAccessCode(
+  code: string,
+  userId: string
+): Promise<{ gameId: string; isMember: boolean }> {
+  // Find game by access code
+  const game = await gameModel.findByAccessCode(code);
+
+  if (!game) {
+    throw new Error(`Game with access code ${code} not found`);
+  }
+
+  // Check if user is already a member
+  const isMember = await gameParticipantModel.exists(userId, game.id);
+
+  return {
+    gameId: game.id,
+    isMember,
+  };
 }
