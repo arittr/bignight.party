@@ -40,6 +40,7 @@
     "dev:debug": "NODE_OPTIONS='--inspect' next dev --turbopack",
     "format": "biome format --write",
     "lint": "pnpm check-types && pnpm format",
+    "merge-train": "tsx scripts/spice-train.ts",
     "prepare": "husky",
     "stack:down": "docker compose down",
     "stack:restart": "docker compose restart",
