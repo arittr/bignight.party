@@ -2,8 +2,8 @@ import type { GameStatus } from "@prisma/client";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { match } from "ts-pattern";
-import { ConfirmDeleteButton } from "@/app/(admin)/admin/_components/confirm-delete-button";
 import { deleteGameAction, updateGameAction } from "@/lib/actions/admin-actions";
+import { requireValidatedSession } from "@/lib/auth/config";
 import * as eventModel from "@/lib/models/event";
 import * as gameModel from "@/lib/models/game";
 
@@ -12,6 +12,8 @@ interface GameDetailPageProps {
 }
 
 export default async function GameDetailPage({ params }: GameDetailPageProps) {
+  await requireValidatedSession();
+
   const { id } = await params;
   const game = await gameModel.findById(id);
 
@@ -57,12 +59,14 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
 
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Game Details</h1>
-        <ConfirmDeleteButton
-          buttonText="Delete Game"
-          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-          confirmMessage="Are you sure you want to delete this game? This will also delete all associated picks."
-          onDelete={handleDeleteGame}
-        />
+        <form action={handleDeleteGame}>
+          <button
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            type="submit"
+          >
+            Delete Game
+          </button>
+        </form>
       </div>
 
       {/* Game Stats */}
