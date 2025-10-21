@@ -4,26 +4,26 @@
  */
 
 export type ParsedNomination = {
-	personName?: string;
-	personWikipediaSlug?: string;
-	personImageUrl?: string;
-	workTitle?: string;
-	workWikipediaSlug?: string;
-	workImageUrl?: string;
-	workYear?: number;
-	isWinner?: boolean;
+  personName?: string;
+  personWikipediaSlug?: string;
+  personImageUrl?: string;
+  workTitle?: string;
+  workWikipediaSlug?: string;
+  workImageUrl?: string;
+  workYear?: number;
+  isWinner?: boolean;
 };
 
 export type ParsedCategory = {
-	name: string;
-	pointValue: number;
-	nominations: ParsedNomination[];
+  name: string;
+  pointValue: number;
+  nominations: ParsedNomination[];
 };
 
 export type ParsedEvent = {
-	name: string;
-	date: Date;
-	slug: string;
-	description?: string;
-	categories: ParsedCategory[];
+  name: string;
+  date: Date;
+  slug: string;
+  description?: string;
+  categories: ParsedCategory[];
 };
