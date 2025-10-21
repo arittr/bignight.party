@@ -213,10 +213,80 @@ Clients update leaderboard UI
 ## Security Architecture
 
 ### Authentication
+
+**Magic Link Authentication:**
 - Magic links expire after 10 minutes
 - Session tokens stored in HTTP-only cookies
 - CSRF protection on all mutations
 - Auth.js v5 handles session management
+- JWT session strategy (required for Edge compatibility)
+
+**Edge Runtime Constraints:**
+
+Next.js middleware ALWAYS runs in Edge runtime, which has important limitations:
+- Cannot use standard Prisma client (requires TCP sockets)
+- Cannot modify cookies in Server Components
+- Cannot run database queries directly
+
+**Solution Pattern:**
+```typescript
+// Middleware (Edge runtime) - JWT validation only
+export default auth((req) => {
+  const isAuthenticated = !!req.auth; // JWT signature check only
+  // Cannot query database here!
+});
+
+// Layouts/Pages (Node.js runtime) - Full validation
+import { requireValidatedSession } from "@/lib/auth/config";
+
+export default async function ProtectedPage() {
+  // Validates JWT + checks user exists in database
+  const session = await requireValidatedSession();
+  // If we get here, user is authenticated and exists in DB
+}
+```
+
+**Stale JWT Protection:**
+
+Problem: User deleted from database but JWT still valid → redirect loop
+
+Solution: `requireValidatedSession()` helper:
+```typescript
+// src/lib/auth/config.ts
+export async function requireValidatedSession() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect("/sign-in");
+  }
+
+  // Validate user still exists in database
+  const userExists = await userModel.exists(session.user.id);
+
+  if (!userExists) {
+    // Redirect to signout to clear JWT, then to sign-in
+    redirect("/api/auth/signout?callbackUrl=/sign-in");
+  }
+
+  return session;
+}
+```
+
+**Why this works:**
+1. Middleware validates JWT signature (fast, edge-compatible)
+2. Layout/page validates user exists (Node.js runtime, can query DB)
+3. If user deleted, redirects to `/api/auth/signout` to clear JWT
+4. Prevents redirect loop (middleware won't see stale JWT after signout)
+
+**Usage:**
+```typescript
+// ✅ GOOD - Use in Server Components (layouts/pages)
+const session = await requireValidatedSession();
+
+// ❌ BAD - Don't use raw auth() in protected routes
+const session = await auth();
+if (!session) redirect("/sign-in"); // Missing DB validation!
+```
 
 ### Authorization
 
@@ -253,24 +323,33 @@ export default auth((req) => {
 });
 ```
 
-**Pages should NOT check auth:**
+**Pages MUST use requireValidatedSession():**
 ```typescript
-// ❌ BAD - Don't do auth checks in pages
+// ✅ GOOD - Full validation (JWT + DB check)
+import { requireValidatedSession } from "@/lib/auth/config";
+
 export default async function Page() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/sign-in"); // Middleware should handle this!
-  }
-  // ...
+  const session = await requireValidatedSession();
+  // If we get here, user is authenticated AND exists in DB
 }
 ```
 
-**Exception: Business Logic Checks**
-Pages CAN check authorization for business logic (not authentication):
 ```typescript
-// ✅ GOOD - Business logic checks in pages
+// ❌ BAD - Missing database validation
+const session = await auth();
+if (!session?.user?.id) {
+  redirect("/sign-in"); // Missing DB check! Stale JWTs can pass!
+}
+```
+
+**Business Logic Authorization:**
+After authentication, check business-specific permissions:
+```typescript
+// ✅ GOOD - Business logic checks after authentication
+import { requireValidatedSession } from "@/lib/auth/config";
+
 export default async function PickWizardPage({ params }) {
-  const session = await auth(); // Already know user is authenticated
+  const session = await requireValidatedSession(); // Auth + DB check
 
   // Check if user is a member of THIS specific game
   const isMember = await gameParticipantModel.exists(session.user.id, gameId);
@@ -320,11 +399,13 @@ ADMIN_EMAILS=admin@example.com,other-admin@example.com
 
 **Layout Protection:**
 ```typescript
-// src/app/(admin)/layout.tsx
-export default async function AdminLayout({ children }) {
-  const session = await auth();
+// src/app/(admin)/admin/layout.tsx
+import { requireValidatedSession } from "@/lib/auth/config";
 
-  if (!session?.user || session.user.role !== 'ADMIN') {
+export default async function AdminLayout({ children }) {
+  const session = await requireValidatedSession(); // Auth + DB check
+
+  if (session.user.role !== 'ADMIN') {
     redirect('/');
   }
 
@@ -430,6 +511,7 @@ Before merging, verify:
 - [ ] No `any` types anywhere
 - [ ] Services don't import `next/*`
 - [ ] Models contain no business logic
+- [ ] Protected pages use `requireValidatedSession()` not raw `auth()`
 
 ### Prohibited Violations
 

@@ -337,6 +337,241 @@ Add Biome rules to catch Server/Client violations:
 
 ---
 
+## Required Pattern: Session Validation with requireValidatedSession()
+
+**When:** ANY protected Server Component (layout or page) that requires authentication
+
+**Why:**
+- Edge runtime constraints: Middleware can't query database (Prisma requires TCP)
+- Stale JWT protection: User deleted from DB but JWT still valid
+- Prevents redirect loops: Clears JWT when user doesn't exist
+- Single responsibility: Middleware validates JWT, pages validate user exists
+
+### The Problem
+
+Next.js middleware ALWAYS runs in Edge runtime, which cannot:
+- Use standard Prisma client (requires TCP sockets)
+- Query the database to check if user exists
+- Modify cookies in Server Components
+
+This creates a vulnerability: User deleted from database → JWT still valid → can access protected routes
+
+### The Solution
+
+**Two-layer validation:**
+1. **Middleware (Edge)**: Validates JWT signature only
+2. **Layout/Page (Node.js)**: Validates JWT + user exists in database
+
+```typescript
+// src/lib/auth/config.ts
+import * as userModel from "@/lib/models/user";
+
+export async function requireValidatedSession() {
+  const session = await auth();
+
+  // No session - redirect to sign in
+  if (!session?.user?.id) {
+    redirect("/sign-in");
+  }
+
+  // Validate user still exists in database
+  const userExists = await userModel.exists(session.user.id);
+
+  if (!userExists) {
+    // User deleted - redirect to signout to clear JWT
+    redirect("/api/auth/signout?callbackUrl=/sign-in");
+  }
+
+  return session;
+}
+```
+
+**Why redirect to `/api/auth/signout`:**
+- Route handlers can modify cookies (Server Components cannot)
+- Clears JWT cookie before redirecting to sign-in
+- Prevents redirect loop (middleware won't see stale JWT)
+
+### Usage in Protected Routes
+
+**✅ GOOD - Layouts:**
+```typescript
+// src/app/(admin)/admin/layout.tsx
+import { requireValidatedSession } from "@/lib/auth/config";
+
+export default async function AdminLayout({ children }) {
+  const session = await requireValidatedSession();
+
+  if (session.user.role !== 'ADMIN') {
+    redirect('/');
+  }
+
+  return <div>{children}</div>;
+}
+```
+
+**✅ GOOD - Pages:**
+```typescript
+// src/app/dashboard/page.tsx
+import { requireValidatedSession } from "@/lib/auth/config";
+
+export default async function DashboardPage() {
+  const session = await requireValidatedSession();
+  const games = await gameService.getUserGames(session.user.id);
+  return <div>{/* ... */}</div>;
+}
+```
+
+**❌ BAD - Missing database validation:**
+```typescript
+// ❌ Don't use raw auth() in protected routes
+const session = await auth();
+if (!session?.user?.id) {
+  redirect("/sign-in"); // Missing DB check! Stale JWTs can pass!
+}
+```
+
+### Business Logic Authorization
+
+After authentication, add business-specific permission checks:
+
+```typescript
+// ✅ GOOD - Auth + business logic
+import { requireValidatedSession } from "@/lib/auth/config";
+
+export default async function PickWizardPage({ params }) {
+  const session = await requireValidatedSession(); // Auth + DB check
+
+  // Business logic: Check if user is member of THIS game
+  const isMember = await gameParticipantModel.exists(
+    session.user.id,
+    params.gameId
+  );
+
+  if (!isMember) {
+    redirect(routes.dashboard()); // Business authorization, not auth
+  }
+
+  // User is authenticated AND authorized
+  const picks = await pickModel.getPicksByUser(session.user.id);
+  return <PickWizard picks={picks} />;
+}
+```
+
+### User Model
+
+Create `src/lib/models/user.ts` for efficient existence checks:
+
+```typescript
+// src/lib/models/user.ts
+import prisma from "@/lib/db/prisma";
+
+export async function exists(id: string) {
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true }, // Minimal select for performance
+  });
+  return user !== null;
+}
+
+export async function findById(id: string) {
+  return prisma.user.findUnique({ where: { id } });
+}
+```
+
+**Performance consideration:**
+- Extra DB query on every protected page load
+- Mitigated by: Primary key lookup (indexed), minimal select
+- Security benefit > marginal performance cost
+- Query is only in Node.js runtime (not Edge)
+
+### Migration from auth()
+
+**Find all usages:**
+```bash
+grep -r "const session = await auth()" src/app
+```
+
+**Replace pattern:**
+```diff
+- import { auth } from "@/lib/auth/config";
++ import { requireValidatedSession } from "@/lib/auth/config";
+
+  export default async function ProtectedPage() {
+-   const session = await auth();
+-   if (!session?.user?.id) {
+-     redirect("/sign-in");
+-   }
++   const session = await requireValidatedSession();
+    // If we get here, user is authenticated AND exists in DB
+  }
+```
+
+### When NOT to use requireValidatedSession()
+
+**Public pages** - Don't need authentication:
+```typescript
+// ✅ Public page - no auth needed
+export default async function HomePage() {
+  return <div>Welcome to BigNight.Party!</div>;
+}
+```
+
+**Optional authentication** - Show different UI based on auth:
+```typescript
+// ✅ Optional auth - use getValidatedSession()
+import { getValidatedSession } from "@/lib/auth/config";
+
+export default async function HomePage() {
+  const session = await getValidatedSession(); // Returns null if not logged in
+
+  return (
+    <div>
+      {session ? (
+        <p>Welcome back, {session.user.email}</p>
+      ) : (
+        <p>Welcome! Please sign in.</p>
+      )}
+    </div>
+  );
+}
+```
+
+### Common Mistakes
+
+**❌ Using auth() in middleware:**
+```typescript
+// ❌ BAD - Can't query DB in middleware
+export default auth(async (req) => {
+  const session = req.auth;
+  const userExists = await userModel.exists(session.user.id); // ERROR!
+  // Middleware runs in Edge runtime - no Prisma!
+});
+```
+
+**❌ Calling signOut() in Server Components:**
+```typescript
+// ❌ BAD - Can't modify cookies in Server Components
+export async function requireValidatedSession() {
+  // ...
+  if (!userExists) {
+    await signOut(); // ERROR! Server Components can't modify cookies
+  }
+}
+```
+
+**✅ GOOD - Redirect to signout route handler:**
+```typescript
+// ✅ GOOD - Route handler can modify cookies
+export async function requireValidatedSession() {
+  // ...
+  if (!userExists) {
+    redirect("/api/auth/signout?callbackUrl=/sign-in"); // ✅
+  }
+}
+```
+
+---
+
 ## Required Pattern: Centralized Routes
 
 **When:** ANY navigation, redirect, or URL generation
