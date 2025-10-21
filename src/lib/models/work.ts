@@ -51,3 +51,17 @@ export async function deleteById(id: string) {
     where: { id },
   });
 }
+
+export async function findOrCreateByWikipediaSlug(data: {
+  wikipediaSlug: string;
+  title: string;
+  type: WorkType;
+  imageUrl?: string;
+  year?: number;
+}) {
+  return await prisma.work.upsert({
+    where: { wikipediaSlug: data.wikipediaSlug },
+    update: {},
+    create: data,
+  });
+}
