@@ -1,8 +1,8 @@
 import { WorkType } from "@prisma/client";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ConfirmDeleteButton } from "@/app/(admin)/admin/_components/confirm-delete-button";
 import { deleteWorkAction, updateWorkAction } from "@/lib/actions/admin-actions";
+import { requireValidatedSession } from "@/lib/auth/config";
 import * as workModel from "@/lib/models/work";
 
 interface WorkDetailPageProps {
@@ -12,6 +12,8 @@ interface WorkDetailPageProps {
 }
 
 export default async function WorkDetailPage(props: WorkDetailPageProps) {
+  await requireValidatedSession();
+
   const params = await props.params;
   const work = await workModel.findById(params.id);
 
@@ -212,12 +214,14 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
                 </p>
               </div>
             ) : (
-              <ConfirmDeleteButton
-                buttonText="Delete Work"
-                className="w-full px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                confirmMessage="Are you sure you want to delete this work?"
-                onDelete={handleDelete}
-              />
+              <form action={handleDelete}>
+                <button
+                  className="w-full px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                  type="submit"
+                >
+                  Delete Work
+                </button>
+              </form>
             )}
           </div>
         </div>
