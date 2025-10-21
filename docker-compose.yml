@@ -12,6 +12,19 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  postgres_test:
+    image: postgres:15
+    container_name: bignight_test
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bignight_test
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   mailpit:
     image: axllent/mailpit
     container_name: mailpit
@@ -29,3 +42,4 @@ services:
 
 volumes:
   postgres_data:
+  postgres_test_data:
