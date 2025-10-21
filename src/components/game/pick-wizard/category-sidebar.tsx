@@ -53,7 +53,9 @@ export function CategorySidebar({
             return (
               <Button
                 className={`w-full justify-between ${
-                  isCurrent ? "" : "text-gray-900 hover:text-gray-900"
+                  isCurrent
+                    ? "bg-gray-900 text-white hover:bg-gray-800"
+                    : "text-gray-900 hover:text-gray-900"
                 }`}
                 key={category.id}
                 onClick={() => onCategorySelect(category.id)}
