@@ -63,9 +63,9 @@ export function EventList({
       render: (event) => (
         <div className="text-sm">
           {new Date(event.eventDate).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
             day: "numeric",
+            month: "short",
+            year: "numeric",
           })}
         </div>
       ),
