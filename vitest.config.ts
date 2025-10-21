@@ -8,10 +8,12 @@ export default defineConfig({
     environment: "happy-dom",
     setupFiles: ["./tests/setup/database.ts"],
     globals: true,
+    fileParallelism: false,
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      tests: path.resolve(__dirname, "./tests"),
     },
   },
 });
