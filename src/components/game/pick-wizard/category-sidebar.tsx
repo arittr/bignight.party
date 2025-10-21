@@ -9,7 +9,7 @@ interface CategorySidebarProps {
   categories: Array<{
     id: string;
     name: string;
-    pointValue: number;
+    points: number;
   }>;
   currentCategoryId: string;
   completedCategoryIds: Set<string>;
@@ -62,7 +62,7 @@ export function CategorySidebar({
                   {isCompleted && <Check className="h-4 w-4 text-green-600" />}
                   <span className="truncate">{category.name}</span>
                 </span>
-                <span className="text-xs text-gray-500">{category.pointValue}pts</span>
+                <span className="text-xs text-gray-500">{category.points}pts</span>
               </Button>
             );
           })}
