@@ -18,6 +18,33 @@ export async function findAll() {
   });
 }
 
+/**
+ * Find all people with aggregated counts for admin list display
+ * Returns nominations with workId to calculate distinct works count
+ */
+export async function findAllWithCounts() {
+  return prisma.person.findMany({
+    orderBy: {
+      name: "asc",
+    },
+    select: {
+      _count: {
+        select: {
+          nominations: true,
+        },
+      },
+      id: true,
+      imageUrl: true,
+      name: true,
+      nominations: {
+        select: {
+          workId: true,
+        },
+      },
+    },
+  });
+}
+
 export async function findById(id: string) {
   return prisma.person.findUnique({
     include: {
