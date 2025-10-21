@@ -1,9 +1,10 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { routes } from "@/lib/routes";
 
 interface CategorySidebarProps {
   categories: Array<{
@@ -34,7 +35,7 @@ export function CategorySidebar({
   onCategorySelect,
 }: CategorySidebarProps) {
   return (
-    <div className="h-full border-r bg-gray-50 p-4">
+    <div className="h-full border-r bg-gray-50 p-4 flex flex-col">
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
         <p className="text-sm text-gray-900">
@@ -44,7 +45,7 @@ export function CategorySidebar({
 
       <Separator className="mb-4" />
 
-      <ScrollArea className="h-[calc(100%-5rem)]">
+      <ScrollArea className="flex-1 mb-4">
         <div className="space-y-2">
           {categories.map((category) => {
             const isCompleted = completedCategoryIds.has(category.id);
@@ -72,6 +73,20 @@ export function CategorySidebar({
           })}
         </div>
       </ScrollArea>
+
+      <Separator className="mb-4" />
+
+      <Button
+        asChild
+        className="w-full text-gray-900 hover:text-gray-900"
+        size="sm"
+        variant="ghost"
+      >
+        <a href={routes.dashboard()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to My Games
+        </a>
+      </Button>
     </div>
   );
 }

@@ -34,7 +34,7 @@ export function WizardNavigation({
         Previous
       </Button>
 
-      <Button disabled={!hasNext} onClick={onNext} size="lg" variant="default">
+      <Button disabled={!hasNext} onClick={onNext} size="lg" variant="outline">
         Next
         <ChevronRight className="h-5 w-5 ml-2" />
       </Button>
