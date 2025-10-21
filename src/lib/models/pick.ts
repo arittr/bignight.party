@@ -152,3 +152,31 @@ export async function deleteByUserAndGame(gameId: string, userId: string) {
     },
   });
 }
+
+/**
+ * Get pick counts grouped by nomination for a specific game and category
+ * Used for live winner marking to show how many users picked each nomination
+ *
+ * @example
+ * ```ts
+ * const pickCounts = await getPickCountsByCategory(gameId, categoryId);
+ * // Returns: [{ nominationId: "abc123", count: 5 }, { nominationId: "def456", count: 3 }]
+ * ```
+ */
+export async function getPickCountsByCategory(gameId: string, categoryId: string) {
+  const results = await prisma.pick.groupBy({
+    _count: {
+      id: true,
+    },
+    by: ["nominationId"],
+    where: {
+      categoryId,
+      gameId,
+    },
+  });
+
+  return results.map((result) => ({
+    count: result._count.id,
+    nominationId: result.nominationId,
+  }));
+}
