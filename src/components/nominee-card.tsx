@@ -32,11 +32,11 @@ export function NomineeCard({ nomination, isSelected, isLocked, onClick }: Nomin
     // biome-ignore lint/a11y/useSemanticElements: TODO: fix the card in general
     <Card
       className={`
-        group relative w-full cursor-pointer transition-all
+        group relative w-full cursor-pointer transition-all overflow-hidden
         ${
           isSelected
-            ? "border-indigo-600 bg-indigo-50 shadow-md"
-            : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-sm"
+            ? "ring-2 ring-indigo-600 shadow-lg"
+            : "border-gray-200 hover:border-indigo-300 hover:shadow-md"
         }
         ${isLocked ? "cursor-not-allowed opacity-60" : ""}
       `}
@@ -44,46 +44,40 @@ export function NomineeCard({ nomination, isSelected, isLocked, onClick }: Nomin
       role="button"
       tabIndex={isLocked ? -1 : 0}
     >
-      <CardContent className="p-6">
-        <div className="flex items-start gap-6">
-          {/* Image or placeholder */}
-          <div className="relative h-40 w-28 flex-shrink-0 overflow-hidden rounded bg-gray-200">
-            {imageUrl ? (
-              <Image
-                alt={title}
-                className="h-full w-full object-cover"
-                fill
-                sizes="112px"
-                src={imageUrl}
-                unoptimized
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400">
-                <ImageIcon className="h-12 w-12 text-gray-500" />
-              </div>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="flex-1">
-            <div className="font-semibold text-lg text-gray-900">
-              {title}
-              {year && <span className="ml-1 text-gray-500">({year})</span>}
-            </div>
-            {nomination.nominationText && (
-              <div className="mt-2 text-base text-gray-600 whitespace-normal break-words">
-                {nomination.nominationText}
-              </div>
-            )}
-          </div>
-
-          {/* Selection indicator */}
-          {isSelected && (
-            <div className="flex-shrink-0 self-center">
-              <CheckCircle2 className="h-6 w-6 text-indigo-600" />
-            </div>
-          )}
+      {/* Selection indicator - top right corner */}
+      {isSelected && (
+        <div className="absolute top-3 right-3 z-10 rounded-full bg-indigo-600 p-1 shadow-lg">
+          <CheckCircle2 className="h-5 w-5 text-white" />
         </div>
+      )}
+
+      {/* Image at top - vertical poster/headshot layout */}
+      <div className="relative w-full aspect-[2/3] overflow-hidden bg-gray-200">
+        {imageUrl ? (
+          <Image
+            alt={title}
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            src={imageUrl}
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400">
+            <ImageIcon className="h-16 w-16 text-gray-500" />
+          </div>
+        )}
+      </div>
+
+      {/* Content below image */}
+      <CardContent className="p-4">
+        <div className="font-semibold text-lg text-gray-900 leading-tight">
+          {title}
+          {year && <span className="ml-1 text-gray-500 font-normal">({year})</span>}
+        </div>
+        {nomination.nominationText && (
+          <div className="mt-2 text-sm text-gray-600 line-clamp-2">{nomination.nominationText}</div>
+        )}
       </CardContent>
     </Card>
   );

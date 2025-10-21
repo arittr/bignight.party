@@ -33,7 +33,6 @@ export function mockPickModel() {
   return {
     create: vi.fn<() => Promise<Pick>>(),
     deleteById: vi.fn<() => Promise<Pick>>(),
-    // biome-ignore lint/suspicious/noExplicitAny: Test mock - flexibility needed for various return types
     deleteByUserAndGame: vi.fn<() => Promise<any>>(),
     findAll: vi.fn<() => Promise<Pick[]>>(),
     findByGameId: vi.fn<() => Promise<Pick[]>>(),
@@ -76,7 +75,6 @@ export function mockGameParticipantModel() {
  *   submitPickAction: mockServerAction(),
  * }));
  */
-// biome-ignore lint/suspicious/noExplicitAny: Generic mock helper - type parameter needs default
 export function mockServerAction<TData = any>() {
   return vi.fn<
     () => Promise<{

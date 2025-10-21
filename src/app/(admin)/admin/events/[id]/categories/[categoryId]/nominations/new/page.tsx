@@ -29,7 +29,6 @@ export default async function NewNominationPage({ params }: PageProps) {
   async function handleCreateNomination(formData: FormData) {
     "use server";
 
-    // biome-ignore lint/nursery/noSecrets: False positive - form field name
     const nominationText = formData.get("nominationText") as string;
     const workId = formData.get("workId") as string;
     const personId = formData.get("personId") as string;
