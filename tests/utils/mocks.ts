@@ -1,5 +1,5 @@
+import type { Game, GameParticipant, Pick } from "@prisma/client";
 import { vi } from "vitest";
-import type { Game, Pick, GameParticipant } from "@prisma/client";
 
 /**
  * Creates a mocked game model with all functions as vi.fn()
@@ -12,12 +12,12 @@ import type { Game, Pick, GameParticipant } from "@prisma/client";
 export function mockGameModel() {
   return {
     create: vi.fn<() => Promise<Game>>(),
-    findAll: vi.fn<() => Promise<Game[]>>(),
-    findById: vi.fn<() => Promise<Game | null>>(),
-    findByEventId: vi.fn<() => Promise<Game[]>>(),
-    findByAccessCode: vi.fn<() => Promise<Game | null>>(),
-    update: vi.fn<() => Promise<Game>>(),
     deleteById: vi.fn<() => Promise<Game>>(),
+    findAll: vi.fn<() => Promise<Game[]>>(),
+    findByAccessCode: vi.fn<() => Promise<Game | null>>(),
+    findByEventId: vi.fn<() => Promise<Game[]>>(),
+    findById: vi.fn<() => Promise<Game | null>>(),
+    update: vi.fn<() => Promise<Game>>(),
   };
 }
 
@@ -32,15 +32,16 @@ export function mockGameModel() {
 export function mockPickModel() {
   return {
     create: vi.fn<() => Promise<Pick>>(),
-    findAll: vi.fn<() => Promise<Pick[]>>(),
-    findById: vi.fn<() => Promise<Pick | null>>(),
-    findByGameId: vi.fn<() => Promise<Pick[]>>(),
-    findByUserId: vi.fn<() => Promise<Pick[]>>(),
     deleteById: vi.fn<() => Promise<Pick>>(),
-    upsert: vi.fn<() => Promise<Pick>>(),
+    // biome-ignore lint/suspicious/noExplicitAny: Test mock - flexibility needed for various return types
+    deleteByUserAndGame: vi.fn<() => Promise<any>>(),
+    findAll: vi.fn<() => Promise<Pick[]>>(),
+    findByGameId: vi.fn<() => Promise<Pick[]>>(),
+    findById: vi.fn<() => Promise<Pick | null>>(),
+    findByUserId: vi.fn<() => Promise<Pick[]>>(),
     getPicksByGameAndUser: vi.fn<() => Promise<Pick[]>>(),
     getPicksCountByGameAndUser: vi.fn<() => Promise<number>>(),
-    deleteByUserAndGame: vi.fn<() => Promise<any>>(),
+    upsert: vi.fn<() => Promise<Pick>>(),
   };
 }
 
@@ -55,10 +56,10 @@ export function mockPickModel() {
 export function mockGameParticipantModel() {
   return {
     create: vi.fn<() => Promise<GameParticipant>>(),
-    findByUserId: vi.fn<() => Promise<GameParticipant[]>>(),
-    findByGameId: vi.fn<() => Promise<GameParticipant[]>>(),
-    exists: vi.fn<() => Promise<boolean>>(),
     deleteByUserAndGame: vi.fn<() => Promise<GameParticipant>>(),
+    exists: vi.fn<() => Promise<boolean>>(),
+    findByGameId: vi.fn<() => Promise<GameParticipant[]>>(),
+    findByUserId: vi.fn<() => Promise<GameParticipant[]>>(),
   };
 }
 
@@ -75,6 +76,7 @@ export function mockGameParticipantModel() {
  *   submitPickAction: mockServerAction(),
  * }));
  */
+// biome-ignore lint/suspicious/noExplicitAny: Generic mock helper - type parameter needs default
 export function mockServerAction<TData = any>() {
   return vi.fn<
     () => Promise<{

@@ -5,10 +5,10 @@
  * Verifies Prisma queries, unique constraints, foreign keys, and referential integrity.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import * as gameParticipantModel from "../game-participant";
+import { buildEvent, buildGame, buildUser } from "tests/factories";
 import { testPrisma } from "tests/utils/prisma";
-import { buildUser, buildEvent, buildGame } from "tests/factories";
+import { beforeEach, describe, expect, it } from "vitest";
+import * as gameParticipantModel from "../game-participant";
 
 describe("gameParticipantModel.create", () => {
   let testUserId: string;
@@ -26,15 +26,15 @@ describe("gameParticipantModel.create", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-gp-1", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-gp-1" }),
     });
     testGameId = game.id;
   });
 
   it("creates participant with valid data", async () => {
     const participant = await gameParticipantModel.create({
-      userId: testUserId,
       gameId: testGameId,
+      userId: testUserId,
     });
 
     expect(participant.id).toBeDefined();
@@ -45,14 +45,14 @@ describe("gameParticipantModel.create", () => {
 
   it("enforces unique constraint on (userId, gameId)", async () => {
     await gameParticipantModel.create({
-      userId: testUserId,
       gameId: testGameId,
+      userId: testUserId,
     });
 
     await expect(
       gameParticipantModel.create({
-        userId: testUserId,
         gameId: testGameId,
+        userId: testUserId,
       })
     ).rejects.toThrow();
   });
@@ -60,8 +60,8 @@ describe("gameParticipantModel.create", () => {
   it("enforces foreign key constraint on userId", async () => {
     await expect(
       gameParticipantModel.create({
-        userId: "invalid-user-id",
         gameId: testGameId,
+        userId: "invalid-user-id",
       })
     ).rejects.toThrow();
   });
@@ -69,8 +69,8 @@ describe("gameParticipantModel.create", () => {
   it("enforces foreign key constraint on gameId", async () => {
     await expect(
       gameParticipantModel.create({
-        userId: testUserId,
         gameId: "invalid-game-id",
+        userId: testUserId,
       })
     ).rejects.toThrow();
   });
@@ -94,34 +94,34 @@ describe("gameParticipantModel.findByUserId", () => {
     // Create two games
     const game1 = await testPrisma.game.create({
       data: buildGame({
-        id: "game-gp-2-1",
-        eventId: event.id,
-        name: "Game 1",
         accessCode: "GP2CODE1",
+        eventId: event.id,
+        id: "game-gp-2-1",
+        name: "Game 1",
       }),
     });
     const game2 = await testPrisma.game.create({
       data: buildGame({
-        id: "game-gp-2-2",
-        eventId: event.id,
-        name: "Game 2",
         accessCode: "GP2CODE2",
+        eventId: event.id,
+        id: "game-gp-2-2",
+        name: "Game 2",
       }),
     });
 
     // Create participants with different join times
     await testPrisma.gameParticipant.create({
       data: {
-        userId: testUserId,
         gameId: game1.id,
         joinedAt: new Date("2025-01-01T10:00:00Z"),
+        userId: testUserId,
       },
     });
     await testPrisma.gameParticipant.create({
       data: {
-        userId: testUserId,
         gameId: game2.id,
         joinedAt: new Date("2025-01-02T10:00:00Z"),
+        userId: testUserId,
       },
     });
   });
@@ -162,31 +162,31 @@ describe("gameParticipantModel.findByGameId", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-gp-3", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-gp-3" }),
     });
     testGameId = game.id;
 
     // Create two users
     const user1 = await testPrisma.user.create({
-      data: buildUser({ id: "user-gp-3-1", email: "user1@example.com" }),
+      data: buildUser({ email: "user1@example.com", id: "user-gp-3-1" }),
     });
     const user2 = await testPrisma.user.create({
-      data: buildUser({ id: "user-gp-3-2", email: "user2@example.com" }),
+      data: buildUser({ email: "user2@example.com", id: "user-gp-3-2" }),
     });
 
     // Create participants with different join times
     await testPrisma.gameParticipant.create({
       data: {
-        userId: user1.id,
         gameId: testGameId,
         joinedAt: new Date("2025-01-01T10:00:00Z"),
+        userId: user1.id,
       },
     });
     await testPrisma.gameParticipant.create({
       data: {
-        userId: user2.id,
         gameId: testGameId,
         joinedAt: new Date("2025-01-02T10:00:00Z"),
+        userId: user2.id,
       },
     });
   });
@@ -231,15 +231,15 @@ describe("gameParticipantModel.exists", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-gp-4", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-gp-4" }),
     });
     testGameId = game.id;
   });
 
   it("returns true when participant exists", async () => {
     await gameParticipantModel.create({
-      userId: testUserId,
       gameId: testGameId,
+      userId: testUserId,
     });
 
     const result = await gameParticipantModel.exists(testUserId, testGameId);
@@ -253,8 +253,8 @@ describe("gameParticipantModel.exists", () => {
 
   it("returns false for invalid userId", async () => {
     await gameParticipantModel.create({
-      userId: testUserId,
       gameId: testGameId,
+      userId: testUserId,
     });
 
     const result = await gameParticipantModel.exists("invalid-user", testGameId);
@@ -263,8 +263,8 @@ describe("gameParticipantModel.exists", () => {
 
   it("returns false for invalid gameId", async () => {
     await gameParticipantModel.create({
-      userId: testUserId,
       gameId: testGameId,
+      userId: testUserId,
     });
 
     const result = await gameParticipantModel.exists(testUserId, "invalid-game");
@@ -288,15 +288,15 @@ describe("gameParticipantModel.deleteByUserAndGame", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-gp-5", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-gp-5" }),
     });
     testGameId = game.id;
   });
 
   it("removes membership", async () => {
     await gameParticipantModel.create({
-      userId: testUserId,
       gameId: testGameId,
+      userId: testUserId,
     });
 
     await gameParticipantModel.deleteByUserAndGame(testUserId, testGameId);
@@ -313,8 +313,8 @@ describe("gameParticipantModel.deleteByUserAndGame", () => {
 
   it("returns deleted participant data", async () => {
     await gameParticipantModel.create({
-      userId: testUserId,
       gameId: testGameId,
+      userId: testUserId,
     });
 
     const deleted = await gameParticipantModel.deleteByUserAndGame(testUserId, testGameId);
@@ -336,13 +336,13 @@ describe("gameParticipantModel cascading deletes", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-gp-6", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-gp-6" }),
     });
 
     // Create participant
     await gameParticipantModel.create({
-      userId: user.id,
       gameId: game.id,
+      userId: user.id,
     });
 
     // Delete user (should cascade to participant)
@@ -364,13 +364,13 @@ describe("gameParticipantModel cascading deletes", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-gp-7", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-gp-7" }),
     });
 
     // Create participant
     await gameParticipantModel.create({
-      userId: user.id,
       gameId: game.id,
+      userId: user.id,
     });
 
     // Delete game (should cascade to participant)

@@ -22,6 +22,7 @@ export function TypeFilter() {
       <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="typeFilter">
         Filter by Type
       </label>
+      {/* biome-ignore lint/correctness/useUniqueElementIds: Single filter component, static ID is safe */}
       <select
         className="px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
         id="typeFilter"

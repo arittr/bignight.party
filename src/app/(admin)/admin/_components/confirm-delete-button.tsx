@@ -13,7 +13,7 @@ export function ConfirmDeleteButton({
   buttonText,
   className = "px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors",
 }: ConfirmDeleteButtonProps) {
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(_formData: FormData) {
     if (confirm(confirmMessage)) {
       await onDelete();
     }

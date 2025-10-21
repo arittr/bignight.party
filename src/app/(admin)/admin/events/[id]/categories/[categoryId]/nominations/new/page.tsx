@@ -29,6 +29,7 @@ export default async function NewNominationPage({ params }: PageProps) {
   async function handleCreateNomination(formData: FormData) {
     "use server";
 
+    // biome-ignore lint/nursery/noSecrets: False positive - form field name
     const nominationText = formData.get("nominationText") as string;
     const workId = formData.get("workId") as string;
     const personId = formData.get("personId") as string;
@@ -66,6 +67,7 @@ export default async function NewNominationPage({ params }: PageProps) {
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="nominationText">
             Nomination Text *
           </label>
+          {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
           <input
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             id="nominationText"
@@ -81,6 +83,7 @@ export default async function NewNominationPage({ params }: PageProps) {
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="workId">
             Work (Optional)
           </label>
+          {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
           <select
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             id="workId"
@@ -102,6 +105,7 @@ export default async function NewNominationPage({ params }: PageProps) {
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="personId">
             Person (Optional)
           </label>
+          {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
           <select
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             id="personId"

@@ -1,8 +1,8 @@
 "use client";
 
 import { useAction } from "next-safe-action/hooks";
-import { submitPickAction } from "@/lib/actions/pick-actions";
 import { useState } from "react";
+import { submitPickAction } from "@/lib/actions/pick-actions";
 
 interface Nomination {
   id: string;
@@ -35,44 +35,40 @@ export function PickForm({
     if (!selectedNominationId) return;
 
     await execute({
-      gameId,
       categoryId,
+      gameId,
       nominationId: selectedNominationId,
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} data-testid="pick-form">
+    <form data-testid="pick-form" onSubmit={handleSubmit}>
       <h2>{categoryName}</h2>
 
-      <div role="group" aria-label="Nominees">
+      <fieldset aria-label="Nominees">
         {nominations.map((nomination) => (
-          <label key={nomination.id} className="nominee-option">
+          <label className="nominee-option" key={nomination.id}>
             <input
-              type="radio"
-              name="nomination"
-              value={nomination.id}
               checked={selectedNominationId === nomination.id}
-              onChange={(e) => setSelectedNominationId(e.target.value)}
               disabled={isPending}
+              name="nomination"
+              onChange={(e) => setSelectedNominationId(e.target.value)}
+              type="radio"
+              value={nomination.id}
             />
             <span>{nomination.nominationText}</span>
           </label>
         ))}
-      </div>
+      </fieldset>
 
-      <button type="submit" disabled={isPending || !selectedNominationId}>
+      <button disabled={isPending || !selectedNominationId} type="submit">
         {isPending ? "Submitting..." : "Submit Pick"}
       </button>
 
-      {result?.data && (
-        <div role="status" className="success-message">
-          Pick saved successfully!
-        </div>
-      )}
+      {result?.data && <output className="success-message">Pick saved successfully!</output>}
 
       {result?.serverError && (
-        <div role="alert" className="error-message">
+        <div className="error-message" role="alert">
           {result.serverError}
         </div>
       )}

@@ -20,65 +20,19 @@
  * Public routes (no authentication required)
  */
 export const routes = {
-  /** Home page */
-  home: () => "/",
-
-  /** Sign in page */
-  signIn: () => "/sign-in",
-
-  /** Sign up flow */
-  signup: {
-    /** Initial signup page with optional code */
-    index: (code?: string) => (code ? `/signup?code=${code}` : "/signup"),
-    /** Email verification callback */
-    callback: (code?: string) => (code ? `/signup/callback?code=${code}` : "/signup/callback"),
-  },
-
-  /** Join game with access code */
-  join: (code: string) => `/join/${code}`,
-
-  /**
-   * Game routes (authentication required)
-   */
-  game: {
-    /** Pick wizard page */
-    pick: (gameId: string, categoryId?: string) =>
-      categoryId ? `/game/${gameId}/pick?category=${categoryId}` : `/game/${gameId}/pick`,
-    /** Leaderboard page */
-    leaderboard: (gameId: string) => `/game/${gameId}/leaderboard`,
-  },
-
-  /**
-   * User dashboard (authentication required)
-   */
-  dashboard: () => "/dashboard",
-
   /**
    * Admin routes (admin role required)
    */
   admin: {
-    /** Admin home */
-    index: () => "/admin",
-
-    /** Wikipedia import */
-    import: () => "/admin/import",
-
     /** Event management */
     events: {
-      /** List all events */
-      index: () => "/admin/events",
-      /** Create new event */
-      new: () => "/admin/events/new",
-      /** View/edit event */
-      detail: (eventId: string) => `/admin/events/${eventId}`,
-
       /** Category management */
       categories: {
-        /** Create new category */
-        new: (eventId: string) => `/admin/events/${eventId}/categories/new`,
         /** View/edit category */
         detail: (eventId: string, categoryId: string) =>
           `/admin/events/${eventId}/categories/${categoryId}`,
+        /** Create new category */
+        new: (eventId: string) => `/admin/events/${eventId}/categories/new`,
 
         /** Nomination management */
         nominations: {
@@ -87,40 +41,83 @@ export const routes = {
             `/admin/events/${eventId}/categories/${categoryId}/nominations/new`,
         },
       },
+      /** View/edit event */
+      detail: (eventId: string) => `/admin/events/${eventId}`,
+      /** List all events */
+      index: () => "/admin/events",
+      /** Create new event */
+      new: () => "/admin/events/new",
     },
 
     /** Game management */
     games: {
+      /** View/edit game */
+      detail: (gameId: string) => `/admin/games/${gameId}`,
       /** List all games */
       index: () => "/admin/games",
       /** Create new game */
       new: () => "/admin/games/new",
-      /** View/edit game */
-      detail: (gameId: string) => `/admin/games/${gameId}`,
     },
+
+    /** Wikipedia import */
+    import: () => "/admin/import",
+    /** Admin home */
+    index: () => "/admin",
+
+    /** Live ceremony controls */
+    live: (gameId?: string) => (gameId ? `/admin/live?game=${gameId}` : "/admin/live"),
 
     /** People management */
     people: {
+      /** View/edit person */
+      detail: (personId: string) => `/admin/people/${personId}`,
       /** List all people */
       index: () => "/admin/people",
       /** Create new person */
       new: () => "/admin/people/new",
-      /** View/edit person */
-      detail: (personId: string) => `/admin/people/${personId}`,
     },
 
     /** Works management */
     works: {
+      /** View/edit work */
+      detail: (workId: string) => `/admin/works/${workId}`,
       /** List all works (with optional type filter) */
       index: (type?: string) => (type ? `/admin/works?type=${type}` : "/admin/works"),
       /** Create new work */
       new: () => "/admin/works/new",
-      /** View/edit work */
-      detail: (workId: string) => `/admin/works/${workId}`,
     },
+  },
 
-    /** Live ceremony controls */
-    live: (gameId?: string) => (gameId ? `/admin/live?game=${gameId}` : "/admin/live"),
+  /**
+   * User dashboard (authentication required)
+   */
+  dashboard: () => "/dashboard",
+
+  /**
+   * Game routes (authentication required)
+   */
+  game: {
+    /** Leaderboard page */
+    leaderboard: (gameId: string) => `/game/${gameId}/leaderboard`,
+    /** Pick wizard page */
+    pick: (gameId: string, categoryId?: string) =>
+      categoryId ? `/game/${gameId}/pick?category=${categoryId}` : `/game/${gameId}/pick`,
+  },
+  /** Home page */
+  home: () => "/",
+
+  /** Join game with access code */
+  join: (code: string) => `/join/${code}`,
+
+  /** Sign in page */
+  signIn: () => "/sign-in",
+
+  /** Sign up flow */
+  signup: {
+    /** Email verification callback */
+    callback: (code?: string) => (code ? `/signup/callback?code=${code}` : "/signup/callback"),
+    /** Initial signup page with optional code */
+    index: (code?: string) => (code ? `/signup?code=${code}` : "/signup"),
   },
 } as const;
 

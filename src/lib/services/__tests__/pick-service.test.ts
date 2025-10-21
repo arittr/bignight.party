@@ -6,13 +6,13 @@
  * validation rules, error handling.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import * as pickService from "../pick-service";
-import * as pickModel from "@/lib/models/pick";
+import { buildGame, buildNomination, buildPick } from "tests/factories";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as gameModel from "@/lib/models/game";
 import * as gameParticipantModel from "@/lib/models/game-participant";
 import * as nominationModel from "@/lib/models/nomination";
-import { buildPick, buildGame, buildNomination } from "tests/factories";
+import * as pickModel from "@/lib/models/pick";
+import * as pickService from "../pick-service";
 
 // Mock all model imports
 vi.mock("@/lib/models/pick");
@@ -30,8 +30,8 @@ describe("pickService.submitPick", () => {
 
     await expect(
       pickService.submitPick("user-1", {
-        gameId: "game-1",
         categoryId: "category-1",
+        gameId: "game-1",
         nominationId: "nomination-1",
       })
     ).rejects.toThrow("User is not a participant in this game");
@@ -45,8 +45,8 @@ describe("pickService.submitPick", () => {
 
     await expect(
       pickService.submitPick("user-1", {
-        gameId: "game-1",
         categoryId: "category-1",
+        gameId: "game-1",
         nominationId: "nomination-1",
       })
     ).rejects.toThrow("Game is not accepting picks");
@@ -60,8 +60,8 @@ describe("pickService.submitPick", () => {
 
     await expect(
       pickService.submitPick("user-1", {
-        gameId: "game-1",
         categoryId: "category-1",
+        gameId: "game-1",
         nominationId: "nomination-1",
       })
     ).rejects.toThrow("Game is not accepting picks");
@@ -75,8 +75,8 @@ describe("pickService.submitPick", () => {
 
     await expect(
       pickService.submitPick("user-1", {
-        gameId: "game-1",
         categoryId: "category-1",
+        gameId: "game-1",
         nominationId: "nomination-1",
       })
     ).rejects.toThrow("Game is not accepting picks");
@@ -84,11 +84,11 @@ describe("pickService.submitPick", () => {
 
   it("accepts pick when game status is OPEN (ts-pattern exhaustive)", async () => {
     const mockPick = buildPick({
-      id: "pick-1",
-      gameId: "game-1",
-      userId: "user-1",
       categoryId: "category-1",
+      gameId: "game-1",
+      id: "pick-1",
       nominationId: "nomination-1",
+      userId: "user-1",
     });
 
     vi.mocked(gameParticipantModel.exists).mockResolvedValue(true);
@@ -98,10 +98,10 @@ describe("pickService.submitPick", () => {
       picks: [],
     });
     vi.mocked(nominationModel.findById).mockResolvedValue({
-      ...buildNomination({ id: "nomination-1", categoryId: "category-1" }),
+      ...buildNomination({ categoryId: "category-1", id: "nomination-1" }),
       category: {} as any,
-      work: null,
       person: null,
+      work: null,
     });
     vi.mocked(pickModel.upsert).mockResolvedValue({
       ...mockPick,
@@ -110,17 +110,17 @@ describe("pickService.submitPick", () => {
     });
 
     const result = await pickService.submitPick("user-1", {
-      gameId: "game-1",
       categoryId: "category-1",
+      gameId: "game-1",
       nominationId: "nomination-1",
     });
 
     expect(result).toMatchObject(mockPick);
     expect(pickModel.upsert).toHaveBeenCalledWith({
-      gameId: "game-1",
-      userId: "user-1",
       categoryId: "category-1",
+      gameId: "game-1",
       nominationId: "nomination-1",
+      userId: "user-1",
     });
   });
 
@@ -131,15 +131,15 @@ describe("pickService.submitPick", () => {
     );
     vi.mocked(nominationModel.findById).mockResolvedValue(
       buildNomination({
-        id: "nomination-1",
         categoryId: "category-2", // Different category!
+        id: "nomination-1",
       }) as any
     );
 
     await expect(
       pickService.submitPick("user-1", {
-        gameId: "game-1",
         categoryId: "category-1",
+        gameId: "game-1",
         nominationId: "nomination-1",
       })
     ).rejects.toThrow("Nomination does not belong to this category");
@@ -147,11 +147,11 @@ describe("pickService.submitPick", () => {
 
   it("successfully creates pick when all validations pass", async () => {
     const mockPick = buildPick({
-      id: "pick-1",
-      gameId: "game-1",
-      userId: "user-1",
       categoryId: "category-1",
+      gameId: "game-1",
+      id: "pick-1",
       nominationId: "nomination-1",
+      userId: "user-1",
     });
 
     vi.mocked(gameParticipantModel.exists).mockResolvedValue(true);
@@ -159,32 +159,32 @@ describe("pickService.submitPick", () => {
       buildGame({ id: "game-1", status: "OPEN" }) as any
     );
     vi.mocked(nominationModel.findById).mockResolvedValue(
-      buildNomination({ id: "nomination-1", categoryId: "category-1" }) as any
+      buildNomination({ categoryId: "category-1", id: "nomination-1" }) as any
     );
     vi.mocked(pickModel.upsert).mockResolvedValue(mockPick as any);
 
     const result = await pickService.submitPick("user-1", {
-      gameId: "game-1",
       categoryId: "category-1",
+      gameId: "game-1",
       nominationId: "nomination-1",
     });
 
     expect(result).toEqual(mockPick);
     expect(pickModel.upsert).toHaveBeenCalledWith({
-      gameId: "game-1",
-      userId: "user-1",
       categoryId: "category-1",
+      gameId: "game-1",
       nominationId: "nomination-1",
+      userId: "user-1",
     });
   });
 
   it("successfully updates existing pick when all validations pass", async () => {
     const mockUpdatedPick = buildPick({
-      id: "pick-1",
-      gameId: "game-1",
-      userId: "user-1",
       categoryId: "category-1",
+      gameId: "game-1",
+      id: "pick-1",
       nominationId: "nomination-2", // Changed nomination
+      userId: "user-1",
     });
 
     vi.mocked(gameParticipantModel.exists).mockResolvedValue(true);
@@ -192,13 +192,13 @@ describe("pickService.submitPick", () => {
       buildGame({ id: "game-1", status: "OPEN" }) as any
     );
     vi.mocked(nominationModel.findById).mockResolvedValue(
-      buildNomination({ id: "nomination-2", categoryId: "category-1" }) as any
+      buildNomination({ categoryId: "category-1", id: "nomination-2" }) as any
     );
     vi.mocked(pickModel.upsert).mockResolvedValue(mockUpdatedPick as any);
 
     const result = await pickService.submitPick("user-1", {
-      gameId: "game-1",
       categoryId: "category-1",
+      gameId: "game-1",
       nominationId: "nomination-2",
     });
 
@@ -211,8 +211,8 @@ describe("pickService.submitPick", () => {
 
     await expect(
       pickService.submitPick("user-1", {
-        gameId: "invalid-game",
         categoryId: "category-1",
+        gameId: "invalid-game",
         nominationId: "nomination-1",
       })
     ).rejects.toThrow("Game with id invalid-game not found");
@@ -227,8 +227,8 @@ describe("pickService.submitPick", () => {
 
     await expect(
       pickService.submitPick("user-1", {
-        gameId: "game-1",
         categoryId: "category-1",
+        gameId: "game-1",
         nominationId: "invalid-nomination",
       })
     ).rejects.toThrow("Nomination with id invalid-nomination not found");

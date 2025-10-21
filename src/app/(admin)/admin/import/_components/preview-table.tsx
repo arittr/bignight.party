@@ -41,9 +41,9 @@ export function PreviewTable({ preview, onConfirm, isConfirming }: PreviewTableP
             <p className="text-sm text-gray-600 mb-1">Date</p>
             <p className="text-lg font-semibold text-gray-900">
               {new Date(preview.event.date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
                 day: "numeric",
+                month: "long",
+                year: "numeric",
               })}
             </p>
           </div>
@@ -65,10 +65,10 @@ export function PreviewTable({ preview, onConfirm, isConfirming }: PreviewTableP
             Sample Categories (First 5)
           </h3>
           <div className="space-y-3">
-            {preview.categories.slice(0, 5).map((category, index) => (
+            {preview.categories.slice(0, 5).map((category) => (
               <div
-                key={index}
                 className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded"
+                key={category.name}
               >
                 <div>
                   <p className="font-medium text-gray-900">{category.name}</p>
@@ -99,10 +99,10 @@ export function PreviewTable({ preview, onConfirm, isConfirming }: PreviewTableP
             Review the data above. Click confirm to import this event into the database.
           </p>
           <button
-            type="button"
-            onClick={onConfirm}
-            disabled={isConfirming}
             className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            disabled={isConfirming}
+            onClick={onConfirm}
+            type="button"
           >
             {isConfirming ? "Importing..." : "Confirm Import"}
           </button>

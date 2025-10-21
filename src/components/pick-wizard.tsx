@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
 import { useAction } from "next-safe-action/hooks";
+import { useEffect, useState } from "react";
 import { submitPickAction } from "@/lib/actions/pick-actions";
-import { NomineeCard } from "./nominee-card";
 import { CategoryProgressStepper } from "./category-progress-stepper";
+import { NomineeCard } from "./nominee-card";
 
 interface PickWizardProps {
   gameId: string;
@@ -38,6 +38,7 @@ interface PickWizardProps {
   minutesUntilLock: number | null;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex UI component with multiple states and interactions
 export function PickWizard({
   gameId,
   gameName,
@@ -68,17 +69,16 @@ export function PickWizard({
   }, [currentCategoryId, existingPicks]);
 
   // Submit pick action
-  const { execute, isPending } = useAction(submitPickAction, {
+  const { execute } = useAction(submitPickAction, {
+    onError: (_error) => {
+      setSaveStatus("idle");
+    },
     onSuccess: () => {
       setSaveStatus("saved");
       // Reset to idle after 2 seconds
       setTimeout(() => {
         setSaveStatus("idle");
       }, 2000);
-    },
-    onError: (error) => {
-      console.error("Failed to save pick:", error);
-      setSaveStatus("idle");
     },
   });
 
@@ -90,8 +90,8 @@ export function PickWizard({
     setSaveStatus("saving");
 
     execute({
-      gameId,
       categoryId: currentCategoryId,
+      gameId,
       nominationId,
     });
   };
@@ -128,9 +128,15 @@ export function PickWizard({
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar overlay */}
       {isSidebarOpen && (
+        // biome-ignore lint/a11y/useSemanticElements: Div is appropriate for full-screen overlay backdrop
         <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setIsSidebarOpen(false);
+          }}
+          role="button"
+          tabIndex={0}
         />
       )}
 
@@ -146,16 +152,16 @@ export function PickWizard({
           <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
             <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
             <button
-              type="button"
-              onClick={() => setIsSidebarOpen(false)}
               className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 lg:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+              type="button"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
+                  d="M6 18L18 6M6 6l12 12"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             </button>
@@ -170,12 +176,6 @@ export function PickWizard({
 
                 return (
                   <button
-                    key={category.id}
-                    type="button"
-                    onClick={() => {
-                      navigateToCategory(category.id);
-                      setIsSidebarOpen(false);
-                    }}
                     className={`
                       w-full rounded-lg px-4 py-3 text-left transition-colors
                       ${
@@ -184,6 +184,12 @@ export function PickWizard({
                           : "text-gray-700 hover:bg-gray-100"
                       }
                     `}
+                    key={category.id}
+                    onClick={() => {
+                      navigateToCategory(category.id);
+                      setIsSidebarOpen(false);
+                    }}
+                    type="button"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
@@ -199,9 +205,9 @@ export function PickWizard({
                           viewBox="0 0 20 20"
                         >
                           <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                             clipRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            fillRule="evenodd"
                           />
                         </svg>
                       )}
@@ -229,16 +235,16 @@ export function PickWizard({
         <div className="mx-auto max-w-4xl px-4 py-8">
           {/* Mobile menu button */}
           <button
-            type="button"
-            onClick={() => setIsSidebarOpen(true)}
             className="mb-4 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm border border-gray-300 hover:bg-gray-50 lg:hidden"
+            onClick={() => setIsSidebarOpen(true)}
+            type="button"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
+                d="M4 6h16M4 12h16M4 18h16"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
               />
             </svg>
             Categories
@@ -261,10 +267,10 @@ export function PickWizard({
                   viewBox="0 0 24 24"
                 >
                   <path
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>
                 <div>
@@ -291,10 +297,10 @@ export function PickWizard({
                   viewBox="0 0 24 24"
                 >
                   <path
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                   />
                 </svg>
                 <div>
@@ -311,8 +317,8 @@ export function PickWizard({
           {/* Progress stepper */}
           <CategoryProgressStepper
             categories={categories}
-            currentCategoryId={currentCategoryId}
             completedCategoryIds={completedCategoryIds}
+            currentCategoryId={currentCategoryId}
             onCategoryClick={navigateToCategory}
           />
 
@@ -332,8 +338,8 @@ export function PickWizard({
                     />
                     <path
                       className="opacity-75"
-                      fill="currentColor"
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      fill="currentColor"
                     />
                   </svg>
                   Saving...
@@ -343,9 +349,9 @@ export function PickWizard({
                 <div className="inline-flex items-center gap-2 rounded-full bg-green-50 px-4 py-2 text-sm text-green-700">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                       clipRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      fillRule="evenodd"
                     />
                   </svg>
                   Saved
@@ -358,10 +364,10 @@ export function PickWizard({
           <div className="space-y-3 mb-8">
             {nominations.map((nomination) => (
               <NomineeCard
+                isLocked={isLocked}
+                isSelected={selectedNominationId === nomination.id}
                 key={nomination.id}
                 nomination={nomination}
-                isSelected={selectedNominationId === nomination.id}
-                isLocked={isLocked}
                 onClick={() => handleSelectNomination(nomination.id)}
               />
             ))}
@@ -375,10 +381,10 @@ export function PickWizard({
                   viewBox="0 0 24 24"
                 >
                   <path
+                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                   />
                 </svg>
                 <p className="mt-4 text-gray-500">No nominations available for this category</p>
@@ -389,9 +395,6 @@ export function PickWizard({
           {/* Navigation buttons */}
           <div className="flex items-center justify-between border-t border-gray-200 pt-6">
             <button
-              type="button"
-              onClick={handlePrevious}
-              disabled={!hasPrevious}
               className={`
               inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors
               ${
@@ -400,22 +403,22 @@ export function PickWizard({
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }
             `}
+              disabled={!hasPrevious}
+              onClick={handlePrevious}
+              type="button"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
+                  d="M15 19l-7-7 7-7"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
                 />
               </svg>
               Previous
             </button>
 
             <button
-              type="button"
-              onClick={handleNext}
-              disabled={!hasNext}
               className={`
               inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors
               ${
@@ -424,14 +427,17 @@ export function PickWizard({
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }
             `}
+              disabled={!hasNext}
+              onClick={handleNext}
+              type="button"
             >
               Next
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
+                  d="M9 5l7 7-7 7"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M9 5l7 7-7 7"
                 />
               </svg>
             </button>
@@ -440,8 +446,8 @@ export function PickWizard({
           {/* Back to dashboard link */}
           <div className="mt-8 text-center">
             <a
-              href="/dashboard"
               className="text-sm text-indigo-600 hover:text-indigo-700 underline"
+              href="/dashboard"
             >
               Back to My Games
             </a>

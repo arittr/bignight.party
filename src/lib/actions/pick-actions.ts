@@ -1,8 +1,8 @@
 "use server";
 
 import { authenticatedAction } from "@/lib/actions/safe-action";
-import { pickSubmissionSchema } from "@/schemas/pick-schema";
 import * as pickService from "@/lib/services/pick-service";
+import { pickSubmissionSchema } from "@/schemas/pick-schema";
 
 /**
  * Submit a pick for a category in a game

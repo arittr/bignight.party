@@ -7,13 +7,13 @@ import type { Pick } from "@prisma/client";
  */
 export function buildPick(overrides: Partial<Pick> = {}): Pick {
   return {
-    id: "pick-test-1",
-    gameId: "game-test-1",
-    userId: "user-test-1",
     categoryId: "category-test-1",
-    nominationId: "nomination-test-1",
     createdAt: new Date("2025-01-01T00:00:00Z"),
+    gameId: "game-test-1",
+    id: "pick-test-1",
+    nominationId: "nomination-test-1",
     updatedAt: new Date("2025-01-01T00:00:00Z"),
+    userId: "user-test-1",
     ...overrides,
   };
 }
