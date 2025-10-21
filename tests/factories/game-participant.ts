@@ -11,12 +11,12 @@ export function buildGameParticipant(overrides: Partial<GameParticipant> = {}): 
   const now = new Date();
 
   return {
-    id: "game-participant-test-1",
-    userId: "user-test-1",
-    gameId: "game-test-1",
-    joinedAt: now,
     createdAt: now,
+    gameId: "game-test-1",
+    id: "game-participant-test-1",
+    joinedAt: now,
     updatedAt: now,
+    userId: "user-test-1",
     ...overrides,
   };
 }

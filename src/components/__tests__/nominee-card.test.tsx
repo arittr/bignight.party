@@ -5,8 +5,8 @@
  * Priority: person.imageUrl → work.imageUrl → placeholder
  */
 
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { NomineeCard } from "../nominee-card";
 
 describe("NomineeCard", () => {
@@ -18,21 +18,21 @@ describe("NomineeCard", () => {
         id: "nom-1",
         nominationText: "Cillian Murphy for Oppenheimer",
         person: {
-          name: "Cillian Murphy",
           imageUrl: "https://example.com/cillian.jpg",
+          name: "Cillian Murphy",
         },
         work: {
-          title: "Oppenheimer",
           imageUrl: "https://example.com/oppenheimer-poster.jpg",
+          title: "Oppenheimer",
           year: 2023,
         },
       };
 
       render(
         <NomineeCard
-          nomination={nomination}
-          isSelected={false}
           isLocked={false}
+          isSelected={false}
+          nomination={nomination}
           onClick={mockOnClick}
         />
       );
@@ -49,17 +49,17 @@ describe("NomineeCard", () => {
         nominationText: "Oppenheimer",
         person: null,
         work: {
-          title: "Oppenheimer",
           imageUrl: "https://example.com/oppenheimer-poster.jpg",
+          title: "Oppenheimer",
           year: 2023,
         },
       };
 
       render(
         <NomineeCard
-          nomination={nomination}
-          isSelected={false}
           isLocked={false}
+          isSelected={false}
+          nomination={nomination}
           onClick={mockOnClick}
         />
       );
@@ -74,21 +74,21 @@ describe("NomineeCard", () => {
         id: "nom-3",
         nominationText: "Cillian Murphy for Oppenheimer",
         person: {
-          name: "Cillian Murphy",
           imageUrl: null,
+          name: "Cillian Murphy",
         },
         work: {
-          title: "Oppenheimer",
           imageUrl: "https://example.com/oppenheimer-poster.jpg",
+          title: "Oppenheimer",
           year: 2023,
         },
       };
 
       render(
         <NomineeCard
-          nomination={nomination}
-          isSelected={false}
           isLocked={false}
+          isSelected={false}
+          nomination={nomination}
           onClick={mockOnClick}
         />
       );
@@ -102,17 +102,17 @@ describe("NomineeCard", () => {
         id: "nom-4",
         nominationText: "Unknown Nominee",
         person: {
-          name: "Unknown",
           imageUrl: null,
+          name: "Unknown",
         },
         work: null,
       };
 
       render(
         <NomineeCard
-          nomination={nomination}
-          isSelected={false}
           isLocked={false}
+          isSelected={false}
+          nomination={nomination}
           onClick={mockOnClick}
         />
       );

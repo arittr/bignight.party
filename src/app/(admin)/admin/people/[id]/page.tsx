@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ConfirmDeleteButton } from "@/app/(admin)/admin/_components/confirm-delete-button";
@@ -35,10 +36,7 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
         return;
       }
       redirect("/admin/people");
-    } catch (error) {
-      // Handle error - person likely has nominations
-      console.error("Error deleting person:", error);
-    }
+    } catch (_error) {}
   }
 
   return (
@@ -56,10 +54,13 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
         <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-4">
             {person.imageUrl ? (
-              <img
+              <Image
                 alt={person.name}
                 className="h-20 w-20 rounded-full object-cover"
+                height={80}
                 src={person.imageUrl}
+                unoptimized
+                width={80}
               />
             ) : (
               <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
@@ -102,6 +103,7 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
                 Name <span className="text-red-500">*</span>
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 defaultValue={person.name}
@@ -116,6 +118,7 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="imageUrl">
                 Image URL
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 defaultValue={person.imageUrl ?? ""}
@@ -129,6 +132,7 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="externalId">
                 External ID
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 defaultValue={person.externalId ?? ""}

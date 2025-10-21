@@ -5,10 +5,10 @@
  * Verifies unique constraints, upsert behavior, foreign keys, and query functions.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import * as pickModel from "../pick";
+import { buildCategory, buildEvent, buildGame, buildNomination, buildUser } from "tests/factories";
 import { testPrisma } from "tests/utils/prisma";
-import { buildUser, buildEvent, buildGame, buildCategory, buildNomination } from "tests/factories";
+import { beforeEach, describe, expect, it } from "vitest";
+import * as pickModel from "../pick";
 
 describe("pickModel.create", () => {
   let testUserId: string;
@@ -28,27 +28,27 @@ describe("pickModel.create", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-1", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-1" }),
     });
     testGameId = game.id;
 
     const category = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-1", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-1" }),
     });
     testCategoryId = category.id;
 
     const nomination = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-1", categoryId: category.id }),
+      data: buildNomination({ categoryId: category.id, id: "nomination-p-1" }),
     });
     testNominationId = nomination.id;
   });
 
   it("creates pick with valid data", async () => {
     const pick = await pickModel.create({
-      game: { connect: { id: testGameId } },
-      user: { connect: { id: testUserId } },
       category: { connect: { id: testCategoryId } },
+      game: { connect: { id: testGameId } },
       nomination: { connect: { id: testNominationId } },
+      user: { connect: { id: testUserId } },
     });
 
     expect(pick.id).toBeDefined();
@@ -60,19 +60,19 @@ describe("pickModel.create", () => {
 
   it("enforces unique constraint on (gameId, userId, categoryId)", async () => {
     await pickModel.create({
-      game: { connect: { id: testGameId } },
-      user: { connect: { id: testUserId } },
       category: { connect: { id: testCategoryId } },
+      game: { connect: { id: testGameId } },
       nomination: { connect: { id: testNominationId } },
+      user: { connect: { id: testUserId } },
     });
 
     // Try to create duplicate pick (same game, user, category)
     await expect(
       pickModel.create({
-        game: { connect: { id: testGameId } },
-        user: { connect: { id: testUserId } },
         category: { connect: { id: testCategoryId } },
+        game: { connect: { id: testGameId } },
         nomination: { connect: { id: testNominationId } },
+        user: { connect: { id: testUserId } },
       })
     ).rejects.toThrow();
   });
@@ -80,10 +80,10 @@ describe("pickModel.create", () => {
   it("enforces foreign key constraint on gameId", async () => {
     await expect(
       pickModel.create({
-        game: { connect: { id: "invalid-game-id" } },
-        user: { connect: { id: testUserId } },
         category: { connect: { id: testCategoryId } },
+        game: { connect: { id: "invalid-game-id" } },
         nomination: { connect: { id: testNominationId } },
+        user: { connect: { id: testUserId } },
       })
     ).rejects.toThrow();
   });
@@ -91,10 +91,10 @@ describe("pickModel.create", () => {
   it("enforces foreign key constraint on userId", async () => {
     await expect(
       pickModel.create({
-        game: { connect: { id: testGameId } },
-        user: { connect: { id: "invalid-user-id" } },
         category: { connect: { id: testCategoryId } },
+        game: { connect: { id: testGameId } },
         nomination: { connect: { id: testNominationId } },
+        user: { connect: { id: "invalid-user-id" } },
       })
     ).rejects.toThrow();
   });
@@ -102,10 +102,10 @@ describe("pickModel.create", () => {
   it("enforces foreign key constraint on categoryId", async () => {
     await expect(
       pickModel.create({
-        game: { connect: { id: testGameId } },
-        user: { connect: { id: testUserId } },
         category: { connect: { id: "invalid-category-id" } },
+        game: { connect: { id: testGameId } },
         nomination: { connect: { id: testNominationId } },
+        user: { connect: { id: testUserId } },
       })
     ).rejects.toThrow();
   });
@@ -113,10 +113,10 @@ describe("pickModel.create", () => {
   it("enforces foreign key constraint on nominationId", async () => {
     await expect(
       pickModel.create({
-        game: { connect: { id: testGameId } },
-        user: { connect: { id: testUserId } },
         category: { connect: { id: testCategoryId } },
+        game: { connect: { id: testGameId } },
         nomination: { connect: { id: "invalid-nomination-id" } },
+        user: { connect: { id: testUserId } },
       })
     ).rejects.toThrow();
   });
@@ -124,27 +124,27 @@ describe("pickModel.create", () => {
   it("allows same user to pick different nominations in different categories", async () => {
     // Create second category and nomination
     const category2 = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-1-2", eventId: "event-p-1", name: "Category 2" }),
+      data: buildCategory({ eventId: "event-p-1", id: "category-p-1-2", name: "Category 2" }),
     });
 
     const nomination2 = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-1-2", categoryId: category2.id }),
+      data: buildNomination({ categoryId: category2.id, id: "nomination-p-1-2" }),
     });
 
     // Create pick for first category
     await pickModel.create({
-      game: { connect: { id: testGameId } },
-      user: { connect: { id: testUserId } },
       category: { connect: { id: testCategoryId } },
+      game: { connect: { id: testGameId } },
       nomination: { connect: { id: testNominationId } },
+      user: { connect: { id: testUserId } },
     });
 
     // Should allow pick for second category
     const pick2 = await pickModel.create({
-      game: { connect: { id: testGameId } },
-      user: { connect: { id: testUserId } },
       category: { connect: { id: category2.id } },
+      game: { connect: { id: testGameId } },
       nomination: { connect: { id: nomination2.id } },
+      user: { connect: { id: testUserId } },
     });
 
     expect(pick2.categoryId).toBe(category2.id);
@@ -170,20 +170,20 @@ describe("pickModel.upsert", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-2", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-2" }),
     });
     testGameId = game.id;
 
     const category = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-2", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-2" }),
     });
     testCategoryId = category.id;
 
     // Create two nominations for same category
     const nomination1 = await testPrisma.nomination.create({
       data: buildNomination({
-        id: "nomination-p-2-1",
         categoryId: category.id,
+        id: "nomination-p-2-1",
         nominationText: "Option 1",
       }),
     });
@@ -191,8 +191,8 @@ describe("pickModel.upsert", () => {
 
     const nomination2 = await testPrisma.nomination.create({
       data: buildNomination({
-        id: "nomination-p-2-2",
         categoryId: category.id,
+        id: "nomination-p-2-2",
         nominationText: "Option 2",
       }),
     });
@@ -201,10 +201,10 @@ describe("pickModel.upsert", () => {
 
   it("creates new pick when none exists", async () => {
     const pick = await pickModel.upsert({
-      gameId: testGameId,
-      userId: testUserId,
       categoryId: testCategoryId,
+      gameId: testGameId,
       nominationId: testNomination1Id,
+      userId: testUserId,
     });
 
     expect(pick.id).toBeDefined();
@@ -214,18 +214,18 @@ describe("pickModel.upsert", () => {
   it("updates existing pick with new nomination", async () => {
     // Create initial pick
     const initialPick = await pickModel.upsert({
-      gameId: testGameId,
-      userId: testUserId,
       categoryId: testCategoryId,
+      gameId: testGameId,
       nominationId: testNomination1Id,
+      userId: testUserId,
     });
 
     // Update to different nomination
     const updatedPick = await pickModel.upsert({
-      gameId: testGameId,
-      userId: testUserId,
       categoryId: testCategoryId,
+      gameId: testGameId,
       nominationId: testNomination2Id,
+      userId: testUserId,
     });
 
     expect(updatedPick.id).toBe(initialPick.id); // Same pick ID
@@ -234,10 +234,10 @@ describe("pickModel.upsert", () => {
 
   it("includes category and nomination data", async () => {
     const pick = await pickModel.upsert({
-      gameId: testGameId,
-      userId: testUserId,
       categoryId: testCategoryId,
+      gameId: testGameId,
       nominationId: testNomination1Id,
+      userId: testUserId,
     });
 
     expect(pick.category).toBeDefined();
@@ -249,26 +249,26 @@ describe("pickModel.upsert", () => {
   it("does not create duplicate picks", async () => {
     // Create pick via upsert
     await pickModel.upsert({
-      gameId: testGameId,
-      userId: testUserId,
       categoryId: testCategoryId,
+      gameId: testGameId,
       nominationId: testNomination1Id,
+      userId: testUserId,
     });
 
     // Upsert again with same data
     await pickModel.upsert({
-      gameId: testGameId,
-      userId: testUserId,
       categoryId: testCategoryId,
+      gameId: testGameId,
       nominationId: testNomination1Id,
+      userId: testUserId,
     });
 
     // Verify only one pick exists
     const picks = await testPrisma.pick.findMany({
       where: {
+        categoryId: testCategoryId,
         gameId: testGameId,
         userId: testUserId,
-        categoryId: testCategoryId,
       },
     });
 
@@ -290,23 +290,23 @@ describe("pickModel.findById", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-3", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-3" }),
     });
 
     const category = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-3", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-3" }),
     });
 
     const nomination = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-3", categoryId: category.id }),
+      data: buildNomination({ categoryId: category.id, id: "nomination-p-3" }),
     });
 
     const pick = await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category.id,
+        gameId: game.id,
         nominationId: nomination.id,
+        userId: user.id,
       },
     });
     testPickId = pick.id;
@@ -346,40 +346,40 @@ describe("pickModel.getPicksByGameAndUser", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-4", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-4" }),
     });
     testGameId = game.id;
 
     // Create two categories with nominations
     const category1 = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-4-1", eventId: event.id, name: "Category 1" }),
+      data: buildCategory({ eventId: event.id, id: "category-p-4-1", name: "Category 1" }),
     });
     const category2 = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-4-2", eventId: event.id, name: "Category 2" }),
+      data: buildCategory({ eventId: event.id, id: "category-p-4-2", name: "Category 2" }),
     });
 
     const nomination1 = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-4-1", categoryId: category1.id }),
+      data: buildNomination({ categoryId: category1.id, id: "nomination-p-4-1" }),
     });
     const nomination2 = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-4-2", categoryId: category2.id }),
+      data: buildNomination({ categoryId: category2.id, id: "nomination-p-4-2" }),
     });
 
     // Create picks
     await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category1.id,
+        gameId: game.id,
         nominationId: nomination1.id,
+        userId: user.id,
       },
     });
     await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category2.id,
+        gameId: game.id,
         nominationId: nomination2.id,
+        userId: user.id,
       },
     });
   });
@@ -436,26 +436,26 @@ describe("pickModel.getPicksCountByGameAndUser", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-5", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-5" }),
     });
     testGameId = game.id;
 
     // Create category and nomination
     const category = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-5", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-5" }),
     });
 
     const nomination = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-5", categoryId: category.id }),
+      data: buildNomination({ categoryId: category.id, id: "nomination-p-5" }),
     });
 
     // Create pick
     await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category.id,
+        gameId: game.id,
         nominationId: nomination.id,
+        userId: user.id,
       },
     });
   });
@@ -493,23 +493,23 @@ describe("pickModel.deleteById", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-6", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-6" }),
     });
 
     const category = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-6", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-6" }),
     });
 
     const nomination = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-6", categoryId: category.id }),
+      data: buildNomination({ categoryId: category.id, id: "nomination-p-6" }),
     });
 
     const pick = await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category.id,
+        gameId: game.id,
         nominationId: nomination.id,
+        userId: user.id,
       },
     });
     testPickId = pick.id;
@@ -549,39 +549,39 @@ describe("pickModel.deleteByUserAndGame", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-7", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-7" }),
     });
     testGameId = game.id;
 
     // Create two categories with picks
     const category1 = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-7-1", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-7-1" }),
     });
     const category2 = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-7-2", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-7-2" }),
     });
 
     const nomination1 = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-7-1", categoryId: category1.id }),
+      data: buildNomination({ categoryId: category1.id, id: "nomination-p-7-1" }),
     });
     const nomination2 = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-7-2", categoryId: category2.id }),
+      data: buildNomination({ categoryId: category2.id, id: "nomination-p-7-2" }),
     });
 
     await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category1.id,
+        gameId: game.id,
         nominationId: nomination1.id,
+        userId: user.id,
       },
     });
     await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category2.id,
+        gameId: game.id,
         nominationId: nomination2.id,
+        userId: user.id,
       },
     });
   });
@@ -620,23 +620,23 @@ describe("pickModel cascading deletes", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-8", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-8" }),
     });
 
     const category = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-8", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-8" }),
     });
 
     const nomination = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-8", categoryId: category.id }),
+      data: buildNomination({ categoryId: category.id, id: "nomination-p-8" }),
     });
 
     const pick = await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category.id,
+        gameId: game.id,
         nominationId: nomination.id,
+        userId: user.id,
       },
     });
 
@@ -661,23 +661,23 @@ describe("pickModel cascading deletes", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-9", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-9" }),
     });
 
     const category = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-9", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-9" }),
     });
 
     const nomination = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-9", categoryId: category.id }),
+      data: buildNomination({ categoryId: category.id, id: "nomination-p-9" }),
     });
 
     const pick = await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category.id,
+        gameId: game.id,
         nominationId: nomination.id,
+        userId: user.id,
       },
     });
 
@@ -702,23 +702,23 @@ describe("pickModel cascading deletes", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-p-10", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-p-10" }),
     });
 
     const category = await testPrisma.category.create({
-      data: buildCategory({ id: "category-p-10", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-p-10" }),
     });
 
     const nomination = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-p-10", categoryId: category.id }),
+      data: buildNomination({ categoryId: category.id, id: "nomination-p-10" }),
     });
 
     const pick = await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category.id,
+        gameId: game.id,
         nominationId: nomination.id,
+        userId: user.id,
       },
     });
 

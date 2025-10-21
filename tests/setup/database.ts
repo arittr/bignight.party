@@ -11,16 +11,10 @@ import { testPrisma, truncateAllTables } from "../utils/prisma";
  */
 
 beforeAll(async () => {
-  // Run migrations against test database
-  try {
-    execSync("dotenv -e .env.test -- prisma migrate deploy", {
-      stdio: "inherit",
-      cwd: process.cwd(),
-    });
-  } catch (error) {
-    console.error("Failed to run migrations:", error);
-    throw error;
-  }
+  execSync("dotenv -e .env.test -- prisma migrate deploy", {
+    cwd: process.cwd(),
+    stdio: "inherit",
+  });
 });
 
 afterEach(async () => {

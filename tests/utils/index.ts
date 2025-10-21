@@ -9,21 +9,19 @@
 // Mock utilities
 export {
   mockGameModel,
-  mockPickModel,
   mockGameParticipantModel,
+  mockPickModel,
   mockServerAction,
   resetAllMocks,
 } from "./mocks";
-
+// Prisma utilities
+export { testPrisma, truncateAllTables } from "./prisma";
 // Test helpers
 export {
   expectToThrow,
-  waitForDbWrite,
-  toMatchGameStatus,
-  toBeValidPick,
-  toBeValidGame,
   registerCustomMatchers,
+  toBeValidGame,
+  toBeValidPick,
+  toMatchGameStatus,
+  waitForDbWrite,
 } from "./test-helpers";
-
-// Prisma utilities
-export { testPrisma, truncateAllTables } from "./prisma";

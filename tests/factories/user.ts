@@ -1,4 +1,4 @@
-import type { User, Role } from "@prisma/client";
+import type { Role, User } from "@prisma/client";
 
 /**
  * Build a User object for testing
@@ -7,13 +7,13 @@ import type { User, Role } from "@prisma/client";
  */
 export function buildUser(overrides: Partial<User> = {}): User {
   return {
-    id: "user-test-1",
-    email: "test@example.com",
-    role: "USER" as Role,
-    emailVerified: null,
-    name: "Test User",
-    image: null,
     createdAt: new Date("2025-01-01T00:00:00Z"),
+    email: "test@example.com",
+    emailVerified: null,
+    id: "user-test-1",
+    image: null,
+    name: "Test User",
+    role: "USER" as Role,
     updatedAt: new Date("2025-01-01T00:00:00Z"),
     ...overrides,
   };

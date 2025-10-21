@@ -17,10 +17,10 @@
  * ```
  */
 
-export { buildUser } from "./user";
+export { buildCategory } from "./category";
 export { buildEvent } from "./event";
 export { buildGame } from "./game";
 export { buildGameParticipant } from "./game-participant";
-export { buildCategory } from "./category";
 export { buildNomination } from "./nomination";
 export { buildPick } from "./pick";
+export { buildUser } from "./user";

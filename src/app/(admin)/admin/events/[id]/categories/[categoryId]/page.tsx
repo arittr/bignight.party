@@ -82,6 +82,7 @@ export default async function CategoryDetailPage(props: Props) {
           <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
             Category Name
           </label>
+          {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
           <input
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             defaultValue={category.name}
@@ -97,6 +98,7 @@ export default async function CategoryDetailPage(props: Props) {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="order">
               Display Order
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               defaultValue={category.order}
@@ -112,6 +114,7 @@ export default async function CategoryDetailPage(props: Props) {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="points">
               Points
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               defaultValue={category.points}
@@ -126,6 +129,7 @@ export default async function CategoryDetailPage(props: Props) {
 
         <div>
           <label className="flex items-center space-x-2">
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="rounded"
               defaultChecked={category.isRevealed}

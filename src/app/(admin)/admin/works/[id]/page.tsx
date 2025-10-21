@@ -22,14 +22,8 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
   // Delete action with error handling
   async function handleDelete() {
     "use server";
-
-    try {
-      await deleteWorkAction({ id: params.id });
-      redirect("/admin/works");
-    } catch (error) {
-      // Foreign key constraint error will be caught here
-      throw error;
-    }
+    await deleteWorkAction({ id: params.id });
+    redirect("/admin/works");
   }
 
   return (
@@ -73,6 +67,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="title">
                 Title
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 defaultValue={work.title}
@@ -87,6 +82,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="type">
                 Type
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <select
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 defaultValue={work.type}
@@ -107,6 +103,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="year">
                 Year
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 defaultValue={work.year ?? ""}
@@ -123,6 +120,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="imageUrl">
                 Poster URL
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 defaultValue={work.imageUrl ?? ""}
@@ -137,6 +135,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
               <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="externalId">
                 External ID
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 defaultValue={work.externalId ?? ""}

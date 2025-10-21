@@ -46,8 +46,8 @@ export async function findOrCreateByWikipediaSlug(data: {
   imageUrl?: string;
 }) {
   return await prisma.person.upsert({
-    where: { wikipediaSlug: data.wikipediaSlug },
-    update: {},
     create: data,
+    update: {},
+    where: { wikipediaSlug: data.wikipediaSlug },
   });
 }

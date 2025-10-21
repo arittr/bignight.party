@@ -1,9 +1,9 @@
 import type { GameStatus, Prisma } from "@prisma/client";
 import { match } from "ts-pattern";
+import * as categoryModel from "@/lib/models/category";
 import * as gameModel from "@/lib/models/game";
 import * as gameParticipantModel from "@/lib/models/game-participant";
 import * as pickModel from "@/lib/models/pick";
-import * as categoryModel from "@/lib/models/category";
 
 /**
  * Create a new game
@@ -90,7 +90,7 @@ export async function joinGame(userId: string, gameId: string) {
   }
 
   // Create participant record
-  return gameParticipantModel.create({ userId, gameId });
+  return gameParticipantModel.create({ gameId, userId });
 }
 
 /**

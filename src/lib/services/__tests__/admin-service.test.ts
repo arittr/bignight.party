@@ -5,15 +5,15 @@
  * Focus: Dashboard statistics aggregation, validation logic.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import * as adminService from "../admin-service";
+import { buildCategory, buildEvent, buildGame, buildNomination } from "tests/factories";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as categoryModel from "@/lib/models/category";
 import * as eventModel from "@/lib/models/event";
 import * as gameModel from "@/lib/models/game";
-import * as categoryModel from "@/lib/models/category";
 import * as nominationModel from "@/lib/models/nomination";
 import * as personModel from "@/lib/models/person";
 import * as workModel from "@/lib/models/work";
-import { buildEvent, buildGame, buildCategory, buildNomination } from "tests/factories";
+import * as adminService from "../admin-service";
 
 // Mock all model imports
 vi.mock("@/lib/models/event");
@@ -42,19 +42,19 @@ describe("adminService.getAdminDashboardStats", () => {
       buildEvent({ id: "event-3", name: "Emmys 2025" }),
     ];
     const mockGames = [
-      buildGame({ id: "game-1", eventId: "event-1" }),
-      buildGame({ id: "game-2", eventId: "event-1" }),
+      buildGame({ eventId: "event-1", id: "game-1" }),
+      buildGame({ eventId: "event-1", id: "game-2" }),
     ];
     const mockCategories = [
-      buildCategory({ id: "cat-1", eventId: "event-1" }),
-      buildCategory({ id: "cat-2", eventId: "event-1" }),
-      buildCategory({ id: "cat-3", eventId: "event-2" }),
+      buildCategory({ eventId: "event-1", id: "cat-1" }),
+      buildCategory({ eventId: "event-1", id: "cat-2" }),
+      buildCategory({ eventId: "event-2", id: "cat-3" }),
     ];
     const mockNominations = [
-      buildNomination({ id: "nom-1", categoryId: "cat-1" }),
-      buildNomination({ id: "nom-2", categoryId: "cat-1" }),
-      buildNomination({ id: "nom-3", categoryId: "cat-2" }),
-      buildNomination({ id: "nom-4", categoryId: "cat-3" }),
+      buildNomination({ categoryId: "cat-1", id: "nom-1" }),
+      buildNomination({ categoryId: "cat-1", id: "nom-2" }),
+      buildNomination({ categoryId: "cat-2", id: "nom-3" }),
+      buildNomination({ categoryId: "cat-3", id: "nom-4" }),
     ];
 
     vi.mocked(eventModel.findAll).mockResolvedValue(mockEvents as any);

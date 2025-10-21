@@ -4,16 +4,16 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
-  test: {
-    environment: "happy-dom",
-    setupFiles: ["./tests/setup/database.ts", "./tests/setup/test-setup.ts"],
-    globals: true,
-    fileParallelism: false,
-  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
       tests: path.resolve(__dirname, "./tests"),
     },
+  },
+  test: {
+    environment: "happy-dom",
+    fileParallelism: false,
+    globals: true,
+    setupFiles: ["./tests/setup/database.ts", "./tests/setup/test-setup.ts"],
   },
 });

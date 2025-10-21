@@ -1,3 +1,4 @@
+import type { GameStatus } from "@prisma/client";
 import Link from "next/link";
 import * as categoryModel from "@/lib/models/category";
 import * as eventModel from "@/lib/models/event";
@@ -5,6 +6,20 @@ import * as gameModel from "@/lib/models/game";
 import * as nominationModel from "@/lib/models/nomination";
 import * as personModel from "@/lib/models/person";
 import * as workModel from "@/lib/models/work";
+
+// Helper function to get status badge color classes
+function getStatusBadgeClass(status: GameStatus): string {
+  switch (status) {
+    case "SETUP":
+      return "bg-gray-100 text-gray-800";
+    case "OPEN":
+      return "bg-blue-100 text-blue-800";
+    case "LIVE":
+      return "bg-green-100 text-green-800";
+    case "COMPLETED":
+      return "bg-purple-100 text-purple-800";
+  }
+}
 
 export default async function AdminDashboardPage() {
   // Fetch all data in parallel
@@ -174,15 +189,7 @@ export default async function AdminDashboardPage() {
                       </div>
                       <div>
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            game.status === "SETUP"
-                              ? "bg-gray-100 text-gray-800"
-                              : game.status === "OPEN"
-                                ? "bg-blue-100 text-blue-800"
-                                : game.status === "LIVE"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-purple-100 text-purple-800"
-                          }`}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(game.status)}`}
                         >
                           {game.status}
                         </span>

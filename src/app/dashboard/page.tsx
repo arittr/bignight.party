@@ -1,6 +1,6 @@
+import { GameListItem } from "@/components/game-list-item";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as gameService from "@/lib/services/game-service";
-import { GameListItem } from "@/components/game-list-item";
 
 export default async function DashboardPage() {
   const session = await requireValidatedSession();

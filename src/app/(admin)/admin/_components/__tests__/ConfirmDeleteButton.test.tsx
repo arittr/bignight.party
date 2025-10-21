@@ -6,9 +6,9 @@
  * Uses mocked delete actions (no real API calls).
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ConfirmDeleteButton } from "../confirm-delete-button";
 
 describe("ConfirmDeleteButton", () => {
@@ -23,9 +23,9 @@ describe("ConfirmDeleteButton", () => {
   it("renders delete button with correct text", () => {
     render(
       <ConfirmDeleteButton
-        onDelete={mockOnDelete}
-        confirmMessage="Are you sure?"
         buttonText="Delete Game"
+        confirmMessage="Are you sure?"
+        onDelete={mockOnDelete}
       />
     );
 
@@ -39,9 +39,9 @@ describe("ConfirmDeleteButton", () => {
 
     render(
       <ConfirmDeleteButton
-        onDelete={mockOnDelete}
-        confirmMessage="Are you sure you want to delete this game?"
         buttonText="Delete"
+        confirmMessage="Are you sure you want to delete this game?"
+        onDelete={mockOnDelete}
       />
     );
 
@@ -58,9 +58,9 @@ describe("ConfirmDeleteButton", () => {
 
     render(
       <ConfirmDeleteButton
-        onDelete={mockOnDelete}
-        confirmMessage="Are you sure?"
         buttonText="Delete"
+        confirmMessage="Are you sure?"
+        onDelete={mockOnDelete}
       />
     );
 
@@ -79,9 +79,9 @@ describe("ConfirmDeleteButton", () => {
 
     render(
       <ConfirmDeleteButton
-        onDelete={mockOnDelete}
-        confirmMessage="Are you sure?"
         buttonText="Delete"
+        confirmMessage="Are you sure?"
+        onDelete={mockOnDelete}
       />
     );
 
@@ -101,9 +101,9 @@ describe("ConfirmDeleteButton", () => {
 
     render(
       <ConfirmDeleteButton
-        onDelete={mockOnDelete}
-        confirmMessage="Are you sure?"
         buttonText="Delete"
+        confirmMessage="Are you sure?"
+        onDelete={mockOnDelete}
       />
     );
 
@@ -121,10 +121,10 @@ describe("ConfirmDeleteButton", () => {
   it("applies custom className to button", () => {
     render(
       <ConfirmDeleteButton
-        onDelete={mockOnDelete}
-        confirmMessage="Are you sure?"
         buttonText="Delete"
         className="custom-delete-button"
+        confirmMessage="Are you sure?"
+        onDelete={mockOnDelete}
       />
     );
 
@@ -135,9 +135,9 @@ describe("ConfirmDeleteButton", () => {
   it("applies default red styling when no className provided", () => {
     render(
       <ConfirmDeleteButton
-        onDelete={mockOnDelete}
-        confirmMessage="Are you sure?"
         buttonText="Delete"
+        confirmMessage="Are you sure?"
+        onDelete={mockOnDelete}
       />
     );
 
@@ -160,9 +160,9 @@ describe("ConfirmDeleteButton", () => {
 
     render(
       <ConfirmDeleteButton
-        onDelete={asyncDelete}
-        confirmMessage="Are you sure?"
         buttonText="Delete"
+        confirmMessage="Are you sure?"
+        onDelete={asyncDelete}
       />
     );
 
@@ -182,9 +182,9 @@ describe("ConfirmDeleteButton", () => {
 
     render(
       <ConfirmDeleteButton
-        onDelete={mockOnDelete}
-        confirmMessage="Are you sure?"
         buttonText="Delete"
+        confirmMessage="Are you sure?"
+        onDelete={mockOnDelete}
       />
     );
 
