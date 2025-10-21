@@ -1,7 +1,9 @@
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { routes } from "@/lib/routes";
 
 export interface UsePickNavigationProps {
+  gameId: string;
   categories: Array<{ id: string }>;
   currentCategoryId: string;
 }
@@ -25,15 +27,17 @@ export interface UsePickNavigationReturn {
  * - Direct category selection
  * - Boundary detection (first/last category)
  *
- * @param props - Categories array and current category ID
+ * Uses centralized routes from @/lib/routes per CLAUDE.md constitution.
+ *
+ * @param props - Game ID, categories array, and current category ID
  * @returns Navigation state and handlers
  */
 export function usePickNavigation({
+  gameId,
   categories,
   currentCategoryId,
 }: UsePickNavigationProps): UsePickNavigationReturn {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   // Calculate current index and boundaries
   const currentIndex = useMemo(
@@ -48,11 +52,9 @@ export function usePickNavigation({
     [currentIndex, categories.length]
   );
 
-  // Navigate to specific category by updating URL search params
+  // Navigate to specific category using centralized routes
   const navigateToCategory = (categoryId: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("category", categoryId);
-    router.push(`?${params.toString()}`);
+    router.push(routes.game.pick(gameId, categoryId));
   };
 
   // Navigate to previous category
