@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth/config";
+import { requireValidatedSession } from "@/lib/auth/config";
 import { JoinGameHandler } from "./join-game-handler";
 
 interface CallbackPageProps {
@@ -9,13 +9,8 @@ interface CallbackPageProps {
 }
 
 export default async function CallbackPage({ searchParams }: CallbackPageProps) {
-  const session = await auth();
+  const session = await requireValidatedSession();
   const params = await searchParams;
-
-  // Must be authenticated to use this page
-  if (!session?.user?.id) {
-    redirect("/sign-in");
-  }
 
   // If no code provided, redirect to dashboard
   if (!params.code) {

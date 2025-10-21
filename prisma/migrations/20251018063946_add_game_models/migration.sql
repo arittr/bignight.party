@@ -52,7 +52,7 @@ CREATE TABLE "Work" (
     "type" "WorkType" NOT NULL,
     "title" TEXT NOT NULL,
     "year" INTEGER,
-    "posterUrl" TEXT,
+    "imageUrl" TEXT,
     "externalId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

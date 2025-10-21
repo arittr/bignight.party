@@ -26,6 +26,100 @@ export class WikipediaAPIError extends Error {
 }
 
 /**
+ * Fetches the main image URL for a Wikipedia page
+ *
+ * @param wikipediaSlug - The Wikipedia page slug (e.g., "Cillian_Murphy")
+ * @returns Image URL or null if no image found
+ */
+export async function fetchWikipediaImage(wikipediaSlug: string): Promise<string | null> {
+  try {
+    const fetchResult = await wtf.fetch(wikipediaSlug);
+
+    if (!fetchResult) {
+      return null;
+    }
+
+    // wtf_wikipedia can return Document or Document[] - ensure we get single Document
+    const doc = Array.isArray(fetchResult) ? fetchResult[0] : fetchResult;
+
+    if (!doc) {
+      return null;
+    }
+
+    // Get the first image from the page
+    const images = doc.images();
+
+    if (!images || images.length === 0) {
+      return null;
+    }
+
+    // Get the main image (first one)
+    const mainImage = images[0];
+
+    // Get the full-size URL
+    const imageUrl = mainImage.url();
+
+    return imageUrl || null;
+  } catch (error) {
+    // If page doesn't exist or API fails, return null
+    console.warn(`Failed to fetch image for ${wikipediaSlug}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Enriches parsed event data with images for all people and works
+ * Fetches images from Wikipedia for each unique person and work slug
+ *
+ * @param parsedEvent - The parsed event data
+ * @returns The same event with image URLs populated
+ */
+export async function enrichWithImages(parsedEvent: ParsedEvent): Promise<ParsedEvent> {
+  // Collect unique slugs to avoid duplicate fetches
+  const personSlugs = new Set<string>();
+  const workSlugs = new Set<string>();
+
+  for (const category of parsedEvent.categories) {
+    for (const nomination of category.nominations) {
+      if (nomination.personWikipediaSlug) {
+        personSlugs.add(nomination.personWikipediaSlug);
+      }
+      if (nomination.workWikipediaSlug) {
+        workSlugs.add(nomination.workWikipediaSlug);
+      }
+    }
+  }
+
+  // Fetch images for unique persons
+  const personImages = new Map<string, string | null>();
+  for (const slug of personSlugs) {
+    const imageUrl = await fetchWikipediaImage(slug);
+    personImages.set(slug, imageUrl);
+  }
+
+  // Fetch images for unique works
+  const workImages = new Map<string, string | null>();
+  for (const slug of workSlugs) {
+    const imageUrl = await fetchWikipediaImage(slug);
+    workImages.set(slug, imageUrl);
+  }
+
+  // Populate image URLs in nominations
+  for (const category of parsedEvent.categories) {
+    for (const nomination of category.nominations) {
+      if (nomination.personWikipediaSlug) {
+        nomination.personImageUrl = personImages.get(nomination.personWikipediaSlug) || undefined;
+      }
+      if (nomination.workWikipediaSlug) {
+        nomination.workImageUrl = workImages.get(nomination.workWikipediaSlug) || undefined;
+      }
+    }
+  }
+
+  return parsedEvent;
+}
+
+/**
  * Validates that a URL is a valid Wikipedia URL
  */
 function validateWikipediaUrl(url: string): { isValid: boolean; pageTitle?: string } {

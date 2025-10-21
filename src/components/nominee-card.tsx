@@ -6,7 +6,7 @@ interface NomineeCardProps {
     nominationText: string;
     work?: {
       title: string;
-      posterUrl: string | null;
+      imageUrl: string | null;
       year: number | null;
     } | null;
     person?: {
@@ -20,8 +20,8 @@ interface NomineeCardProps {
 }
 
 export function NomineeCard({ nomination, isSelected, isLocked, onClick }: NomineeCardProps) {
-  const imageUrl = nomination.work?.posterUrl || nomination.person?.imageUrl || null;
-  const title = nomination.work?.title || nomination.person?.name || "Unknown";
+  const imageUrl = nomination.person?.imageUrl || nomination.work?.imageUrl || null;
+  const title = nomination.person?.name || nomination.work?.title || "Unknown";
   const year = nomination.work?.year;
 
   return (

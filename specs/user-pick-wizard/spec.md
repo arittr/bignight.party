@@ -21,6 +21,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 ### Functional Requirements
 
 **FR1: Invite Flow & Game Membership**
+
 - New users receive invite link: `/signup?code=GAMECODE`
 - Sign-in flow captures invite code and auto-joins game after authentication
 - After signup, user lands on dashboard with success toast: "✓ You've joined [Game Name]!"
@@ -28,18 +29,21 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 - Toast auto-dismisses after 5 seconds
 
 **FR2: Dashboard**
+
 - After login, users see `/dashboard` with "My Games" list
 - Shows all games user has joined (from GameParticipant table)
 - Each game shows: name, event name, status, completion count (X/Y categories completed)
 - Click game → navigate to `/game/[gameId]/pick` (uses DB ID, not access code)
 
 **FR3: Game Access - Direct Links**
+
 - Direct URLs with access code (`/game/[code]` or `/game/[code]/pick`) work for sharing
 - If user is already a member: redirect to `/game/[gameId]/pick` (resolve gameId from code)
 - If user is NOT a member: show game info page with "Join Game" button (explicit join required)
 - After clicking "Join Game": create GameParticipant record, then redirect to pick wizard
 
 **FR4: Pick Wizard Navigation**
+
 - Single route (`/game/[gameId]/pick`) with URL query parameter for category navigation (uses DB ID)
 - Hybrid navigation: progress stepper with clickable category indicators + Previous/Next buttons
 - Browser back/forward buttons work naturally with URL state
@@ -47,6 +51,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 - Categories displayed in order defined by `Category.order` field
 
 **FR5: Nominee Selection**
+
 - Nominees displayed as cards in responsive grid (2-3 per row)
 - Each card shows: Work poster/Person photo, nomination text, work/person details
 - If image is null, show gray placeholder with film/person icon
@@ -56,6 +61,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 - Click to select, click again to deselect (optional picks)
 
 **FR6: Autosave**
+
 - Picks automatically saved on each selection (no manual save button)
 - Immediate optimistic UI update
 - Server action called with pick data (upserts via unique constraint)
@@ -63,23 +69,27 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 - Network errors show retry option
 
 **FR7: Draft Management**
+
 - Users can navigate between categories freely without losing selections
 - Partial completion allowed during OPEN status
 - Existing picks loaded on page load and pre-populate selections
 - Skip categories permitted (scores 0 points for skipped)
 
 **FR8: Game Status Locking**
+
 - Picks only editable when `game.status === 'OPEN'`
 - When game status is not OPEN: disable all cards, show "Picks are locked" banner
 - Server action validates game status before saving (rejects if locked)
 - User must refresh page to see status changes (no real-time WebSocket for lock state)
 
 **FR9: Completion Tracking**
+
 - Show count of completed categories (categories with Pick records)
 - No enforcement of 100% completion before game starts
 - Incomplete categories score 0 points when game goes LIVE
 
 **FR10: Lock Time Warning**
+
 - If game.status is OPEN and `picksLockAt` is within 30 minutes, show warning banner
 - Banner text: "⚠️ Game starts in X minutes! You have Y incomplete categories."
 - Only display if user has incomplete picks (some categories without Pick records)
@@ -88,24 +98,28 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 ### Non-Functional Requirements
 
 **NFR1: Performance**
+
 - Initial page load fetches only current category's nominations (not all categories)
 - Category navigation updates URL without full page reload
 - Images lazy-loaded with placeholders
 - Autosave debounced if multiple rapid clicks
 
 **NFR2: Mobile Responsive**
+
 - Works on mobile, tablet, and desktop
 - Card grid adjusts for screen size (1 column mobile, 2-3 desktop)
 - Touch-friendly card selection (minimum 44px tap targets)
 - Progress stepper scrollable horizontally on mobile
 
 **NFR3: Accessibility**
+
 - Keyboard navigation through categories and cards
 - ARIA labels on interactive elements
 - Focus indicators visible
 - Screen reader friendly progress announcements
 
 **NFR4: Data Integrity**
+
 - Unique constraint on Pick (gameId + userId + categoryId) prevents duplicates
 - Upsert pattern allows changing picks without errors
 - Server-side validation prevents picks after game locked
@@ -120,20 +134,24 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 **New Files:**
 
 **Models Layer:**
+
 - `src/lib/models/game-participant-model.ts` - Data access for GameParticipant join table (membership CRUD)
 - `src/lib/models/pick-model.ts` - Data access for Pick table (CRUD operations)
 - `src/lib/models/nomination-model.ts` - Add `getNominationsByCategoryId` method
 - `src/lib/models/category-model.ts` - Add `getCategoriesByEventId` method
 
 **Services Layer:**
+
 - `src/lib/services/game-service.ts` - Add methods for joining games, checking membership
 - `src/lib/services/pick-service.ts` - Business logic for pick submission (status validation, nomination validation)
 
 **Actions Layer:**
+
 - `src/lib/actions/game-actions.ts` - Server actions for joining games
 - `src/lib/actions/pick-actions.ts` - Server actions with next-safe-action for pick submission
 
 **UI Layer:**
+
 - `src/app/signup/page.tsx` - Signup page that captures `?code=X` and auto-joins after auth
 - `src/app/dashboard/page.tsx` - User dashboard (Server Component, shows "My Games" list)
 - `src/app/game/[code]/page.tsx` - Game access resolver (checks membership, shows join button or redirects)
@@ -144,15 +162,18 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 - `src/components/game-list-item.tsx` - Client Component for dashboard game cards
 
 **Schemas:**
+
 - `src/schemas/pick-schema.ts` - Zod validation schema for pick submission
 - `src/schemas/game-schema.ts` - Zod validation schema for joining games
 
 **Modified Files:**
+
 - `src/app/(auth)/sign-in/page.tsx` - Capture `returnUrl` or `code` query params for post-auth redirect
 
 ### Dependencies
 
 **Existing packages:**
+
 - `next-safe-action` - Server action validation (already in project)
 - `zod` - Input validation (already in project)
 - `ts-pattern` - Exhaustive status checking (already in project)
@@ -162,11 +183,13 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 ### Integration Points
 
 **Authentication:**
+
 - Uses existing Auth.js v5 setup
 - Middleware protects `/game/*` routes
 - `authenticatedAction` from `src/lib/actions/safe-action.ts` provides `ctx.userId`
 
 **Database:**
+
 - Prisma client per @docs/constitutions/current/tech-stack.md
 - Pick model already exists with correct schema
 - Unique constraint `@@unique([gameId, userId, categoryId])` enables upsert pattern
@@ -174,10 +197,12 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 - **Migration**: `add_game_participant` - Create join table for game membership tracking
 
 **Validation:**
+
 - Zod schemas per @docs/constitutions/current/patterns.md
 - All inputs validated via next-safe-action
 
 **Real-time (Future):**
+
 - No WebSocket integration for lock state in initial version
 - Lock state checked on page load only
 - Future enhancement: WebSocket notification when game status changes
@@ -185,6 +210,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 ### Data Flow
 
 **Invite & Signup:**
+
 1. User receives link: `/signup?code=PARTY2025`
 2. Signup page captures code in URL, shows sign-in form
 3. After auth, callback checks for pending code
@@ -192,6 +218,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 5. Redirect to `/dashboard`
 
 **Dashboard Load:**
+
 1. Server Component at `/dashboard` fetches user's games
 2. Query GameParticipant where userId = current user
 3. Include game + event data for each
@@ -199,6 +226,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 5. Display game cards with "Continue Making Picks" buttons
 
 **Game Access via Direct Link:**
+
 1. User navigates to `/game/[code]` or `/game/[code]/pick`
 2. Server Component looks up game by access code
 3. Check if GameParticipant record exists for (userId, gameId)
@@ -207,6 +235,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 6. Click "Join Game" → create GameParticipant → redirect to pick wizard
 
 **Pick Wizard Page Load:**
+
 1. Server Component at `/game/[gameId]/pick?category=[id]` runs
 2. Verify user is game participant (check GameParticipant table)
 3. Fetch game by DB ID via `gameModel.getGameById(gameId)`
@@ -216,6 +245,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 7. Pass data as props to Client Components
 
 **Pick Submission:**
+
 1. User clicks nominee card in Client Component
 2. Optimistic UI update (show selected state)
 3. Call `submitPickAction({ gameId, categoryId, nominationId })`
@@ -227,6 +257,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 9. Return success/error to client
 
 **Category Navigation:**
+
 1. User clicks category in stepper or Previous/Next button
 2. Client Component updates URL query param via `router.push()`
 3. Server Component re-renders with new category data
@@ -235,23 +266,27 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 ### State Management
 
 **Server State (fetched per route):**
+
 - Current game
 - All categories for event
 - Nominations for current category
 - User's existing picks
 
 **Client State (Pick Wizard Component):**
+
 - `selectedNominationId` - Current selection for displayed category
 - `isSaving` - Loading state during autosave
 - `currentCategoryIndex` - For Previous/Next navigation
 
 **URL State:**
+
 - `?category=[categoryId]` - Current category being viewed
 - Browser history enables back/forward navigation
 
 ## Acceptance Criteria
 
 **Constitution compliance:**
+
 - [x] Server actions use next-safe-action (@docs/constitutions/current/patterns.md)
 - [x] Game status checked with ts-pattern and .exhaustive() in service layer
 - [x] Layer boundaries respected (Pick queries only in models/, business logic in services/)
@@ -259,25 +294,29 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 
 **Feature-specific:**
 
-*Invite & Membership:*
+_Invite & Membership:_
+
 - [ ] User can access `/signup?code=GAMECODE` invite link
 - [ ] After sign-in with invite code, GameParticipant record created automatically
 - [ ] After signup, user redirects to dashboard with success toast
 - [ ] Success toast shows "✓ You've joined [Game Name]!" and auto-dismisses after 5s
 - [ ] GameParticipant table tracks userId + gameId + joinedAt
 
-*Dashboard:*
+_Dashboard:_
+
 - [ ] Dashboard at `/dashboard` shows "My Games" list
 - [ ] Each game card shows name, event name, status, completion (X/Y categories)
 - [ ] Clicking game navigates to `/game/[gameId]/pick`
 
-*Game Access:*
+_Game Access:_
+
 - [ ] Direct link `/game/[code]` resolves game by access code
 - [ ] If user is member: redirect to `/game/[gameId]/pick`
 - [ ] If user is NOT member: show game info page with "Join Game" button
 - [ ] Clicking "Join Game" creates GameParticipant and redirects to pick wizard
 
-*Pick Wizard:*
+_Pick Wizard:_
+
 - [ ] Pick wizard shows categories with progress stepper
 - [ ] Categories displayed in order defined by Category.order field
 - [ ] Nominee cards display images, nomination text, and work/person details
@@ -301,6 +340,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
 - [ ] Browser back/forward buttons work for category navigation
 
 **Verification:**
+
 - [ ] Tests pass (TDD per @docs/constitutions/current/testing.md)
 - [ ] Linting passes (`pnpm lint`)
 - [ ] Feature works end-to-end (can submit picks, navigate categories, see lock state)
@@ -312,7 +352,7 @@ Need to build game membership system (GameParticipant table), invite flow, user 
    - Can add `invitedBy`, `role`, `lastVisitedAt` in future if needed
 
 2. **Image fallbacks**: Gray placeholder with icon
-   - If `Work.posterUrl` or `Person.imageUrl` is null, show default placeholder
+   - If `Work.imageUrl` or `Person.imageUrl` is null, show default placeholder
    - Design: Light gray background with film/person icon centered
 
 3. **Completion warning**: Yes, show warning banner

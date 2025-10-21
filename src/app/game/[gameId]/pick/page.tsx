@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config";
+import { requireValidatedSession } from "@/lib/auth/config";
 import { redirect } from "next/navigation";
 import * as gameParticipantModel from "@/lib/models/game-participant";
 import * as gameModel from "@/lib/models/game";
@@ -16,11 +16,8 @@ export default async function PickWizardPage({ params, searchParams }: PickWizar
   const { gameId } = await params;
   const { category } = await searchParams;
 
-  // Check authentication
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/sign-in");
-  }
+  // Require authenticated user with validated database record
+  const session = await requireValidatedSession();
 
   // Verify user is participant
   const isMember = await gameParticipantModel.exists(session.user.id, gameId);

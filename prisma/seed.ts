@@ -34,7 +34,7 @@ async function main() {
   const oppenheimer = await prisma.work.create({
     data: {
       externalId: "tmdb:872585",
-      posterUrl: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+      imageUrl: "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
       title: "Oppenheimer",
       type: WorkType.FILM,
       year: 2023,
@@ -45,7 +45,7 @@ async function main() {
   const barbie = await prisma.work.create({
     data: {
       externalId: "tmdb:346698",
-      posterUrl: "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
+      imageUrl: "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
       title: "Barbie",
       type: WorkType.FILM,
       year: 2023,
@@ -56,7 +56,7 @@ async function main() {
   const killersOfTheFlowerMoon = await prisma.work.create({
     data: {
       externalId: "tmdb:466420",
-      posterUrl: "https://image.tmdb.org/t/p/w500/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
+      imageUrl: "https://image.tmdb.org/t/p/w500/dB6Krk806zeqd0YNp2ngQ9zXteH.jpg",
       title: "Killers of the Flower Moon",
       type: WorkType.FILM,
       year: 2023,
@@ -254,6 +254,16 @@ async function main() {
   console.log(`  - People: 3`);
   console.log(`  - Nominations: 9`);
 }
+
+console.log(`    - Creating admin user`);
+const adminUser = await prisma.user.create({
+  data: {
+    email: "drew@ritter.dev",
+    name: "Admin",
+    role: "ADMIN",
+  },
+});
+console.log(`    - Created admin user: ${adminUser.email}`);
 
 main()
   .catch((e) => {

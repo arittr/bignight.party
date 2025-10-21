@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config";
+import { requireValidatedSession } from "@/lib/auth/config";
 import * as gameModel from "@/lib/models/game";
 import * as gameService from "@/lib/services/game-service";
 import { notFound, redirect } from "next/navigation";
@@ -9,10 +9,7 @@ interface PageProps {
 }
 
 export default async function GameAccessPage({ params }: PageProps) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/sign-in");
-  }
+  const session = await requireValidatedSession();
 
   const { code } = await params;
 

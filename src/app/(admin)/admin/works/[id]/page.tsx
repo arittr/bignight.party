@@ -53,7 +53,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
               const title = formData.get("title");
               const type = formData.get("type");
               const year = formData.get("year");
-              const posterUrl = formData.get("posterUrl");
+              const imageUrl = formData.get("imageUrl");
               const externalId = formData.get("externalId");
 
               await updateWorkAction({
@@ -61,7 +61,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
                 ...(title && { title: title as string }),
                 ...(type && { type: type as WorkType }),
                 ...(year && { year: Number(year) }),
-                ...(posterUrl && { posterUrl: posterUrl as string }),
+                ...(imageUrl && { imageUrl: imageUrl as string }),
                 ...(externalId && { externalId: externalId as string }),
               });
             }}
@@ -120,14 +120,14 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
 
             {/* Poster URL */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="posterUrl">
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="imageUrl">
                 Poster URL
               </label>
               <input
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                defaultValue={work.posterUrl ?? ""}
-                id="posterUrl"
-                name="posterUrl"
+                defaultValue={work.imageUrl ?? ""}
+                id="imageUrl"
+                name="imageUrl"
                 type="url"
               />
             </div>

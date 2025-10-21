@@ -36,9 +36,9 @@ model User {
   name          String?
   image         String?
 
-  accounts          Account[]
-  picks             Pick[]
-  gameParticipants  GameParticipant[]
+  accounts         Account[]
+  picks            Pick[]
+  gameParticipants GameParticipant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -145,7 +145,7 @@ model Work {
   type          WorkType
   title         String
   year          Int?
-  posterUrl     String?
+  imageUrl      String?
   externalId    String?
   wikipediaSlug String?  @unique
 

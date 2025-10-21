@@ -1,14 +1,9 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth/config";
+import { requireValidatedSession } from "@/lib/auth/config";
 import * as gameService from "@/lib/services/game-service";
 import { GameListItem } from "@/components/game-list-item";
 
 export default async function DashboardPage() {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    redirect("/sign-in");
-  }
+  const session = await requireValidatedSession();
 
   const gamesWithCompletion = await gameService.getUserGames(session.user.id);
 
