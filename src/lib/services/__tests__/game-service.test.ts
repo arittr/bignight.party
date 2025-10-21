@@ -5,13 +5,13 @@
  * Focus: State transitions, validation, orchestration logic.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import * as gameService from "../game-service";
+import { buildCategory, buildGame, buildGameParticipant } from "tests/factories";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as categoryModel from "@/lib/models/category";
 import * as gameModel from "@/lib/models/game";
 import * as gameParticipantModel from "@/lib/models/game-participant";
 import * as pickModel from "@/lib/models/pick";
-import * as categoryModel from "@/lib/models/category";
-import { buildGame, buildGameParticipant, buildCategory } from "tests/factories";
+import * as gameService from "../game-service";
 
 // Mock all model imports
 vi.mock("@/lib/models/game");
@@ -27,9 +27,9 @@ describe("gameService.joinGame", () => {
   it("creates GameParticipant when game exists", async () => {
     const mockGame = buildGame({ id: "game-1", status: "OPEN" });
     const mockParticipant = buildGameParticipant({
+      gameId: "game-1",
       id: "participant-1",
       userId: "user-1",
-      gameId: "game-1",
     });
 
     vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
@@ -39,8 +39,8 @@ describe("gameService.joinGame", () => {
 
     expect(gameModel.findById).toHaveBeenCalledWith("game-1");
     expect(gameParticipantModel.create).toHaveBeenCalledWith({
-      userId: "user-1",
       gameId: "game-1",
+      userId: "user-1",
     });
     expect(result.id).toBe("participant-1");
   });
@@ -87,16 +87,16 @@ describe("gameService.getUserGames", () => {
 
   it("returns all games with completion counts", async () => {
     const mockGame = buildGame({
+      eventId: "event-1",
       id: "game-1",
       name: "Test Game",
-      eventId: "event-1",
     });
 
     const mockParticipant = {
       ...buildGameParticipant({
+        gameId: "game-1",
         id: "participant-1",
         userId: "user-1",
-        gameId: "game-1",
       }),
       game: mockGame,
     };
@@ -140,7 +140,7 @@ describe("gameService.resolveAccessCode", () => {
   });
 
   it("returns { gameId, isMember: true } when user is member", async () => {
-    const mockGame = buildGame({ id: "game-1", accessCode: "TEST123" });
+    const mockGame = buildGame({ accessCode: "TEST123", id: "game-1" });
 
     vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
     vi.mocked(gameParticipantModel.exists).mockResolvedValue(true);
@@ -153,7 +153,7 @@ describe("gameService.resolveAccessCode", () => {
   });
 
   it("returns { gameId, isMember: false } when user is not member", async () => {
-    const mockGame = buildGame({ id: "game-1", accessCode: "TEST123" });
+    const mockGame = buildGame({ accessCode: "TEST123", id: "game-1" });
 
     vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
     vi.mocked(gameParticipantModel.exists).mockResolvedValue(false);
@@ -179,7 +179,7 @@ describe("gameService.updateGameStatus", () => {
 
   it("allows valid state transitions using ts-pattern", async () => {
     const mockGame = buildGame({ id: "game-1", status: "SETUP" });
-    const updatedGame = buildGame({ id: "game-1", status: "OPEN", picksLockAt: new Date() });
+    const updatedGame = buildGame({ id: "game-1", picksLockAt: new Date(), status: "OPEN" });
 
     vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
     vi.mocked(gameModel.update).mockResolvedValue(updatedGame as any);
@@ -202,7 +202,7 @@ describe("gameService.updateGameStatus", () => {
   });
 
   it("validates picksLockAt when transitioning to OPEN", async () => {
-    const mockGame = buildGame({ id: "game-1", status: "SETUP", picksLockAt: null });
+    const mockGame = buildGame({ id: "game-1", picksLockAt: null, status: "SETUP" });
 
     vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
 

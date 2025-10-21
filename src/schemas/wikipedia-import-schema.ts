@@ -19,24 +19,24 @@ export const wikipediaUrlSchema = z.object({
  * Defines the structure returned by previewImportAction
  */
 export const previewDataSchema = z.object({
-  url: z.string().url(),
-  event: z.object({
-    name: z.string(),
-    date: z.date(),
-    slug: z.string(),
-    description: z.string().optional(),
-  }),
-  categoryCount: z.number().int().min(0),
-  nominationCount: z.number().int().min(0),
   categories: z
     .array(
       z.object({
         name: z.string(),
-        pointValue: z.number().int(),
         nominationCount: z.number().int().min(0),
+        pointValue: z.number().int(),
       })
     )
     .optional(),
+  categoryCount: z.number().int().min(0),
+  event: z.object({
+    date: z.date(),
+    description: z.string().optional(),
+    name: z.string(),
+    slug: z.string(),
+  }),
+  nominationCount: z.number().int().min(0),
+  url: z.string().url(),
 });
 
 export type WikipediaUrlInput = z.infer<typeof wikipediaUrlSchema>;

@@ -1,7 +1,9 @@
+// biome-ignore-all lint/style/useNamingConvention: Follow existing project conventions
+
 "use client";
 
-import Link from "next/link";
 import type { GameStatus } from "@prisma/client";
+import Link from "next/link";
 
 interface GameListItemProps {
   game: {
@@ -16,18 +18,18 @@ interface GameListItemProps {
   totalCategories: number;
 }
 
-const statusStyles = {
-  SETUP: "bg-gray-100 text-gray-800",
-  OPEN: "bg-green-100 text-green-800",
-  LIVE: "bg-blue-100 text-blue-800",
+const statusStyles: Record<GameStatus, string> = {
   COMPLETED: "bg-purple-100 text-purple-800",
+  LIVE: "bg-blue-100 text-blue-800",
+  OPEN: "bg-green-100 text-green-800",
+  SETUP: "bg-gray-100 text-gray-800",
 };
 
-const statusLabels = {
-  SETUP: "Setup",
-  OPEN: "Open",
-  LIVE: "Live",
+const statusLabels: Record<GameStatus, string> = {
   COMPLETED: "Completed",
+  LIVE: "Live",
+  OPEN: "Open",
+  SETUP: "Setup",
 };
 
 export function GameListItem({ game, picksCount, totalCategories }: GameListItemProps) {

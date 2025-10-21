@@ -6,9 +6,9 @@
  * Uses mocked server actions (no real API calls).
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PickForm } from "../PickForm";
 
 // Mock the server action module
@@ -34,9 +34,9 @@ describe("PickForm", () => {
   ];
 
   const defaultProps = {
-    gameId: "game-123",
     categoryId: "cat-456",
     categoryName: "Best Picture",
+    gameId: "game-123",
     nominations: mockNominations,
   };
 
@@ -91,8 +91,8 @@ describe("PickForm", () => {
     await user.click(submitButton);
 
     expect(mockExecute).toHaveBeenCalledWith({
-      gameId: "game-123",
       categoryId: "cat-456",
+      gameId: "game-123",
       nominationId: "nom-3",
     });
   });
@@ -154,8 +154,8 @@ describe("PickForm", () => {
 
     // Should submit the latest selection
     expect(mockExecute).toHaveBeenCalledWith({
-      gameId: "game-123",
       categoryId: "cat-456",
+      gameId: "game-123",
       nominationId: "nom-3",
     });
   });

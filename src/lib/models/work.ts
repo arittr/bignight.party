@@ -60,8 +60,8 @@ export async function findOrCreateByWikipediaSlug(data: {
   year?: number;
 }) {
   return await prisma.work.upsert({
-    where: { wikipediaSlug: data.wikipediaSlug },
-    update: {},
     create: data,
+    update: {},
+    where: { wikipediaSlug: data.wikipediaSlug },
   });
 }

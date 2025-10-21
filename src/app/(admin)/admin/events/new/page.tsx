@@ -40,6 +40,7 @@ export default function NewEventPage() {
               <label className="block text-sm font-medium text-gray-700" htmlFor="name">
                 Event Name
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 id="name"
@@ -53,6 +54,7 @@ export default function NewEventPage() {
               <label className="block text-sm font-medium text-gray-700" htmlFor="slug">
                 Slug
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 id="slug"
@@ -71,6 +73,7 @@ export default function NewEventPage() {
               <label className="block text-sm font-medium text-gray-700" htmlFor="eventDate">
                 Event Date
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <input
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 id="eventDate"
@@ -84,6 +87,7 @@ export default function NewEventPage() {
               <label className="block text-sm font-medium text-gray-700" htmlFor="description">
                 Description (Optional)
               </label>
+              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
               <textarea
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 id="description"

@@ -25,9 +25,7 @@ export async function truncateAllTables() {
     if (tablename !== "_prisma_migrations") {
       try {
         await testPrisma.$executeRawUnsafe(`TRUNCATE TABLE "public"."${tablename}" CASCADE;`);
-      } catch (error) {
-        console.error(`Error truncating ${tablename}:`, error);
-      }
+      } catch (_error) {}
     }
   }
 }

@@ -80,25 +80,25 @@ export async function upsert(data: {
   nominationId: string;
 }) {
   return prisma.pick.upsert({
-    where: {
-      gameId_userId_categoryId: {
-        gameId: data.gameId,
-        userId: data.userId,
-        categoryId: data.categoryId,
-      },
-    },
-    update: {
-      nominationId: data.nominationId,
-    },
     create: {
-      gameId: data.gameId,
-      userId: data.userId,
       categoryId: data.categoryId,
+      gameId: data.gameId,
       nominationId: data.nominationId,
+      userId: data.userId,
     },
     include: {
       category: true,
       nomination: true,
+    },
+    update: {
+      nominationId: data.nominationId,
+    },
+    where: {
+      gameId_userId_categoryId: {
+        categoryId: data.categoryId,
+        gameId: data.gameId,
+        userId: data.userId,
+      },
     },
   });
 }
@@ -109,21 +109,21 @@ export async function upsert(data: {
  */
 export async function getPicksByGameAndUser(gameId: string, userId: string) {
   return prisma.pick.findMany({
-    where: {
-      gameId,
-      userId,
-    },
     include: {
       category: true,
       nomination: {
         include: {
-          work: true,
           person: true,
+          work: true,
         },
       },
     },
     orderBy: {
       createdAt: "asc",
+    },
+    where: {
+      gameId,
+      userId,
     },
   });
 }

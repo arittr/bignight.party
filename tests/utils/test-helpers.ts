@@ -1,5 +1,5 @@
-import { expect } from "vitest";
 import type { GameStatus } from "@prisma/client";
+import { expect } from "vitest";
 
 /**
  * Helper for cleaner async error assertions
@@ -42,11 +42,11 @@ export async function waitForDbWrite(ms = 10) {
 export function toMatchGameStatus(received: { status: GameStatus }, expected: GameStatus) {
   const pass = received.status === expected;
   return {
-    pass,
     message: () =>
       pass
         ? `Expected game status NOT to be ${expected}, but it was`
         : `Expected game status to be ${expected}, but received ${received.status}`,
+    pass,
   };
 }
 
@@ -63,11 +63,11 @@ export function toBeValidPick(received: any) {
 
   const pass = missingFields.length === 0;
   return {
-    pass,
     message: () =>
       pass
         ? "Expected object NOT to be a valid pick, but it was"
         : `Expected object to be a valid pick, but missing fields: ${missingFields.join(", ")}`,
+    pass,
   };
 }
 
@@ -92,11 +92,11 @@ export function toBeValidGame(received: any) {
 
   const pass = missingFields.length === 0;
   return {
-    pass,
     message: () =>
       pass
         ? "Expected object NOT to be a valid game, but it was"
         : `Expected object to be a valid game, but missing fields: ${missingFields.join(", ")}`,
+    pass,
   };
 }
 
@@ -111,9 +111,9 @@ export function toBeValidGame(received: any) {
  */
 export function registerCustomMatchers() {
   expect.extend({
-    toMatchGameStatus,
-    toBeValidPick,
     toBeValidGame,
+    toBeValidPick,
+    toMatchGameStatus,
   });
 }
 

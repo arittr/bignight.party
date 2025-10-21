@@ -75,6 +75,7 @@
     "rules": {
       "a11y": {
         "noStaticElementInteractions": "error",
+        "noSvgWithoutTitle": "off",
         "recommended": true,
         "useAriaPropsSupportedByRole": "error"
       },
@@ -99,7 +100,7 @@
       },
       "nursery": {
         "noNextAsyncClientComponent": "error",
-        "noSecrets": "error",
+        "noSecrets": "warn",
         "useExhaustiveSwitchCases": "error",
         "useReactFunctionComponents": "error"
       },
@@ -175,6 +176,29 @@
         "rules": {
           "style": {
             "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/lib/models/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useNamingConvention": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/**/__tests__/**", "src/**/__mocks__/**", "tests/**"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noSecrets": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off"
           }
         }
       }

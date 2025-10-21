@@ -1,7 +1,7 @@
+import { notFound, redirect } from "next/navigation";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as gameModel from "@/lib/models/game";
 import * as gameService from "@/lib/services/game-service";
-import { notFound, redirect } from "next/navigation";
 import { JoinGameButton } from "./join-game-button";
 
 interface PageProps {
@@ -45,9 +45,9 @@ export default async function GameAccessPage({ params }: PageProps) {
               <span className="text-gray-600">Date:</span>
               <span className="ml-2">
                 {new Date(game.event.eventDate).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
                   day: "numeric",
+                  month: "long",
+                  year: "numeric",
                 })}
               </span>
             </div>
@@ -62,7 +62,7 @@ export default async function GameAccessPage({ params }: PageProps) {
         </div>
       </div>
     );
-  } catch (error) {
+  } catch (_error) {
     // Invalid code or game not found
     notFound();
   }

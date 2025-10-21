@@ -35,6 +35,7 @@ export default function NewPersonPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
               Name <span className="text-red-500">*</span>
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               id="name"
@@ -50,6 +51,7 @@ export default function NewPersonPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="imageUrl">
               Image URL
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               id="imageUrl"
@@ -66,6 +68,7 @@ export default function NewPersonPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="externalId">
               External ID
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               id="externalId"

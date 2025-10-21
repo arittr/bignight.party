@@ -38,9 +38,7 @@ export function CategoryProgressStepper({
 
               return (
                 <button
-                  key={category.id}
-                  type="button"
-                  onClick={() => onCategoryClick(category.id)}
+                  aria-label={`Category ${index + 1}: ${category.name}`}
                   className={`
                     group relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all
                     ${
@@ -51,15 +49,17 @@ export function CategoryProgressStepper({
                           : "border-gray-300 bg-white text-gray-600 hover:border-indigo-400 hover:text-indigo-600"
                     }
                   `}
-                  aria-label={`Category ${index + 1}: ${category.name}`}
+                  key={category.id}
+                  onClick={() => onCategoryClick(category.id)}
                   title={category.name}
+                  type="button"
                 >
                   {isCompleted && !isCurrent ? (
                     <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                       <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                         clipRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        fillRule="evenodd"
                       />
                     </svg>
                   ) : (

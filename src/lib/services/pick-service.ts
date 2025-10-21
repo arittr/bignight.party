@@ -1,9 +1,9 @@
 import type { GameStatus } from "@prisma/client";
 import { match } from "ts-pattern";
-import * as pickModel from "@/lib/models/pick";
 import * as gameModel from "@/lib/models/game";
 import * as gameParticipantModel from "@/lib/models/game-participant";
 import * as nominationModel from "@/lib/models/nomination";
+import * as pickModel from "@/lib/models/pick";
 
 /**
  * Submit or update a pick for a user in a game
@@ -58,9 +58,9 @@ export async function submitPick(
 
   // All validations passed, upsert the pick
   return pickModel.upsert({
-    gameId,
-    userId,
     categoryId,
+    gameId,
     nominationId,
+    userId,
   });
 }

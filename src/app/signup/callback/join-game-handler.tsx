@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
-import { resolveAccessCodeAction, joinGameAction } from "@/lib/actions/game-actions";
+import { useEffect, useState } from "react";
+import { joinGameAction, resolveAccessCodeAction } from "@/lib/actions/game-actions";
 
 interface JoinGameHandlerProps {
   accessCode: string;
@@ -18,6 +18,9 @@ export function JoinGameHandler({ accessCode }: JoinGameHandlerProps) {
   const [shouldJoin, setShouldJoin] = useState(false);
 
   const { execute: resolveCode, status: resolveStatus } = useAction(resolveAccessCodeAction, {
+    onError: () => {
+      setError("Invalid invite code");
+    },
     onSuccess: ({ data }) => {
       if (!data) {
         setError("Failed to resolve invite code");
@@ -36,20 +39,17 @@ export function JoinGameHandler({ accessCode }: JoinGameHandlerProps) {
       // Otherwise, trigger join
       setShouldJoin(true);
     },
-    onError: () => {
-      setError("Invalid invite code");
-    },
   });
 
   const { execute: joinGame, status: joinStatus } = useAction(joinGameAction, {
+    onError: () => {
+      setError("Failed to join game");
+    },
     onSuccess: () => {
       setGameName("the game");
       setTimeout(() => {
         router.push("/dashboard");
       }, 2000);
-    },
-    onError: () => {
-      setError("Failed to join game");
     },
   });
 

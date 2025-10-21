@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import * as personModel from "@/lib/models/person";
 
@@ -61,10 +62,13 @@ export default async function PeoplePage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {person.imageUrl ? (
-                      <img
+                      <Image
                         alt={person.name}
                         className="h-10 w-10 rounded-full object-cover"
+                        height={40}
                         src={person.imageUrl}
+                        unoptimized
+                        width={40}
                       />
                     ) : (
                       <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
