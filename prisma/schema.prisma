@@ -141,29 +141,35 @@ model Category {
 }
 
 model Work {
-  id         String   @id @default(cuid())
-  type       WorkType
-  title      String
-  year       Int?
-  posterUrl  String?
-  externalId String?
+  id            String   @id @default(cuid())
+  type          WorkType
+  title         String
+  year          Int?
+  posterUrl     String?
+  externalId    String?
+  wikipediaSlug String?  @unique
 
   nominations Nomination[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([wikipediaSlug])
 }
 
 model Person {
-  id         String  @id @default(cuid())
-  name       String
-  imageUrl   String?
-  externalId String?
+  id            String  @id @default(cuid())
+  name          String
+  imageUrl      String?
+  externalId    String?
+  wikipediaSlug String? @unique
 
   nominations Nomination[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([wikipediaSlug])
 }
 
 model Nomination {
