@@ -60,6 +60,9 @@ export const routes = {
     /** Admin home */
     index: () => "/admin",
 
+    /** Wikipedia import */
+    import: () => "/admin/import",
+
     /** Event management */
     events: {
       /** List all events */
