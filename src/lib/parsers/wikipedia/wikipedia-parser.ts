@@ -177,6 +177,14 @@ export async function parse(url: string): Promise<ParsedEvent> {
 
       for (const table of tables) {
         try {
+          // Try parsing as compact format first (returns multiple categories)
+          const compactCategories = parseCompactAwardsTable(table);
+          if (compactCategories && compactCategories.length > 0) {
+            categories.push(...compactCategories);
+            continue;
+          }
+
+          // Fall back to single category parsing
           const category = parseCategoryFromTable(sectionTitle, table);
           if (category) {
             categories.push(category);
@@ -310,6 +318,198 @@ function parseNominationFromRow(row: Record<string, unknown>): ParsedNomination 
   // Only return if we found at least a person or work
   if (!nomination.personName && !nomination.workTitle) {
     return null;
+  }
+
+  return nomination;
+}
+
+/**
+ * Category name mappings for compact Awards table format
+ * Maps row index to [col1 category, col2 category]
+ */
+const COMPACT_CATEGORY_MAP: Record<number, [string, string]> = {
+  0: ["Best Picture", "Best Director"],
+  1: ["Best Actor", "Best Actress"],
+  2: ["Best Supporting Actor", "Best Supporting Actress"],
+  3: ["Best Original Screenplay", "Best Adapted Screenplay"],
+  4: ["Best Animated Feature", "Best International Feature Film"],
+  5: ["Best Documentary Feature", "Best Documentary Short"],
+  6: ["Best Live Action Short", "Best Animated Short"],
+  7: ["Best Original Score", "Best Original Song"],
+  8: ["Best Sound", "Best Production Design"],
+  9: ["Best Cinematography", "Best Makeup and Hairstyling"],
+  10: ["Best Costume Design", "Best Film Editing"],
+  11: ["Best Visual Effects", ""],
+};
+
+/**
+ * Parses compact Awards table format where each row contains 2 categories
+ * This format is used in recent Academy Awards pages (97th, etc.)
+ */
+function parseCompactAwardsTable(table: { json(): unknown }): ParsedCategory[] | null {
+  const jsonResult = table.json();
+  if (!jsonResult || typeof jsonResult !== "object") return null;
+
+  const rows = Array.isArray(jsonResult) ? jsonResult : [];
+  if (rows.length === 0) return null;
+
+  // Detect compact format: has col1/col2 with bullet-formatted text
+  const firstRow = rows[0];
+  if (!firstRow || typeof firstRow !== "object") return null;
+
+  const hasCompactFormat =
+    "col1" in firstRow &&
+    "col2" in firstRow &&
+    typeof firstRow.col1 === "object" &&
+    firstRow.col1 !== null &&
+    "text" in firstRow.col1;
+
+  if (!hasCompactFormat) return null;
+
+  const categories: ParsedCategory[] = [];
+
+  // Parse each row (each row has 2 categories in col1 and col2)
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    const row = rows[rowIndex];
+    if (!row || typeof row !== "object") continue;
+
+    const categoryNames = COMPACT_CATEGORY_MAP[rowIndex];
+    if (!categoryNames) continue; // Unknown row, skip
+
+    // Parse col1 (first category)
+    if ("col1" in row && categoryNames[0]) {
+      const col1 = row.col1;
+      const text =
+        typeof col1 === "object" && col1 !== null && "text" in col1
+          ? (col1 as { text: string }).text
+          : "";
+
+      if (text) {
+        const nominations = parseBulletPointNominations(text);
+        if (nominations.length > 0) {
+          categories.push({
+            name: categoryNames[0],
+            pointValue: 10,
+            nominations,
+          });
+        }
+      }
+    }
+
+    // Parse col2 (second category)
+    if ("col2" in row && categoryNames[1]) {
+      const col2 = row.col2;
+      const text =
+        typeof col2 === "object" && col2 !== null && "text" in col2
+          ? (col2 as { text: string }).text
+          : "";
+
+      if (text) {
+        const nominations = parseBulletPointNominations(text);
+        if (nominations.length > 0) {
+          categories.push({
+            name: categoryNames[1],
+            pointValue: 10,
+            nominations,
+          });
+        }
+      }
+    }
+  }
+
+  return categories.length > 0 ? categories : null;
+}
+
+/**
+ * Parses bullet-point formatted nomination text
+ * Format: * Winner – details ‡ ** Nominee – details ** Nominee – details
+ * Note: All nominations are on ONE line, separated by ** markers
+ */
+function parseBulletPointNominations(text: string): ParsedNomination[] {
+  const nominations: ParsedNomination[] = [];
+
+  // Split by ** to get individual nominations
+  // First one starts with * (winner), rest start with ** (nominees)
+  const parts = text.split(" ** ");
+
+  for (let i = 0; i < parts.length; i++) {
+    let part = parts[i]?.trim();
+    if (!part) continue;
+
+    // First part might start with * (winner)
+    const isWinner = i === 0 && part.startsWith("* ");
+
+    // Remove leading * or ** markers
+    part = part.replace(/^\*+ /, "").replace(/‡/g, "").trim();
+
+    // Split by " – " to separate work/person from details
+    const segments = part.split(" – ");
+    if (segments.length === 0) continue;
+
+    const mainPart = segments[0]?.trim();
+    const details = segments.slice(1).join(" – ").trim();
+
+    if (!mainPart) continue;
+
+    // Try to parse the nomination
+    const nomination = parseBulletPointNomination(mainPart, details, isWinner);
+    if (nomination) {
+      nominations.push(nomination);
+    }
+  }
+
+  return nominations;
+}
+
+/**
+ * Parses a single bullet-point nomination
+ */
+function parseBulletPointNomination(
+  mainPart: string,
+  details: string,
+  isWinner: boolean
+): ParsedNomination | null {
+  const nomination: ParsedNomination = {
+    isWinner,
+  };
+
+  // Check if mainPart looks like a person name (e.g., "Adrien Brody")
+  // vs work title (e.g., "Anora" or "The Brutalist")
+  const isPersonName = /^[A-Z][a-z]+ [A-Z]/.test(mainPart);
+
+  if (isPersonName) {
+    // This is a person (actor, director, etc.)
+    nomination.personName = mainPart;
+
+    // Extract work from details if it mentions "as" or film title in italics
+    const asMatch = details.match(/^(.+?) as /);
+    if (asMatch?.[1]) {
+      nomination.workTitle = asMatch[1].trim();
+    }
+
+    // Extract Wikipedia slug from person name
+    nomination.personWikipediaSlug = mainPart.replace(/ /g, "_");
+  } else {
+    // This is a work (film, song, etc.)
+    nomination.workTitle = mainPart;
+    nomination.workWikipediaSlug = mainPart.replace(/ /g, "_");
+
+    // Extract person names from details (producers, directors, etc.)
+    // Format: "Name1, Name2, and Name3, producers"
+    const peopleMatch = details.match(/^(.+?),\s*(producers?|directors?)/i);
+    if (peopleMatch?.[1]) {
+      const names = peopleMatch[1].split(/,| and /).map((n) => n.trim());
+      if (names.length > 0 && names[0]) {
+        nomination.personName = names[0];
+        nomination.personWikipediaSlug = names[0].replace(/ /g, "_");
+      }
+    }
+  }
+
+  // Extract year if present
+  const yearMatch = mainPart.match(/\((\d{4})\)/);
+  if (yearMatch?.[1]) {
+    nomination.workYear = Number.parseInt(yearMatch[1], 10);
   }
 
   return nomination;
