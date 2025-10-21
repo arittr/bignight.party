@@ -1,11 +1,11 @@
-import { requireValidatedSession } from "@/lib/auth/config";
 import { redirect } from "next/navigation";
-import * as gameParticipantModel from "@/lib/models/game-participant";
-import * as gameModel from "@/lib/models/game";
+import { PickWizard } from "@/components/pick-wizard";
+import { requireValidatedSession } from "@/lib/auth/config";
 import * as categoryModel from "@/lib/models/category";
+import * as gameModel from "@/lib/models/game";
+import * as gameParticipantModel from "@/lib/models/game-participant";
 import * as nominationModel from "@/lib/models/nomination";
 import * as pickModel from "@/lib/models/pick";
-import { PickWizard } from "@/components/pick-wizard";
 
 interface PickWizardPageProps {
   params: Promise<{ gameId: string }>;
@@ -59,15 +59,15 @@ export default async function PickWizardPage({ params, searchParams }: PickWizar
 
   return (
     <PickWizard
-      gameId={gameId}
-      gameName={game.name}
       categories={categories}
       currentCategoryId={currentCategoryId}
-      nominations={nominations}
       existingPicks={existingPicks}
+      gameId={gameId}
+      gameName={game.name}
       isLocked={isLocked}
-      showLockWarning={showLockWarning}
       minutesUntilLock={minutesUntilLock}
+      nominations={nominations}
+      showLockWarning={showLockWarning}
     />
   );
 }

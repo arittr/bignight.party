@@ -6,7 +6,7 @@
  */
 
 import type { Prisma } from "@prisma/client";
-import type { ParsedEvent, ParsedCategory, ParsedNomination } from "./types";
+import type { ParsedEvent, ParsedNomination } from "./types";
 
 /**
  * Preview data structure for UI display
@@ -47,25 +47,25 @@ export function transformToPreview(parsed: ParsedEvent, url: string): PreviewDat
   );
 
   return {
-    url,
-    event: {
-      name: parsed.name.trim(),
-      date: parsed.date,
-      slug: parsed.slug.trim(),
-      description: parsed.description?.trim(),
-    },
-    categoryCount: parsed.categories.length,
-    nominationCount: totalNominations,
     categories: parsed.categories.map((category) => ({
       name: category.name.trim(),
-      pointValue: category.pointValue,
       nominationCount: category.nominations.length,
+      pointValue: category.pointValue,
       sampleNominations: category.nominations.slice(0, 3).map((nom) => ({
+        isWinner: nom.isWinner,
         personName: nom.personName?.trim(),
         workTitle: nom.workTitle?.trim(),
-        isWinner: nom.isWinner,
       })),
     })),
+    categoryCount: parsed.categories.length,
+    event: {
+      date: parsed.date,
+      description: parsed.description?.trim(),
+      name: parsed.name.trim(),
+      slug: parsed.slug.trim(),
+    },
+    nominationCount: totalNominations,
+    url,
   };
 }
 
@@ -84,20 +84,20 @@ export function transformToPreview(parsed: ParsedEvent, url: string): PreviewDat
  */
 export function transformToPrismaInput(parsed: ParsedEvent): Prisma.EventCreateInput {
   return {
-    name: parsed.name.trim(),
-    slug: parsed.slug.trim(),
-    description: parsed.description?.trim(),
-    eventDate: parsed.date,
     categories: {
       create: parsed.categories.map((category, categoryIndex) => ({
+        isRevealed: false,
         name: category.name.trim(),
         order: categoryIndex,
         points: category.pointValue,
-        isRevealed: false,
         // Note: nominations will be connected after Person/Work deduplication
         // The service layer handles creating nominations with proper personId/workId
       })),
     },
+    description: parsed.description?.trim(),
+    eventDate: parsed.date,
+    name: parsed.name.trim(),
+    slug: parsed.slug.trim(),
   };
 }
 
@@ -110,6 +110,7 @@ export function transformToPrismaInput(parsed: ParsedEvent): Prisma.EventCreateI
  * @param parsed - Parsed Wikipedia event data
  * @returns Map of Wikipedia slug to person data
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex deduplication logic with multiple conditionals
 export function extractUniquePersons(parsed: ParsedEvent): Map<
   string,
   {
@@ -133,9 +134,9 @@ export function extractUniquePersons(parsed: ParsedEvent): Map<
         // Only add if we haven't seen this slug before
         if (!persons.has(nomination.personWikipediaSlug)) {
           persons.set(nomination.personWikipediaSlug, {
-            wikipediaSlug: nomination.personWikipediaSlug,
-            name: nomination.personName.trim(),
             imageUrl: nomination.personImageUrl,
+            name: nomination.personName.trim(),
+            wikipediaSlug: nomination.personWikipediaSlug,
           });
         }
       }
@@ -154,6 +155,7 @@ export function extractUniquePersons(parsed: ParsedEvent): Map<
  * @param parsed - Parsed Wikipedia event data
  * @returns Map of Wikipedia slug to work data
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex deduplication logic with multiple conditionals
 export function extractUniqueWorks(parsed: ParsedEvent): Map<
   string,
   {
@@ -179,9 +181,9 @@ export function extractUniqueWorks(parsed: ParsedEvent): Map<
         // Only add if we haven't seen this slug before
         if (!works.has(nomination.workWikipediaSlug)) {
           works.set(nomination.workWikipediaSlug, {
-            wikipediaSlug: nomination.workWikipediaSlug,
-            title: nomination.workTitle.trim(),
             imageUrl: nomination.workImageUrl,
+            title: nomination.workTitle.trim(),
+            wikipediaSlug: nomination.workWikipediaSlug,
             year: nomination.workYear,
           });
         }

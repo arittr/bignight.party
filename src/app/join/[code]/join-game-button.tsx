@@ -1,9 +1,9 @@
 "use client";
 
-import { joinGameAction } from "@/lib/actions/game-actions";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { joinGameAction } from "@/lib/actions/game-actions";
 
 interface JoinGameButtonProps {
   gameId: string;
@@ -15,21 +15,20 @@ export function JoinGameButton({ gameId, gameName }: JoinGameButtonProps) {
   const [error, setError] = useState<string | null>(null);
 
   const { execute, isPending } = useAction(joinGameAction, {
+    onError: ({ error }) => {
+      setError(error.serverError || "Failed to join game. Please try again.");
+    },
     onSuccess: () => {
       router.push(`/game/${gameId}/pick`);
-    },
-    onError: ({ error }) => {
-      console.error("Failed to join game:", error);
-      setError(error.serverError || "Failed to join game. Please try again.");
     },
   });
 
   return (
     <div>
       <button
-        onClick={() => execute({ gameId })}
-        disabled={isPending}
         className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        disabled={isPending}
+        onClick={() => execute({ gameId })}
         type="button"
       >
         {isPending ? "Joining..." : `Join ${gameName}`}

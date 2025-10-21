@@ -1,8 +1,8 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Role } from "@prisma/client";
+import { redirect } from "next/navigation";
 import NextAuth from "next-auth";
 import Resend from "next-auth/providers/resend";
-import { redirect } from "next/navigation";
 import prisma from "@/lib/db/prisma";
 import * as userModel from "@/lib/models/user";
 import MailpitProvider from "./mailpit-provider";

@@ -40,6 +40,7 @@ export default function NewWorkPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="title">
               Title <span className="text-red-500">*</span>
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               id="title"
@@ -55,6 +56,7 @@ export default function NewWorkPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="type">
               Type <span className="text-red-500">*</span>
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <select
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               id="type"
@@ -76,6 +78,7 @@ export default function NewWorkPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="year">
               Year
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               id="year"
@@ -92,6 +95,7 @@ export default function NewWorkPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="imageUrl">
               Poster URL
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               id="imageUrl"
@@ -106,6 +110,7 @@ export default function NewWorkPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="externalId">
               External ID
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               id="externalId"

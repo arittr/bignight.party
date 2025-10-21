@@ -129,10 +129,7 @@ function getAllPRInfo(branches: string[]): Map<string, PRInfo | null> {
         prMap.set(pr.headRefName, pr);
       }
     }
-  } catch (error) {
-    // Fallback to individual queries if batch fails
-    console.log("  (Batch PR lookup failed, using slower individual queries...)");
-  }
+  } catch (_error) {}
 
   // Fill in any missing branches with individual queries or null
   for (const branch of branches) {
@@ -157,41 +154,33 @@ async function confirm(message: string): Promise<boolean> {
 }
 
 // --- Main Functions --------------------------------------------------------
-async function mergePR(branch: string, parent: string, config: Config): Promise<void> {
-  // Check if PR exists
-  const prInfo = getPRInfo(branch);
+function ensurePRExists(
+  branch: string,
+  parent: string,
+  prInfo: PRInfo | null,
+  config: Config
+): void {
+  if (config.dryRun) return;
 
   if (!prInfo) {
-    if (config.dryRun) {
-      console.log(`  [DRY-RUN] Would create PR: ${branch} → ${parent}`);
-      return;
-    }
-    console.log(`  Creating PR: ${branch} → ${parent}`);
     exec(`gh pr create --head "${branch}" --base "${parent}" --title "${branch}" --fill`);
-  } else {
-    // Check if base needs updating
-    if (prInfo.baseRefName !== parent) {
-      if (config.dryRun) {
-        console.log(
-          `  [DRY-RUN] Would update PR base: ${branch} (${prInfo.baseRefName} → ${parent})`
-        );
-        return;
-      }
-      console.log(`  Updating PR base: ${branch} (${prInfo.baseRefName} → ${parent})`);
-      exec(`gh pr edit --head "${branch}" --base "${parent}"`);
-    }
+  } else if (prInfo.baseRefName !== parent) {
+    exec(`gh pr edit --head "${branch}" --base "${parent}"`);
   }
+}
 
-  // Merge PR
+function executeMerge(branch: string, config: Config): void {
+  if (config.dryRun) return;
+
   const autoFlag = config.auto ? "--auto" : "";
   const mergeCmd = `gh pr merge ${autoFlag} --${config.mode} --match-head "${branch}"`;
+  exec(mergeCmd);
+}
 
-  if (config.dryRun) {
-    console.log(`  [DRY-RUN] Would merge: ${mergeCmd}`);
-  } else {
-    console.log(`  Merging: ${branch}`);
-    exec(mergeCmd);
-  }
+async function mergePR(branch: string, parent: string, config: Config): Promise<void> {
+  const prInfo = getPRInfo(branch);
+  ensurePRExists(branch, parent, prInfo, config);
+  executeMerge(branch, config);
 }
 
 function checkPrerequisites(): void {
@@ -199,7 +188,6 @@ function checkPrerequisites(): void {
   try {
     execQuiet("gh auth status");
   } catch {
-    console.error("✖ GitHub CLI not authenticated. Run: gh auth login");
     process.exit(1);
   }
 
@@ -207,14 +195,12 @@ function checkPrerequisites(): void {
   try {
     execQuiet("git rev-parse --show-toplevel");
   } catch {
-    console.error("✖ Not in a git repository");
     process.exit(1);
   }
 
   // Check for clean working tree
   const status = execQuiet("git status --porcelain");
   if (status) {
-    console.error("✖ Dirty tree; commit or stash changes first.");
     exec("git status --short");
     process.exit(1);
   }
@@ -222,115 +208,68 @@ function checkPrerequisites(): void {
   // Check not detached HEAD
   const currentBranch = execQuiet("git branch --show-current");
   if (!currentBranch) {
-    console.error("✖ Detached HEAD - checkout a branch first");
     process.exit(1);
   }
-
-  console.log("✓ Prerequisites passed");
-  console.log("");
 }
 
 function showHeader(config: Config): void {
-  console.log("════════════════════════════════════════════════════════════════════════════");
-  console.log("  Git-Spice Merge Train");
-  console.log("════════════════════════════════════════════════════════════════════════════");
   if (config.dryRun) {
-    console.log("  MODE: DRY-RUN (no destructive operations)");
   }
-  console.log(`  Trunk: ${config.trunk}`);
-  console.log(`  Merge mode: ${config.mode}`);
-  console.log(`  Auto-merge: ${config.auto ? "yes (wait for CI)" : "no (immediate)"}`);
-  console.log("════════════════════════════════════════════════════════════════════════════");
-  console.log("");
 }
 
-function showStackPreview(stack: Branch[], trunk: string): void {
-  console.log("════════════════════════════════════════════════════════════════════════════");
-  console.log(`  Stack Preview (${stack.length} branches, bottom → top → ${trunk})`);
-  console.log("════════════════════════════════════════════════════════════════════════════");
-  console.log("");
-  console.log("  Fetching PR information...");
-
+function showStackPreview(stack: Branch[], _trunk: string): void {
   // Batch fetch all PR info for better performance
   const branchNames = stack.map((b) => b.name);
   const prInfoMap = getAllPRInfo(branchNames);
-
-  console.log("");
 
   for (let i = 0; i < stack.length; i++) {
     const { name, parent } = stack[i];
     const prInfo = prInfoMap.get(name);
 
-    console.log(`  ${i + 1}. ${name} → ${parent}`);
-
     if (prInfo) {
-      let baseStatus = "";
+      let _baseStatus = "";
       if (prInfo.baseRefName !== parent) {
-        baseStatus = ` (⚠️  base is ${prInfo.baseRefName}, will update to ${parent})`;
+        _baseStatus = ` (⚠️  base is ${prInfo.baseRefName}, will update to ${parent})`;
       }
-      console.log(`     PR #${prInfo.number} [${prInfo.state}]${baseStatus}`);
     } else {
-      console.log("     ⚠️  No PR exists (will be created)");
     }
   }
-
-  console.log("════════════════════════════════════════════════════════════════════════════");
-  console.log("");
 }
 
 async function syncAndRestack(config: Config): Promise<void> {
   if (config.dryRun) {
-    console.log("→ [DRY-RUN] Would run: gs repo sync --restack");
-    console.log("→ [DRY-RUN] Would run: gs stack restack");
   } else {
-    console.log("→ Syncing with trunk and restacking...");
     try {
       exec("gs repo sync --restack");
       exec("gs stack restack");
-      console.log("✓ Sync complete");
     } catch {
-      console.error("✖ Failed to sync/restack. Check for conflicts.");
       process.exit(1);
     }
   }
-  console.log("");
 }
 
 async function mergeStack(stack: Branch[], config: Config): Promise<void> {
-  console.log("→ Starting merge train...");
-  console.log("");
-
   for (let i = 0; i < stack.length; i++) {
     const { name, parent } = stack[i];
-    console.log(`[${i + 1}/${stack.length}] Processing: ${name} → ${parent}`);
     await mergePR(name, parent, config);
-    console.log("");
   }
 }
 
 async function finalCleanup(config: Config): Promise<void> {
   if (config.dryRun) {
-    console.log("→ [DRY-RUN] Would run: gs repo sync");
   } else {
-    console.log("→ Final sync to clean up merged branches...");
     exec("gs repo sync");
-    console.log("✓ Cleanup complete");
   }
-  console.log("");
 }
 
 function showCompletion(config: Config): void {
-  console.log("════════════════════════════════════════════════════════════════════════════");
   if (config.dryRun) {
-    console.log("  ✓ Dry-run complete (no changes made)");
   } else {
-    console.log("  ✓ Merge train complete");
   }
-  console.log("════════════════════════════════════════════════════════════════════════════");
 }
 
 function showHelp(): void {
-  const helpText = `
+  const _helpText = `
 Git-Spice Merge Train
 
 Usage:
@@ -355,17 +294,16 @@ Safety:
   - Prompts for confirmation (unless --dry-run)
   - Checks PR status and updates bases as needed
 `;
-  console.log(helpText);
 }
 
 // --- Main ------------------------------------------------------------------
 async function main() {
   // Parse arguments
   const config: Config = {
-    trunk: "main",
     auto: true,
-    mode: "rebase",
     dryRun: false,
+    mode: "rebase",
+    trunk: "main",
   };
 
   const args = process.argv.slice(2);
@@ -373,9 +311,11 @@ async function main() {
   for (const arg of args) {
     switch (arg) {
       case "--help":
-      case "-h":
+      case "-h": {
         showHelp();
         process.exit(0);
+        break; // Unreachable but satisfies linter
+      }
       case "--dry-run":
         config.dryRun = true;
         break;
@@ -390,8 +330,6 @@ async function main() {
         break;
       default:
         if (arg.startsWith("-")) {
-          console.error(`Unknown option: ${arg}`);
-          console.error("Run with --help for usage");
           process.exit(1);
         }
         config.trunk = arg;
@@ -400,9 +338,6 @@ async function main() {
 
   // Show header
   showHeader(config);
-
-  // Check prerequisites
-  console.log("→ Checking prerequisites...");
   checkPrerequisites();
 
   // Sync and restack
@@ -419,10 +354,8 @@ async function main() {
   if (!config.dryRun) {
     const proceed = await confirm("Proceed with merge train?");
     if (!proceed) {
-      console.log("✖ Aborted by user");
       process.exit(0);
     }
-    console.log("");
   }
 
   // Merge PRs
@@ -435,7 +368,6 @@ async function main() {
   showCompletion(config);
 }
 
-main().catch((error) => {
-  console.error("✖ Fatal error:", error.message);
+main().catch((_error) => {
   process.exit(1);
 });

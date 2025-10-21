@@ -1,8 +1,8 @@
 "use server";
 
 import { authenticatedAction } from "@/lib/actions/safe-action";
-import { joinGameSchema, resolveAccessCodeSchema } from "@/schemas/game-schema";
 import * as gameService from "@/lib/services/game-service";
+import { joinGameSchema, resolveAccessCodeSchema } from "@/schemas/game-schema";
 
 /**
  * Join a game by gameId

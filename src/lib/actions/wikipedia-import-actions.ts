@@ -1,12 +1,12 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
+import { redirect } from "next/navigation";
 import { adminAction } from "@/lib/actions/safe-action";
-import * as wikipediaImportService from "@/lib/services/wikipedia-import-service";
-import { WikipediaParseError, WikipediaAPIError } from "@/lib/parsers/wikipedia/wikipedia-parser";
-import { wikipediaUrlSchema } from "@/schemas/wikipedia-import-schema";
+import { WikipediaAPIError, WikipediaParseError } from "@/lib/parsers/wikipedia/wikipedia-parser";
 import { routes } from "@/lib/routes";
+import * as wikipediaImportService from "@/lib/services/wikipedia-import-service";
+import { wikipediaUrlSchema } from "@/schemas/wikipedia-import-schema";
 
 /**
  * Preview Wikipedia import without saving to database
@@ -24,21 +24,21 @@ export const previewImportAction = adminAction
   .action(async ({ parsedInput }) => {
     try {
       const preview = await wikipediaImportService.previewImport(parsedInput.url);
-      return { success: true, data: preview };
+      return { data: preview, success: true };
     } catch (error) {
       // Handle known Wikipedia parsing errors
       if (error instanceof WikipediaParseError) {
         return {
-          success: false,
           error: `Failed to parse Wikipedia page: ${error.message}`,
+          success: false,
         };
       }
 
       // Handle known Wikipedia API errors
       if (error instanceof WikipediaAPIError) {
         return {
-          success: false,
           error: `Failed to fetch Wikipedia page: ${error.message}`,
+          success: false,
         };
       }
 
@@ -70,32 +70,32 @@ export const confirmImportAction = adminAction
       // Handle Prisma unique constraint violations (duplicate slug)
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
         return {
-          success: false,
           error: "Event already imported. An event with this slug already exists in the database.",
+          success: false,
         };
       }
 
       // Handle known Wikipedia parsing errors
       if (error instanceof WikipediaParseError) {
         return {
-          success: false,
           error: `Failed to parse Wikipedia page: ${error.message}`,
+          success: false,
         };
       }
 
       // Handle known Wikipedia API errors
       if (error instanceof WikipediaAPIError) {
         return {
-          success: false,
           error: `Failed to fetch Wikipedia page: ${error.message}`,
+          success: false,
         };
       }
 
       // Handle service-level import errors
       if (error instanceof wikipediaImportService.ImportServiceError) {
         return {
-          success: false,
           error: error.message,
+          success: false,
         };
       }
 

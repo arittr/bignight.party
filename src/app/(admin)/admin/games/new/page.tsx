@@ -42,6 +42,7 @@ export default async function NewGamePage() {
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="name">
               Name *
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               id="name"
@@ -56,6 +57,7 @@ export default async function NewGamePage() {
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="eventId">
               Event *
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <select
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               id="eventId"
@@ -75,6 +77,7 @@ export default async function NewGamePage() {
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="accessCode">
               Access Code *
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
               id="accessCode"
@@ -92,6 +95,7 @@ export default async function NewGamePage() {
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="picksLockAt">
               Picks Lock At
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
             <input
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               id="picksLockAt"

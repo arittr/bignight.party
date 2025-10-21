@@ -1,7 +1,7 @@
 "use client";
 
 import { useAction } from "next-safe-action/hooks";
-import { useId, useState, useEffect } from "react";
+import { useEffect, useId, useState } from "react";
 import { signInAction } from "@/lib/actions/auth-actions";
 
 interface SignupFormProps {

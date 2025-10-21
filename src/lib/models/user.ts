@@ -9,8 +9,8 @@ export async function findById(id: string) {
 
 export async function exists(id: string) {
   const user = await prisma.user.findUnique({
-    where: { id },
     select: { id: true },
+    where: { id },
   });
   return user !== null;
 }
@@ -29,8 +29,8 @@ export async function create(data: Prisma.UserCreateInput) {
 
 export async function update(id: string, data: Prisma.UserUpdateInput) {
   return prisma.user.update({
-    where: { id },
     data,
+    where: { id },
   });
 }
 

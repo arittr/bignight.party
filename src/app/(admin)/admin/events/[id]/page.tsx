@@ -54,6 +54,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
                   <label className="block text-sm font-medium text-gray-700" htmlFor="name">
                     Event Name
                   </label>
+                  {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
                   <input
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     defaultValue={event.name}
@@ -68,6 +69,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
                   <label className="block text-sm font-medium text-gray-700" htmlFor="slug">
                     Slug
                   </label>
+                  {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
                   <input
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     defaultValue={event.slug}
@@ -86,6 +88,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
                   <label className="block text-sm font-medium text-gray-700" htmlFor="eventDate">
                     Event Date
                   </label>
+                  {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
                   <input
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     defaultValue={new Date(event.eventDate).toISOString().split("T")[0]}
@@ -100,6 +103,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
                   <label className="block text-sm font-medium text-gray-700" htmlFor="description">
                     Description (Optional)
                   </label>
+                  {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
                   <textarea
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     defaultValue={event.description || ""}

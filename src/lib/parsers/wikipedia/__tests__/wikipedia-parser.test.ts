@@ -4,7 +4,7 @@
  * Tests image extraction from Wikipedia pages for people and works
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { fetchWikipediaImage } from "../wikipedia-parser";
 
 describe("Wikipedia Parser - Image Extraction", () => {

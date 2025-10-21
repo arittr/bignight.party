@@ -5,17 +5,10 @@
  * Verifies Prisma queries, unique constraints, foreign keys, and cascading deletes.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import * as gameModel from "../game";
+import { buildCategory, buildEvent, buildGame, buildNomination, buildUser } from "tests/factories";
 import { testPrisma } from "tests/utils/prisma";
-import {
-  buildEvent,
-  buildGame,
-  buildUser,
-  buildCategory,
-  buildNomination,
-  buildPick,
-} from "tests/factories";
+import { beforeEach, describe, expect, it } from "vitest";
+import * as gameModel from "../game";
 
 describe("gameModel.create", () => {
   let testEventId: string;
@@ -30,11 +23,11 @@ describe("gameModel.create", () => {
 
   it("creates game with valid data", async () => {
     const game = await gameModel.create({
+      accessCode: "TESTCODE1",
       event: { connect: { id: testEventId } },
       name: "Test Game",
-      accessCode: "TESTCODE1",
-      status: "OPEN",
       picksLockAt: new Date("2025-03-02T19:00:00Z"),
+      status: "OPEN",
     });
 
     expect(game.id).toBeDefined();
@@ -46,17 +39,17 @@ describe("gameModel.create", () => {
 
   it("enforces unique constraint on accessCode", async () => {
     await gameModel.create({
+      accessCode: "DUPLICATE",
       event: { connect: { id: testEventId } },
       name: "Game 1",
-      accessCode: "DUPLICATE",
       status: "OPEN",
     });
 
     await expect(
       gameModel.create({
+        accessCode: "DUPLICATE",
         event: { connect: { id: testEventId } },
         name: "Game 2",
-        accessCode: "DUPLICATE",
         status: "OPEN",
       })
     ).rejects.toThrow();
@@ -65,9 +58,9 @@ describe("gameModel.create", () => {
   it("enforces foreign key constraint on eventId", async () => {
     await expect(
       gameModel.create({
+        accessCode: "TESTCODE2",
         event: { connect: { id: "invalid-event-id" } },
         name: "Test Game",
-        accessCode: "TESTCODE2",
         status: "OPEN",
       })
     ).rejects.toThrow();
@@ -83,7 +76,7 @@ describe("gameModel.findById", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-g-2", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-g-2" }),
     });
     testGameId = game.id;
   });
@@ -115,7 +108,7 @@ describe("gameModel.findByAccessCode", () => {
     });
 
     await testPrisma.game.create({
-      data: buildGame({ id: "game-g-3", eventId: event.id, accessCode: "FINDME123" }),
+      data: buildGame({ accessCode: "FINDME123", eventId: event.id, id: "game-g-3" }),
     });
     testAccessCode = "FINDME123";
   });
@@ -153,10 +146,10 @@ describe("gameModel.findByEventId", () => {
 
     // Create multiple games for same event
     await testPrisma.game.create({
-      data: buildGame({ id: "game-g-4-1", eventId: testEventId, accessCode: "CODE1" }),
+      data: buildGame({ accessCode: "CODE1", eventId: testEventId, id: "game-g-4-1" }),
     });
     await testPrisma.game.create({
-      data: buildGame({ id: "game-g-4-2", eventId: testEventId, accessCode: "CODE2" }),
+      data: buildGame({ accessCode: "CODE2", eventId: testEventId, id: "game-g-4-2" }),
     });
   });
 
@@ -192,13 +185,13 @@ describe("gameModel.findAll", () => {
     // Create games with different timestamps
     await testPrisma.game.create({
       data: {
-        ...buildGame({ id: "game-g-5-1", eventId: event.id, accessCode: "OLDER" }),
+        ...buildGame({ accessCode: "OLDER", eventId: event.id, id: "game-g-5-1" }),
         createdAt: new Date("2025-01-01T10:00:00Z"),
       },
     });
     await testPrisma.game.create({
       data: {
-        ...buildGame({ id: "game-g-5-2", eventId: event.id, accessCode: "NEWER" }),
+        ...buildGame({ accessCode: "NEWER", eventId: event.id, id: "game-g-5-2" }),
         createdAt: new Date("2025-01-02T10:00:00Z"),
       },
     });
@@ -237,7 +230,7 @@ describe("gameModel.update", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-g-6", eventId: event.id, status: "SETUP" }),
+      data: buildGame({ eventId: event.id, id: "game-g-6", status: "SETUP" }),
     });
     testGameId = game.id;
   });
@@ -275,7 +268,7 @@ describe("gameModel.deleteById", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-g-7", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-g-7" }),
     });
     testGameId = game.id;
   });
@@ -306,7 +299,7 @@ describe("gameModel cascading deletes", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-g-8", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-g-8" }),
     });
 
     const user = await testPrisma.user.create({
@@ -314,20 +307,20 @@ describe("gameModel cascading deletes", () => {
     });
 
     const category = await testPrisma.category.create({
-      data: buildCategory({ id: "category-g-8", eventId: event.id }),
+      data: buildCategory({ eventId: event.id, id: "category-g-8" }),
     });
 
     const nomination = await testPrisma.nomination.create({
-      data: buildNomination({ id: "nomination-g-8", categoryId: category.id }),
+      data: buildNomination({ categoryId: category.id, id: "nomination-g-8" }),
     });
 
     // Create pick
     const pick = await testPrisma.pick.create({
       data: {
-        gameId: game.id,
-        userId: user.id,
         categoryId: category.id,
+        gameId: game.id,
         nominationId: nomination.id,
+        userId: user.id,
       },
     });
 
@@ -348,7 +341,7 @@ describe("gameModel cascading deletes", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-g-9", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-g-9" }),
     });
 
     const user = await testPrisma.user.create({
@@ -358,8 +351,8 @@ describe("gameModel cascading deletes", () => {
     // Create participant
     const participant = await testPrisma.gameParticipant.create({
       data: {
-        userId: user.id,
         gameId: game.id,
+        userId: user.id,
       },
     });
 
@@ -380,7 +373,7 @@ describe("gameModel cascading deletes", () => {
     });
 
     const game = await testPrisma.game.create({
-      data: buildGame({ id: "game-g-10", eventId: event.id }),
+      data: buildGame({ eventId: event.id, id: "game-g-10" }),
     });
 
     // Delete event (should cascade to games)
@@ -406,9 +399,9 @@ describe("gameModel GameStatus enum validation", () => {
 
   it("accepts SETUP status", async () => {
     const game = await gameModel.create({
+      accessCode: "SETUP1",
       event: { connect: { id: testEventId } },
       name: "Setup Game",
-      accessCode: "SETUP1",
       status: "SETUP",
     });
 
@@ -417,9 +410,9 @@ describe("gameModel GameStatus enum validation", () => {
 
   it("accepts OPEN status", async () => {
     const game = await gameModel.create({
+      accessCode: "OPEN1",
       event: { connect: { id: testEventId } },
       name: "Open Game",
-      accessCode: "OPEN1",
       status: "OPEN",
     });
 
@@ -428,9 +421,9 @@ describe("gameModel GameStatus enum validation", () => {
 
   it("accepts LIVE status", async () => {
     const game = await gameModel.create({
+      accessCode: "LIVE1",
       event: { connect: { id: testEventId } },
       name: "Live Game",
-      accessCode: "LIVE1",
       status: "LIVE",
     });
 
@@ -439,9 +432,9 @@ describe("gameModel GameStatus enum validation", () => {
 
   it("accepts COMPLETED status", async () => {
     const game = await gameModel.create({
+      accessCode: "COMPLETED1",
       event: { connect: { id: testEventId } },
       name: "Completed Game",
-      accessCode: "COMPLETED1",
       status: "COMPLETED",
     });
 

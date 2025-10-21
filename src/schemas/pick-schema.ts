@@ -5,8 +5,8 @@ import { z } from "zod";
  * Used by submitPickAction to validate user input
  */
 export const pickSubmissionSchema = z.object({
-  gameId: z.string().cuid("Invalid game ID"),
   categoryId: z.string().cuid("Invalid category ID"),
+  gameId: z.string().cuid("Invalid game ID"),
   nominationId: z.string().cuid("Invalid nomination ID"),
 });
 

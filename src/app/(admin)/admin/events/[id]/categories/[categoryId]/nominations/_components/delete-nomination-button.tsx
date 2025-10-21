@@ -11,7 +11,7 @@ export function DeleteNominationButton({
   nominationId,
   nominationText,
 }: DeleteNominationButtonProps) {
-  async function handleDelete(formData: FormData) {
+  async function handleDelete(_formData: FormData) {
     if (confirm(`Are you sure you want to delete: "${nominationText}"?`)) {
       await deleteNominationAction({ id: nominationId });
     }

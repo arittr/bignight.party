@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useAction } from "next-safe-action/hooks";
-import { previewImportAction, confirmImportAction } from "@/lib/actions/wikipedia-import-actions";
+import { useState } from "react";
+import { confirmImportAction, previewImportAction } from "@/lib/actions/wikipedia-import-actions";
 import { PreviewTable } from "./preview-table";
 
 /**
@@ -48,17 +48,18 @@ export function ImportForm() {
       <div className="bg-white p-6 rounded-lg border shadow-sm">
         <div className="space-y-4">
           <div>
-            <label htmlFor="wikipedia-url" className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="wikipedia-url">
               Wikipedia URL
             </label>
+            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use import form, static IDs are safe */}
             <input
-              id="wikipedia-url"
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://en.wikipedia.org/wiki/97th_Academy_Awards"
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={isPreviewing || isConfirming}
+              id="wikipedia-url"
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://en.wikipedia.org/wiki/97th_Academy_Awards"
+              type="url"
+              value={url}
             />
             <p className="mt-1 text-sm text-gray-500">
               Enter the URL of a Wikipedia article for an awards ceremony (e.g., Academy Awards,
@@ -67,10 +68,10 @@ export function ImportForm() {
           </div>
 
           <button
-            type="button"
-            onClick={handlePreview}
-            disabled={isPreviewing || isConfirming || !isValidUrl}
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={isPreviewing || isConfirming || !isValidUrl}
+            onClick={handlePreview}
+            type="button"
           >
             {isPreviewing ? "Loading Preview..." : "Preview Import"}
           </button>
@@ -80,9 +81,9 @@ export function ImportForm() {
       {/* Preview Section */}
       {previewResult?.data?.success && previewResult.data.data && (
         <PreviewTable
-          preview={previewResult.data.data}
-          onConfirm={handleConfirm}
           isConfirming={isConfirming}
+          onConfirm={handleConfirm}
+          preview={previewResult.data.data}
         />
       )}
 
