@@ -79,7 +79,7 @@ export function NomineeCard({ nomination, isSelected, isLocked, onClick }: Nomin
 
           {/* Selection indicator */}
           {isSelected && (
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 self-center">
               <CheckCircle2 className="h-6 w-6 text-indigo-600" />
             </div>
           )}
