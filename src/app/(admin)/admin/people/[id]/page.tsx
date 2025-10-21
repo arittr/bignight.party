@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ConfirmDeleteButton } from "@/app/(admin)/admin/_components/confirm-delete-button";
 import { deletePersonAction, updatePersonAction } from "@/lib/actions/admin-actions";
+import { requireValidatedSession } from "@/lib/auth/config";
 import * as personModel from "@/lib/models/person";
 
 interface PersonDetailPageProps {
@@ -10,6 +10,8 @@ interface PersonDetailPageProps {
 }
 
 export default async function PersonDetailPage({ params }: PersonDetailPageProps) {
+  await requireValidatedSession();
+
   const { id } = await params;
   const person = await personModel.findById(id);
 
@@ -75,12 +77,14 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
             </div>
           </div>
 
-          <ConfirmDeleteButton
-            buttonText="Delete Person"
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-            confirmMessage="Are you sure you want to delete this person?"
-            onDelete={handleDelete}
-          />
+          <form action={handleDelete}>
+            <button
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              type="submit"
+            >
+              Delete Person
+            </button>
+          </form>
         </div>
 
         {person.nominations.length > 0 && (
