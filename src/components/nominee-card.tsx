@@ -40,6 +40,9 @@ export function NomineeCard({ nomination, isSelected, isLocked, onClick }: Nomin
         ${isLocked ? "cursor-not-allowed opacity-60" : ""}
       `}
       onClick={isLocked ? undefined : onClick}
+      // biome-ignore lint/a11y/useSemanticElements: Card is shadcn/ui div component, can't use <button>
+      role="button"
+      tabIndex={isLocked ? -1 : 0}
     >
       <CardContent className="p-6">
         <div className="flex items-start gap-6">
