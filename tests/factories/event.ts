@@ -6,10 +6,11 @@ import type { Event } from "@prisma/client";
  * @returns Event object with sensible defaults
  */
 export function buildEvent(overrides: Partial<Event> = {}): Event {
+  const id = overrides.id || "event-test-1";
   return {
-    id: "event-test-1",
+    id,
     name: "97th Academy Awards 2025",
-    slug: "oscars-2025",
+    slug: `oscars-2025-${id}`,
     description: "The 97th Academy Awards ceremony",
     eventDate: new Date("2025-03-02T20:00:00Z"),
     createdAt: new Date("2025-01-01T00:00:00Z"),
