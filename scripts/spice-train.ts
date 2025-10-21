@@ -1,4 +1,6 @@
 #!/usr/bin/env tsx
+
+/** biome-ignore-all lint/suspicious/noConsole: it's a console tool */
 /**
  * spice-train.ts — use git-spice for sync/restack; merge PRs bottom→top with gh
  *
@@ -188,6 +190,7 @@ function checkPrerequisites(): void {
   try {
     execQuiet("gh auth status");
   } catch {
+    console.error("❌ GitHub CLI not authenticated. Run: gh auth login");
     process.exit(1);
   }
 
@@ -195,12 +198,14 @@ function checkPrerequisites(): void {
   try {
     execQuiet("git rev-parse --show-toplevel");
   } catch {
+    console.error("❌ Not in a git repository");
     process.exit(1);
   }
 
   // Check for clean working tree
   const status = execQuiet("git status --porcelain");
   if (status) {
+    console.error("❌ Working tree has uncommitted changes:");
     exec("git status --short");
     process.exit(1);
   }
@@ -208,16 +213,24 @@ function checkPrerequisites(): void {
   // Check not detached HEAD
   const currentBranch = execQuiet("git branch --show-current");
   if (!currentBranch) {
+    console.error("❌ Detached HEAD state. Check out a branch first.");
     process.exit(1);
   }
 }
 
 function showHeader(config: Config): void {
+  console.log("\n🚂 Git-Spice Merge Train\n");
   if (config.dryRun) {
+    console.log("🔍 DRY RUN MODE - No changes will be made\n");
   }
+  console.log(`Mode: ${config.mode}`);
+  console.log(`Trunk: ${config.trunk}`);
+  console.log(`Auto-merge: ${config.auto ? "enabled (wait for CI)" : "disabled (merge now)"}\n`);
 }
 
 function showStackPreview(stack: Branch[], _trunk: string): void {
+  console.log(`📋 Stack Preview (${stack.length} branches)\n`);
+
   // Batch fetch all PR info for better performance
   const branchNames = stack.map((b) => b.name);
   const prInfoMap = getAllPRInfo(branchNames);
@@ -226,50 +239,80 @@ function showStackPreview(stack: Branch[], _trunk: string): void {
     const { name, parent } = stack[i];
     const prInfo = prInfoMap.get(name);
 
+    const stepNum = `${i + 1}.`.padEnd(3);
+
     if (prInfo) {
-      let _baseStatus = "";
+      let baseStatus = "";
       if (prInfo.baseRefName !== parent) {
-        _baseStatus = ` (⚠️  base is ${prInfo.baseRefName}, will update to ${parent})`;
+        baseStatus = ` (⚠️  base is ${prInfo.baseRefName}, will update to ${parent})`;
       }
+      console.log(`${stepNum} ${name} → ${parent}`);
+      console.log(`     PR #${prInfo.number} [${prInfo.state}]${baseStatus}`);
     } else {
+      console.log(`${stepNum} ${name} → ${parent}`);
+      console.log(`     No PR yet (will create)`);
     }
   }
+  console.log();
 }
 
 async function syncAndRestack(config: Config): Promise<void> {
   if (config.dryRun) {
+    console.log("⏭️  Would run: gs repo sync --restack && gs stack restack\n");
   } else {
+    console.log("🔄 Syncing and restacking...");
     try {
       exec("gs repo sync --restack");
       exec("gs stack restack");
+      console.log("✅ Sync complete\n");
     } catch {
+      console.error("❌ Failed to sync/restack");
       process.exit(1);
     }
   }
 }
 
 async function mergeStack(stack: Branch[], config: Config): Promise<void> {
+  if (!config.dryRun) {
+    console.log("🚀 Merging PRs bottom-to-top...\n");
+  }
+
   for (let i = 0; i < stack.length; i++) {
     const { name, parent } = stack[i];
-    await mergePR(name, parent, config);
+    const stepNum = i + 1;
+
+    if (config.dryRun) {
+      console.log(`${stepNum}. Would merge: ${name} → ${parent}`);
+    } else {
+      console.log(`${stepNum}. Merging: ${name} → ${parent}`);
+      await mergePR(name, parent, config);
+      console.log(`   ✅ Merged\n`);
+    }
   }
 }
 
 async function finalCleanup(config: Config): Promise<void> {
   if (config.dryRun) {
+    console.log("⏭️  Would run: gs repo sync\n");
   } else {
+    console.log("\n🧹 Final sync...");
     exec("gs repo sync");
+    console.log("✅ Done\n");
   }
 }
 
 function showCompletion(config: Config): void {
   if (config.dryRun) {
+    console.log("✅ Dry run complete. No changes were made.");
+    console.log("   Remove --dry-run to execute the merge train.");
   } else {
+    console.log("🎉 Merge train complete!");
+    console.log("   All PRs have been merged bottom-to-top.");
   }
 }
 
 function showHelp(): void {
-  const _helpText = `
+  const helpText = `
 Git-Spice Merge Train
 
 Usage:
@@ -294,6 +337,7 @@ Safety:
   - Prompts for confirmation (unless --dry-run)
   - Checks PR status and updates bases as needed
 `;
+  console.log(helpText);
 }
 
 // --- Main ------------------------------------------------------------------
@@ -330,6 +374,8 @@ async function main() {
         break;
       default:
         if (arg.startsWith("-")) {
+          console.error(`❌ Unknown option: ${arg}`);
+          console.error("   Run with --help to see available options");
           process.exit(1);
         }
         config.trunk = arg;
@@ -368,6 +414,7 @@ async function main() {
   showCompletion(config);
 }
 
-main().catch((_error) => {
+main().catch((error) => {
+  console.error("\n❌ Error:", error.message || error);
   process.exit(1);
 });
