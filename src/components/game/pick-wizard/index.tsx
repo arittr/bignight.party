@@ -4,7 +4,6 @@ import { useState } from "react";
 import { usePickNavigation } from "@/hooks/game/use-pick-navigation";
 import { usePickSubmission } from "@/hooks/game/use-pick-submission";
 import { useSaveIndicator } from "@/hooks/game/use-save-indicator";
-import { routes } from "@/lib/routes";
 import { CategorySidebar } from "./category-sidebar";
 import { NominationList } from "./nomination-list";
 import { SaveIndicator } from "./save-indicator";
@@ -278,16 +277,6 @@ export function PickWizard({
             onNext={navigation.handleNext}
             onPrevious={navigation.handlePrevious}
           />
-
-          {/* Back to dashboard link */}
-          <div className="mt-8 text-center">
-            <a
-              className="text-sm text-indigo-600 hover:text-indigo-700 underline"
-              href={routes.dashboard()}
-            >
-              Back to My Games
-            </a>
-          </div>
         </div>
       </div>
     </div>
