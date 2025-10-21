@@ -20,6 +20,7 @@
 export { buildUser } from "./user";
 export { buildEvent } from "./event";
 export { buildGame } from "./game";
+export { buildGameParticipant } from "./game-participant";
 export { buildCategory } from "./category";
 export { buildNomination } from "./nomination";
 export { buildPick } from "./pick";
