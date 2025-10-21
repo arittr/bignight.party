@@ -39,3 +39,15 @@ export async function deleteById(id: string) {
     where: { id },
   });
 }
+
+export async function findOrCreateByWikipediaSlug(data: {
+  wikipediaSlug: string;
+  name: string;
+  imageUrl?: string;
+}) {
+  return await prisma.person.upsert({
+    where: { wikipediaSlug: data.wikipediaSlug },
+    update: {},
+    create: data,
+  });
+}
