@@ -6,6 +6,7 @@ import { deleteGameAction, updateGameAction } from "@/lib/actions/admin-actions"
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as eventModel from "@/lib/models/event";
 import * as gameModel from "@/lib/models/game";
+import { routes } from "@/lib/routes";
 
 interface GameDetailPageProps {
   params: Promise<{ id: string }>;
@@ -46,13 +47,13 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     "use server";
 
     await deleteGameAction({ id });
-    redirect("/admin/games");
+    redirect(routes.admin.games.index());
   }
 
   return (
     <div className="p-8">
       <div className="mb-6">
-        <Link className="text-blue-600 hover:text-blue-800" href="/admin/games">
+        <Link className="text-blue-600 hover:text-blue-800" href={routes.admin.games.index()}>
           &larr; Back to Games
         </Link>
       </div>
@@ -87,6 +88,16 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
             <GameStatusBadge status={game.status} />
           </div>
         </div>
+      </div>
+
+      {/* Admin Actions */}
+      <div className="mb-6">
+        <Link
+          className="inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          href={routes.admin.games.live(id)}
+        >
+          Live Winner Marking
+        </Link>
       </div>
 
       {/* Edit Form */}
