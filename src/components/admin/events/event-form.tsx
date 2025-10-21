@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import type { ControllerRenderProps } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AdminForm, AdminFormField } from "@/components/admin/ui/admin-form";
 import { Input } from "@/components/ui/input";
@@ -30,13 +30,13 @@ export function EventForm({
   submitLabel = "Save Event",
 }: EventFormProps) {
   const form = useForm<EventFormData>({
-    resolver: zodResolver(eventCreateSchema),
     defaultValues: {
+      description: initialData?.description ?? "",
+      eventDate: initialData?.eventDate ?? new Date(),
       name: initialData?.name ?? "",
       slug: initialData?.slug ?? "",
-      eventDate: initialData?.eventDate ?? new Date(),
-      description: initialData?.description ?? "",
     },
+    resolver: zodResolver(eventCreateSchema),
   });
 
   return (

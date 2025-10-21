@@ -5,6 +5,7 @@ import type { Event } from "@prisma/client";
 import { format } from "date-fns";
 import { RefreshCw } from "lucide-react";
 import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { AdminForm, AdminFormField } from "@/components/admin/ui/admin-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { gameCreateSchema } from "@/schemas/game-schema";
-import type { z } from "zod";
 
 type GameFormInput = z.input<typeof gameCreateSchema>;
 
@@ -155,7 +155,10 @@ export function GameForm({
         name="picksLockAt"
       >
         {(field) => {
-          const typedField = field as { value: Date | undefined; onChange: (value: Date | undefined) => void };
+          const typedField = field as {
+            value: Date | undefined;
+            onChange: (value: Date | undefined) => void;
+          };
           return (
             <Input
               aria-label="Picks lock time"
