@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { deleteEventAction, updateEventAction } from "@/lib/actions/admin-actions";
+import { requireValidatedSession } from "@/lib/auth/config";
 import * as eventModel from "@/lib/models/event";
+import { routes } from "@/lib/routes";
 
 export default async function EventDetailPage({ params }: { params: { id: string } }) {
+  await requireValidatedSession();
+
   const event = await eventModel.findById(params.id);
 
   if (!event) {
@@ -31,13 +35,13 @@ export default async function EventDetailPage({ params }: { params: { id: string
     "use server";
 
     await deleteEventAction({ id: params.id });
-    redirect("/admin/events");
+    redirect(routes.admin.events.index());
   }
 
   return (
     <div>
       <div className="mb-6">
-        <Link className="text-blue-600 hover:text-blue-900" href="/admin/events">
+        <Link className="text-blue-600 hover:text-blue-900" href={routes.admin.events.index()}>
           &larr; Back to Events
         </Link>
       </div>
@@ -142,7 +146,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
               <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
               <Link
                 className="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                href={`/admin/events/${event.id}/categories/new`}
+                href={routes.admin.events.categories.new(event.id)}
               >
                 Add Category
               </Link>
@@ -158,7 +162,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
                     <li key={category.id}>
                       <Link
                         className="block p-3 rounded border border-gray-200 hover:bg-gray-50 transition-colors"
-                        href={`/admin/events/${event.id}/categories/${category.id}`}
+                        href={routes.admin.events.categories.detail(event.id, category.id)}
                       >
                         <div className="font-medium text-gray-900">{category.name}</div>
                         <div className="text-sm text-gray-500">
@@ -183,7 +187,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
                   <li key={game.id}>
                     <Link
                       className="block p-3 rounded border border-gray-200 hover:bg-gray-50 transition-colors"
-                      href={`/admin/games/${game.id}`}
+                      href={routes.admin.games.detail(game.id)}
                     >
                       <div className="font-medium text-gray-900">{game.name}</div>
                       <div className="text-sm text-gray-500">
