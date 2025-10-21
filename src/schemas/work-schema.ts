@@ -8,7 +8,7 @@ const maxYear = currentYear + 10; // Allow future releases
 
 export const workCreateSchema = z.object({
   externalId: z.string().optional(),
-  posterUrl: z.string().url("Poster URL must be a valid URL").optional(),
+  imageUrl: z.string().url("Poster URL must be a valid URL").optional(),
   title: z.string().min(1, "Title is required"),
   type: z.nativeEnum(WorkType, {
     message: "Work type is required",
@@ -24,7 +24,7 @@ export const workCreateSchema = z.object({
 export const workUpdateSchema = z.object({
   externalId: z.string().optional(),
   id: z.string().cuid("Invalid work ID"),
-  posterUrl: z.string().url("Poster URL must be a valid URL").optional(),
+  imageUrl: z.string().url("Poster URL must be a valid URL").optional(),
   title: z.string().min(1, "Title is required").optional(),
   type: z.nativeEnum(WorkType).optional(),
   year: z

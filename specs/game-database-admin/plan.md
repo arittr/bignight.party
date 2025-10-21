@@ -13,6 +13,7 @@
 - **Time Savings**: 11.5h (42%)
 
 **Parallel Opportunities:**
+
 - Phase 2: 2 tasks (1h saved)
 - Phase 7: 7 tasks (9h saved)
 
@@ -26,6 +27,7 @@
 ### Task 1.1: Add Game Database Schema
 
 **Files**:
+
 - `prisma/schema.prisma`
 - `prisma/migrations/XXXXXX_add_game_models/`
 
@@ -37,6 +39,7 @@
 Add all 7 game models (Event, Game, Category, Work, Person, Nomination, Pick) and 2 enums (GameStatus, WorkType) to Prisma schema following schema-rules.md conventions.
 
 **Implementation Steps**:
+
 1. Add GameStatus enum (SETUP, OPEN, LIVE, COMPLETED)
 2. Add WorkType enum (FILM, TV_SHOW, ALBUM, SONG, PLAY, BOOK)
 3. Add Event model with fields per spec (id, name, slug, description, eventDate, timestamps)
@@ -53,6 +56,7 @@ Add all 7 game models (Event, Game, Category, Work, Person, Nomination, Pick) an
 14. Verify migration with `pnpm prisma studio`
 
 **Acceptance Criteria**:
+
 - [ ] All 7 models present in schema.prisma
 - [ ] Both enums defined with correct values
 - [ ] All foreign keys have @@index directives
@@ -62,11 +66,13 @@ Add all 7 game models (Event, Game, Category, Work, Person, Nomination, Pick) an
 - [ ] `pnpm prisma generate` completes successfully
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Schema naming: PascalCase models, camelCase fields (@docs/constitutions/v1/schema-rules.md)
 - Field organization: ID, required, optional, relations, timestamps
 - All enums: UPPER_CASE values
 
 **Quality Gates**:
+
 ```bash
 pnpm prisma format
 pnpm prisma validate
@@ -80,6 +86,7 @@ pnpm biome check --write prisma/schema.prisma
 ### Task 1.2: Install tsx Dependency
 
 **Files**:
+
 - `package.json`
 - `pnpm-lock.yaml`
 
@@ -91,20 +98,24 @@ pnpm biome check --write prisma/schema.prisma
 Install tsx as dev dependency for running TypeScript seed script, and add db:seed script to package.json.
 
 **Implementation Steps**:
+
 1. Run `pnpm add -D tsx`
 2. Add `"db:seed": "tsx prisma/seed.ts"` to package.json scripts
 3. Verify installation with `pnpm tsx --version`
 
 **Acceptance Criteria**:
+
 - [ ] tsx appears in devDependencies
 - [ ] pnpm-lock.yaml updated
 - [ ] db:seed script present in package.json
 - [ ] `pnpm tsx --version` works
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Version pinning: Use `^` for dev dependencies (@docs/constitutions/v1/tech-stack.md)
 
 **Quality Gates**:
+
 ```bash
 pnpm biome check --write package.json
 pnpm tsx --version
@@ -120,6 +131,7 @@ pnpm tsx --version
 ### Task 2.1: Create Models Layer
 
 **Files**:
+
 - `src/lib/models/event.ts`
 - `src/lib/models/game.ts`
 - `src/lib/models/category.ts`
@@ -136,6 +148,7 @@ pnpm tsx --version
 Create model layer files for all 7 entities with standard CRUD operations (create, findAll, findById, update, delete). Each model uses Prisma client and exports typed functions.
 
 **Implementation Steps**:
+
 1. Create `src/lib/models/event.ts` with create, findAll, findById, findBySlug, update, delete
 2. Create `src/lib/models/game.ts` with create, findAll, findById, findByEventId, findByAccessCode, update, delete
 3. Create `src/lib/models/category.ts` with create, findAll, findById, findByEventId, update, delete
@@ -148,6 +161,7 @@ Create model layer files for all 7 entities with standard CRUD operations (creat
 10. Include relations in find operations where needed
 
 **Acceptance Criteria**:
+
 - [ ] All 7 model files exist and export CRUD functions
 - [ ] No Prisma imports outside models/ layer
 - [ ] All functions properly typed with Prisma types
@@ -156,11 +170,13 @@ Create model layer files for all 7 entities with standard CRUD operations (creat
 - [ ] TypeScript compiles without errors
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Models layer: ONLY Prisma queries, no business logic (@docs/constitutions/v1/architecture.md)
 - No `next/*` imports in models
 - Use `Prisma` types from `@prisma/client`
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/lib/models/
@@ -171,6 +187,7 @@ pnpm biome check --write src/lib/models/
 ### Task 2.2: Create Validation Schemas
 
 **Files**:
+
 - `src/schemas/event-schema.ts`
 - `src/schemas/game-schema.ts`
 - `src/schemas/category-schema.ts`
@@ -186,6 +203,7 @@ pnpm biome check --write src/lib/models/
 Create Zod validation schemas for all 6 entity types with create/update variants. Schemas validate all required fields, enums, and business rules.
 
 **Implementation Steps**:
+
 1. Create `event-schema.ts` with eventCreateSchema and eventUpdateSchema (validate slug format, date)
 2. Create `game-schema.ts` with gameCreateSchema and gameUpdateSchema (validate GameStatus enum, accessCode format)
 3. Create `category-schema.ts` with categoryCreateSchema and categoryUpdateSchema (validate points > 0, order >= 0)
@@ -197,6 +215,7 @@ Create Zod validation schemas for all 6 entity types with create/update variants
 9. Export inferred types: `export type EventCreateInput = z.infer<typeof eventCreateSchema>`
 
 **Acceptance Criteria**:
+
 - [ ] All 6 schema files exist with create/update variants
 - [ ] GameStatus enum validated with z.nativeEnum()
 - [ ] WorkType enum validated with z.nativeEnum()
@@ -205,11 +224,13 @@ Create Zod validation schemas for all 6 entity types with create/update variants
 - [ ] TypeScript compiles without errors
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Validation: Use Zod for all inputs (@docs/constitutions/v1/patterns.md)
 - Enums: Use z.nativeEnum() for Prisma enums
 - Export types: `export type X = z.infer<typeof schema>`
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/schemas/
@@ -225,6 +246,7 @@ pnpm biome check --write src/schemas/
 ### Task 3.1: Create Services Layer
 
 **Files**:
+
 - `src/lib/services/event-service.ts`
 - `src/lib/services/game-service.ts`
 - `src/lib/services/admin-service.ts`
@@ -237,6 +259,7 @@ pnpm biome check --write src/schemas/
 Create service layer for business logic. Services orchestrate multiple model calls, handle validation, and manage complex operations like cascading deletes.
 
 **Implementation Steps**:
+
 1. Create `event-service.ts` with createEvent, updateEvent, deleteEvent (cascades to categories/games)
 2. Create `game-service.ts` with createGame, updateGame, deleteGame, updateGameStatus (uses ts-pattern)
 3. Create `admin-service.ts` with validateAdminAccess, getAdminDashboardStats
@@ -247,6 +270,7 @@ Create service layer for business logic. Services orchestrate multiple model cal
 8. No Prisma imports (only model layer)
 
 **Acceptance Criteria**:
+
 - [ ] All 3 service files exist
 - [ ] No `@prisma/client` imports in services
 - [ ] game-service.ts uses ts-pattern with .exhaustive() for GameStatus
@@ -255,11 +279,13 @@ Create service layer for business logic. Services orchestrate multiple model cal
 - [ ] TypeScript compiles without errors
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Services: No Prisma imports, only models (@docs/constitutions/v1/architecture.md)
 - Pattern matching: Use ts-pattern with .exhaustive() (@docs/constitutions/v1/patterns.md)
 - No `next/*` imports in services
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/lib/services/
@@ -275,6 +301,7 @@ pnpm biome check --write src/lib/services/
 ### Task 4.1: Create Admin Actions
 
 **Files**:
+
 - `src/lib/actions/admin-actions.ts`
 
 **Complexity**: M (3h)
@@ -285,6 +312,7 @@ pnpm biome check --write src/lib/services/
 Create all admin CRUD actions using next-safe-action with adminAction client. Each action validates input with Zod schema, calls service layer, and revalidates paths.
 
 **Implementation Steps**:
+
 1. Import adminAction from `@/lib/actions/safe-action`
 2. Import all schemas from `@/schemas/`
 3. Import services from `@/lib/services/`
@@ -300,6 +328,7 @@ Create all admin CRUD actions using next-safe-action with adminAction client. Ea
 13. Use ts-pattern for complex validation if needed
 
 **Acceptance Criteria**:
+
 - [ ] All 18 CRUD actions implemented (6 entities × 3 operations)
 - [ ] All actions use adminAction client
 - [ ] All actions use .schema() with Zod validation
@@ -309,11 +338,13 @@ Create all admin CRUD actions using next-safe-action with adminAction client. Ea
 - [ ] TypeScript compiles without errors
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Server actions: MUST use next-safe-action (@docs/constitutions/v1/patterns.md)
 - Actions: Call services, not models (@docs/constitutions/v1/architecture.md)
 - Validation: Use .schema() with Zod schemas
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/lib/actions/admin-actions.ts
@@ -329,6 +360,7 @@ pnpm biome check --write src/lib/actions/admin-actions.ts
 ### Task 5.1: Create Idempotent Seed Script
 
 **Files**:
+
 - `prisma/seed.ts`
 
 **Complexity**: M (2h)
@@ -339,6 +371,7 @@ pnpm biome check --write src/lib/actions/admin-actions.ts
 Create idempotent seed script that clears all game data and recreates realistic Oscar 2025 data: 3 works (films), 3 people, 1 event, 1 game, 3 categories, 9 nominations.
 
 **Implementation Steps**:
+
 1. Create `prisma/seed.ts` with main() function
 2. Delete existing data in reverse dependency order: Pick → Nomination → Category → Work → Person → Game → Event
 3. Create 3 Work records (type: FILM): "Oppenheimer", "Barbie", "Killers of the Flower Moon"
@@ -358,6 +391,7 @@ Create idempotent seed script that clears all game data and recreates realistic 
 11. Call main().catch() at end
 
 **Acceptance Criteria**:
+
 - [ ] Script runs without errors: `pnpm db:seed`
 - [ ] Script is idempotent (can run multiple times)
 - [ ] All 3 works created with type FILM
@@ -369,11 +403,13 @@ Create idempotent seed script that clears all game data and recreates realistic 
 - [ ] Console logs show progress
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Use Prisma client from `@/lib/db/prisma`
 - Delete in reverse dependency order
 - Use cuid() for IDs or let Prisma auto-generate
 
 **Quality Gates**:
+
 ```bash
 pnpm db:seed
 pnpm prisma studio  # Verify data exists
@@ -391,6 +427,7 @@ pnpm biome check --write prisma/seed.ts
 ### Task 6.1: Create Admin Layout and Middleware
 
 **Files**:
+
 - `src/app/(admin)/admin/layout.tsx`
 
 **Complexity**: S (1h)
@@ -401,6 +438,7 @@ pnpm biome check --write prisma/seed.ts
 Create admin layout that checks user authentication and role, redirecting non-admin users to home page. Provides consistent layout for all admin pages.
 
 **Implementation Steps**:
+
 1. Create `src/app/(admin)/admin/layout.tsx` as Server Component
 2. Import `auth` from `@/lib/auth/config`
 3. Check session exists: `const session = await auth()`
@@ -412,6 +450,7 @@ Create admin layout that checks user authentication and role, redirecting non-ad
 9. Add basic Tailwind styling for sidebar + content layout
 
 **Acceptance Criteria**:
+
 - [ ] Non-authenticated users redirected to /
 - [ ] Non-admin users (role: USER) redirected to /
 - [ ] Admin users can access layout
@@ -420,11 +459,13 @@ Create admin layout that checks user authentication and role, redirecting non-ad
 - [ ] TypeScript compiles without errors
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Server Components for layouts (@docs/constitutions/v1/architecture.md)
 - Use existing auth() from Auth.js setup
 - Role check uses enum: `session.user.role === 'ADMIN'`
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/app/\(admin\)/
@@ -441,6 +482,7 @@ pnpm dev  # Test redirect behavior
 ### Task 7.1: Create Events Admin UI
 
 **Files**:
+
 - `src/app/(admin)/admin/events/page.tsx`
 - `src/app/(admin)/admin/events/new/page.tsx`
 - `src/app/(admin)/admin/events/[id]/page.tsx`
@@ -453,6 +495,7 @@ pnpm dev  # Test redirect behavior
 Create CRUD pages for events: list all events, create new event form, view/edit event page with delete button.
 
 **Implementation Steps**:
+
 1. Create `events/page.tsx` - Server Component listing all events in table
 2. Fetch events using eventModel.findAll()
 3. Display: name, slug, eventDate, category count, game count
@@ -467,6 +510,7 @@ Create CRUD pages for events: list all events, create new event form, view/edit 
 12. Add "Add Category" button linking to nested category creation
 
 **Acceptance Criteria**:
+
 - [ ] Events list page renders without errors
 - [ ] Create event form submits successfully
 - [ ] Event detail page shows event info and categories
@@ -476,11 +520,13 @@ Create CRUD pages for events: list all events, create new event form, view/edit 
 - [ ] revalidatePath called after mutations
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Server Components for data fetching (@docs/constitutions/v1/architecture.md)
 - Forms use action attribute (no client state)
 - Import actions from `@/lib/actions/admin-actions`
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/app/\(admin\)/admin/events/
@@ -492,6 +538,7 @@ pnpm dev  # Test CRUD operations
 ### Task 7.2: Create Games Admin UI
 
 **Files**:
+
 - `src/app/(admin)/admin/games/page.tsx`
 - `src/app/(admin)/admin/games/new/page.tsx`
 - `src/app/(admin)/admin/games/[id]/page.tsx`
@@ -504,6 +551,7 @@ pnpm dev  # Test CRUD operations
 Create CRUD pages for games: list all games, create new game form, view/edit game page with status management.
 
 **Implementation Steps**:
+
 1. Create `games/page.tsx` - List all games with event names
 2. Fetch games using gameModel.findAll() with event relation
 3. Display: name, event name, accessCode, status, picksLockAt
@@ -516,6 +564,7 @@ Create CRUD pages for games: list all games, create new game form, view/edit gam
 10. Add edit and delete buttons
 
 **Acceptance Criteria**:
+
 - [ ] Games list page shows all games with event names
 - [ ] Create game form has event dropdown
 - [ ] Game detail page shows status and stats
@@ -524,11 +573,13 @@ Create CRUD pages for games: list all games, create new game form, view/edit gam
 - [ ] TypeScript compiles without errors
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Server Components for data fetching
 - Use ts-pattern for GameStatus display if needed
 - Forms use action attribute
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/app/\(admin\)/admin/games/
@@ -540,6 +591,7 @@ pnpm dev  # Test CRUD operations
 ### Task 7.3: Create Works Admin UI
 
 **Files**:
+
 - `src/app/(admin)/admin/works/page.tsx`
 - `src/app/(admin)/admin/works/new/page.tsx`
 - `src/app/(admin)/admin/works/[id]/page.tsx`
@@ -552,17 +604,19 @@ pnpm dev  # Test CRUD operations
 Create CRUD pages for works: list all works with type filter, create new work form, view/edit work page showing nominations.
 
 **Implementation Steps**:
+
 1. Create `works/page.tsx` - List all works
 2. Add filter dropdown for WorkType
 3. Display: title, type, year, nomination count
 4. Create `works/new/page.tsx` - Form for creating works
-5. Fields: title, type (dropdown with all WorkType values), year, posterUrl, externalId
+5. Fields: title, type (dropdown with all WorkType values), year, imageUrl, externalId
 6. Create `works/[id]/page.tsx` - View/edit work
 7. Show all nominations this work appears in
 8. Add edit and delete buttons
 9. Show error if trying to delete work with nominations
 
 **Acceptance Criteria**:
+
 - [ ] Works list page shows all works
 - [ ] Type filter works correctly
 - [ ] Create form has WorkType dropdown
@@ -571,11 +625,13 @@ Create CRUD pages for works: list all works with type filter, create new work fo
 - [ ] Edit work updates successfully
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Use z.nativeEnum for WorkType in forms
 - Handle foreign key errors gracefully
 - Server Components only
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/app/\(admin\)/admin/works/
@@ -587,6 +643,7 @@ pnpm dev  # Test CRUD operations
 ### Task 7.4: Create People Admin UI
 
 **Files**:
+
 - `src/app/(admin)/admin/people/page.tsx`
 - `src/app/(admin)/admin/people/new/page.tsx`
 - `src/app/(admin)/admin/people/[id]/page.tsx`
@@ -599,6 +656,7 @@ pnpm dev  # Test CRUD operations
 Create CRUD pages for people: list all people, create new person form, view/edit person page showing nominations.
 
 **Implementation Steps**:
+
 1. Create `people/page.tsx` - List all people
 2. Display: name, imageUrl, nomination count
 3. Create `people/new/page.tsx` - Form for creating people
@@ -609,6 +667,7 @@ Create CRUD pages for people: list all people, create new person form, view/edit
 8. Handle foreign key error if trying to delete person with nominations
 
 **Acceptance Criteria**:
+
 - [ ] People list page shows all people
 - [ ] Create person form works
 - [ ] Person detail shows nominations
@@ -617,11 +676,13 @@ Create CRUD pages for people: list all people, create new person form, view/edit
 - [ ] TypeScript compiles without errors
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Server Components for data fetching
 - Handle foreign key errors gracefully
 - Forms use action attribute
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/app/\(admin\)/admin/people/
@@ -633,6 +694,7 @@ pnpm dev  # Test CRUD operations
 ### Task 7.5: Create Categories Admin UI
 
 **Files**:
+
 - `src/app/(admin)/admin/events/[id]/categories/new/page.tsx`
 - `src/app/(admin)/admin/events/[id]/categories/[categoryId]/page.tsx`
 
@@ -644,6 +706,7 @@ pnpm dev  # Test CRUD operations
 Create CRUD pages for categories nested under events: create new category form, view/edit category page with nominations list.
 
 **Implementation Steps**:
+
 1. Create `categories/new/page.tsx` - Form for creating category within event
 2. Get eventId from params.id
 3. Fields: name, order, points, isRevealed (checkbox)
@@ -654,6 +717,7 @@ Create CRUD pages for categories nested under events: create new category form, 
 8. Show winner if winnerNominationId is set
 
 **Acceptance Criteria**:
+
 - [ ] Create category form associates with correct event
 - [ ] Category list shows under event detail page
 - [ ] Category detail shows nominations
@@ -663,11 +727,13 @@ Create CRUD pages for categories nested under events: create new category form, 
 - [ ] Winner display works if set
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Nested routes follow Next.js conventions
 - Server Components for data fetching
 - Forms use action attribute
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/app/\(admin\)/admin/events/
@@ -679,6 +745,7 @@ pnpm dev  # Test CRUD operations
 ### Task 7.6: Create Nominations Admin UI
 
 **Files**:
+
 - `src/app/(admin)/admin/events/[id]/categories/[categoryId]/nominations/new/page.tsx`
 
 **Complexity**: S (1.5h)
@@ -689,6 +756,7 @@ pnpm dev  # Test CRUD operations
 Create nomination form nested under categories, allowing selection of work and/or person with validation that at least one is selected.
 
 **Implementation Steps**:
+
 1. Create `nominations/new/page.tsx` - Form for creating nomination
 2. Get categoryId from params
 3. Fetch all works: workModel.findAll()
@@ -700,6 +768,7 @@ Create nomination form nested under categories, allowing selection of work and/o
 9. Add delete button for nominations
 
 **Acceptance Criteria**:
+
 - [ ] Nomination form shows work and person dropdowns
 - [ ] Validation prevents submitting without work or person
 - [ ] Can create work-only nomination
@@ -709,11 +778,13 @@ Create nomination form nested under categories, allowing selection of work and/o
 - [ ] Delete nomination works
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Zod schema validates workId or personId required
 - Handle validation errors from server action
 - Server Components for data fetching
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/app/\(admin\)/admin/events/
@@ -725,6 +796,7 @@ pnpm dev  # Test validation and CRUD
 ### Task 7.7: Create Admin Dashboard Home
 
 **Files**:
+
 - `src/app/(admin)/admin/page.tsx`
 
 **Complexity**: S (1.5h)
@@ -735,6 +807,7 @@ pnpm dev  # Test validation and CRUD
 Create admin dashboard home page showing overview stats and quick links to all entity management pages.
 
 **Implementation Steps**:
+
 1. Create `admin/page.tsx` - Dashboard overview
 2. Fetch counts for all entities:
    - Event count: eventModel.findAll().length
@@ -749,6 +822,7 @@ Create admin dashboard home page showing overview stats and quick links to all e
 6. Add Tailwind styling for dashboard layout
 
 **Acceptance Criteria**:
+
 - [ ] Dashboard shows counts for all entities
 - [ ] Quick links navigate to correct pages
 - [ ] Recent events displayed
@@ -757,11 +831,13 @@ Create admin dashboard home page showing overview stats and quick links to all e
 - [ ] TypeScript compiles without errors
 
 **Mandatory Patterns** (BigNight.Party):
+
 - Server Component for data fetching
 - Use React cache() for deduplication if needed
 - Tailwind v4 for styling
 
 **Quality Gates**:
+
 ```bash
 pnpm check-types
 pnpm biome check --write src/app/\(admin\)/admin/page.tsx
@@ -785,11 +861,13 @@ pnpm dev  # Verify dashboard loads
 ### Recommended Execution
 
 **Use `/execute` command:**
+
 ```bash
 /execute @specs/game-database-admin/plan.md
 ```
 
 This will:
+
 - Execute phases in order
 - Run parallel tasks simultaneously using subagents
 - Include code review between tasks
@@ -798,6 +876,7 @@ This will:
 ### Manual Execution
 
 If executing manually:
+
 1. Complete Phase 1 sequentially
 2. Run Phase 2 tasks in parallel (2 developers or 2 terminal sessions)
 3. Complete Phases 3-6 sequentially
@@ -806,6 +885,7 @@ If executing manually:
 ### Quality Verification
 
 After each phase:
+
 ```bash
 pnpm lint
 pnpm check-types
@@ -813,16 +893,19 @@ pnpm dev  # Smoke test
 ```
 
 After Phase 1:
+
 ```bash
 pnpm prisma studio  # Verify schema
 ```
 
 After Phase 5:
+
 ```bash
 pnpm db:seed  # Verify seed works
 ```
 
 After Phase 7:
+
 ```bash
 # Test all admin CRUD operations manually
 # Verify non-admin users blocked
@@ -834,6 +917,7 @@ After Phase 7:
 ## Success Criteria
 
 **All tasks completed when:**
+
 - [ ] All 15 tasks have acceptance criteria checked
 - [ ] `pnpm lint` passes
 - [ ] `pnpm check-types` passes

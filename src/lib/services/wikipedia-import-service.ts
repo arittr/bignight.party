@@ -95,7 +95,10 @@ function inferWorkType(categoryName: string): WorkType {
  */
 export async function previewImport(url: string) {
   // Call parser to fetch and parse Wikipedia page
-  const parsed = await wikipediaParser.parse(url);
+  let parsed = await wikipediaParser.parse(url);
+
+  // Enrich with images from Wikipedia
+  parsed = await wikipediaParser.enrichWithImages(parsed);
 
   // Transform to preview format (no database access)
   const preview = wikipediaAdapter.transformToPreview(parsed, url);
@@ -120,7 +123,10 @@ export async function previewImport(url: string) {
  */
 export async function commitImport(url: string) {
   // Parse and transform
-  const parsed = await wikipediaParser.parse(url);
+  let parsed = await wikipediaParser.parse(url);
+
+  // Enrich with images from Wikipedia
+  parsed = await wikipediaParser.enrichWithImages(parsed);
 
   try {
     // Start transaction - all-or-nothing atomic operation

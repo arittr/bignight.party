@@ -21,7 +21,7 @@ interface PickWizardProps {
     nominationText: string;
     work?: {
       title: string;
-      posterUrl: string | null;
+      imageUrl: string | null;
       year: number | null;
     } | null;
     person?: {
@@ -270,9 +270,9 @@ export function PickWizard({
                 <div>
                   <div className="font-semibold text-yellow-900">Picks lock soon!</div>
                   <div className="mt-1 text-sm text-yellow-800">
-                    You have {minutesUntilLock} minute{minutesUntilLock !== 1 ? "s" : ""} to
-                    complete your picks. You have {categories.length - completedCategoryIds.size}{" "}
-                    categor
+                    You have {minutesUntilLock} minute
+                    {minutesUntilLock !== 1 ? "s" : ""} to complete your picks. You have{" "}
+                    {categories.length - completedCategoryIds.size} categor
                     {categories.length - completedCategoryIds.size === 1 ? "y" : "ies"} remaining.
                   </div>
                 </div>

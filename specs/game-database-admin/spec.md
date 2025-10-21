@@ -6,18 +6,21 @@
 ## Problem Statement
 
 **Current State:**
+
 - Database only contains Auth.js models (User, Account, VerificationToken)
 - No game-related data models exist
 - No way to create or manage events, categories, or nominations
 - No seed data for development and testing
 
 **Desired State:**
+
 - Complete database schema for game entities (Event, Game, Category, Work, Person, Nomination, Pick)
 - Normalized schema supporting cross-event entity reuse (works and people can be nominated for multiple awards)
 - Admin dashboard for CRUD operations on game data
 - Idempotent seed script creating realistic Oscar data for development
 
 **Gap:**
+
 - Missing 7 core game models in Prisma schema
 - Missing 2 enums (GameStatus, WorkType)
 - Missing seed script and pnpm command
@@ -31,6 +34,7 @@
 ### Functional Requirements
 
 **Database:**
+
 - FR1: Add Event model (award show data: name, slug, date)
 - FR2: Add Game model (competition instance: access code, status, picks lock time)
 - FR3: Add Category model (award category: name, points, winner tracking, reveal control)
@@ -42,11 +46,13 @@
 - FR9: Add WorkType enum (FILM, TV_SHOW, ALBUM, SONG, PLAY, BOOK)
 
 **Seed Script:**
+
 - FR10: Create idempotent seed script (clears and recreates data)
 - FR11: Seed creates 3 Works (FILM type), 3 People, 1 Event, 1 Game, 3 Categories, 9 Nominations
 - FR12: Add `db:seed` pnpm script to run seed
 
 **Admin Dashboard:**
+
 - FR13: Admin-only routes protected by role check
 - FR14: CRUD operations for Events (create, view, edit, delete)
 - FR15: CRUD operations for Games (create, view, edit, delete)
@@ -87,7 +93,7 @@
    - Relations: belongs to Event, has many Nomination, has many Pick
 
 4. **Work** - Creative work entity (film, album, etc)
-   - Fields: id, type (enum), title, year, posterUrl, externalId
+   - Fields: id, type (enum), title, year, imageUrl, externalId
    - Relations: has many Nomination
 
 5. **Person** - Individual entity
@@ -105,10 +111,12 @@
    - Constraint: @@unique([gameId, userId, categoryId])
 
 **Enums:**
+
 - GameStatus: SETUP, OPEN, LIVE, COMPLETED
 - WorkType: FILM, TV_SHOW, ALBUM, SONG, PLAY, BOOK
 
 **Indexes:**
+
 - Foreign keys: gameId, userId, categoryId, nominationId on Pick
 - Foreign keys: categoryId, workId, personId on Nomination
 - Composite: [gameId, userId] on Pick
@@ -121,6 +129,7 @@
 **New Files:**
 
 **Models Layer** (src/lib/models/):
+
 - `event.ts` - Event CRUD operations
 - `game.ts` - Game CRUD operations
 - `category.ts` - Category CRUD operations
@@ -130,14 +139,17 @@
 - `pick.ts` - Pick CRUD operations (for future player functionality)
 
 **Services Layer** (src/lib/services/):
+
 - `event-service.ts` - Event business logic, orchestrates event + category creation
 - `game-service.ts` - Game lifecycle management
 - `admin-service.ts` - Admin operations, cascading deletes
 
 **Actions Layer** (src/lib/actions/):
+
 - `admin-actions.ts` - All admin CRUD actions using adminAction client
 
 **Schemas** (src/schemas/):
+
 - `event-schema.ts` - Event create/update validation
 - `game-schema.ts` - Game create/update validation
 - `category-schema.ts` - Category create/update validation
@@ -146,6 +158,7 @@
 - `nomination-schema.ts` - Nomination create/update validation (validates at least one of workId/personId)
 
 **Admin Routes** (src/app/(admin)/admin/):
+
 ```
 admin/
 ├── layout.tsx              # Auth + role check
@@ -176,9 +189,11 @@ admin/
 ```
 
 **Seed Script:**
+
 - `prisma/seed.ts` - Idempotent seed creating Oscar data
 
 **Modified Files:**
+
 - `prisma/schema.prisma` - Add all game models
 - `package.json` - Add `db:seed` script
 - User model - Add `picks Pick[]` relation
@@ -186,10 +201,12 @@ admin/
 ### Dependencies
 
 **New Packages:**
+
 - `tsx` (dev) - TypeScript execution for seed script
 - See: https://github.com/privatenumber/tsx
 
 **Existing Packages (no additions needed):**
+
 - `@prisma/client` - Database queries
 - `next-safe-action` - Server actions
 - `zod` - Input validation
@@ -198,27 +215,32 @@ admin/
 ### Integration Points
 
 **Authentication:**
+
 - Uses existing Auth.js setup from `src/lib/auth/config.ts`
 - Admin routes check `session.user.role === 'ADMIN'`
 - Admin actions use `adminAction` client from `src/lib/actions/safe-action.ts`
 
 **Database:**
+
 - Uses existing Prisma client from `src/lib/db/prisma.ts`
 - Follows migration strategy per @docs/constitutions/v1/schema-rules.md
 - All models follow field organization rules from schema-rules.md
 
 **Validation:**
+
 - All schemas use Zod per @docs/constitutions/v1/patterns.md
 - Server actions use next-safe-action per patterns.md
 - Pattern matching uses ts-pattern for GameStatus enum
 
 **Authorization:**
+
 - Leverage existing Role enum (USER, ADMIN)
 - Admin middleware from existing safe-action.ts setup
 
 ## Acceptance Criteria
 
 **Constitution Compliance:**
+
 - [ ] All server actions use next-safe-action (@docs/constitutions/v1/patterns.md)
 - [ ] GameStatus pattern matching uses ts-pattern with .exhaustive()
 - [ ] Layer boundaries respected (no Prisma outside models/)
@@ -229,6 +251,7 @@ admin/
 - [ ] Composite unique constraint on Pick model
 
 **Database:**
+
 - [ ] Migration creates all 7 models successfully
 - [ ] All relations properly defined with cascade behavior
 - [ ] Seed script runs without errors
@@ -236,6 +259,7 @@ admin/
 - [ ] `pnpm db:seed` command works
 
 **Admin Dashboard:**
+
 - [ ] Non-admin users redirected from /admin routes
 - [ ] All CRUD operations work for all 6 entity types
 - [ ] Forms validate inputs before submission
@@ -243,12 +267,14 @@ admin/
 - [ ] revalidatePath() called after mutations
 
 **Data Integrity:**
+
 - [ ] Cannot create duplicate picks (same game/user/category)
 - [ ] Cannot create nomination without work or person
 - [ ] Cannot delete work/person referenced by nominations (foreign key error)
 - [ ] Deleting game cascades to delete picks
 
 **Verification:**
+
 - [ ] `pnpm lint` passes
 - [ ] `pnpm check-types` passes
 - [ ] Seed data viewable in Prisma Studio
@@ -261,6 +287,7 @@ None - design validated through brainstorming phases 1-3.
 ## References
 
 **Constitutions:**
+
 - Architecture: @docs/constitutions/v1/architecture.md
 - Patterns: @docs/constitutions/v1/patterns.md
 - Schema Rules: @docs/constitutions/v1/schema-rules.md
@@ -268,6 +295,7 @@ None - design validated through brainstorming phases 1-3.
 - Testing: @docs/constitutions/v1/testing.md
 
 **External Documentation:**
+
 - Prisma Schema: https://www.prisma.io/docs/orm/prisma-schema
 - Zod Validation: https://zod.dev
 - next-safe-action: https://next-safe-action.dev

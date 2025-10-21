@@ -1,14 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth/config";
+import { requireValidatedSession } from "@/lib/auth/config";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-
-  // Redirect if no session
-  if (!session) {
-    redirect("/");
-  }
+  const session = await requireValidatedSession();
 
   // Redirect if not admin
   if (session.user.role !== "ADMIN") {

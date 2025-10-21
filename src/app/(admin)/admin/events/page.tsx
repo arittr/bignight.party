@@ -1,5 +1,6 @@
 import Link from "next/link";
 import * as eventModel from "@/lib/models/event";
+import { routes } from "@/lib/routes";
 
 export default async function EventsPage() {
   const events = await eventModel.findAll();
@@ -8,12 +9,20 @@ export default async function EventsPage() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Events</h1>
-        <Link
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          href="/admin/events/new"
-        >
-          New Event
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+            href={routes.admin.import()}
+          >
+            Import from Wikipedia
+          </Link>
+          <Link
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            href={routes.admin.events.new()}
+          >
+            New Event
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -70,7 +79,7 @@ export default async function EventsPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <Link
                       className="text-blue-600 hover:text-blue-900"
-                      href={`/admin/events/${event.id}`}
+                      href={routes.admin.events.detail(event.id)}
                     >
                       View
                     </Link>
