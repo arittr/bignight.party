@@ -52,7 +52,9 @@ export function CategorySidebar({
 
             return (
               <Button
-                className="w-full justify-between"
+                className={`w-full justify-between ${
+                  isCurrent ? "" : "text-gray-900 hover:text-gray-900"
+                }`}
                 key={category.id}
                 onClick={() => onCategorySelect(category.id)}
                 size="sm"
@@ -62,7 +64,7 @@ export function CategorySidebar({
                   {isCompleted && <Check className="h-4 w-4 text-green-600" />}
                   <span className="truncate">{category.name}</span>
                 </span>
-                <span className="text-xs text-gray-900 font-medium">{category.points}pts</span>
+                <span className="text-xs font-medium">{category.points}pts</span>
               </Button>
             );
           })}
