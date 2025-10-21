@@ -18,7 +18,19 @@
     }
   },
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build",
+      "!.git",
+      "!coverage",
+      "!.turbo",
+      "!.vercel",
+      "!.worktrees"
+    ]
   },
   "formatter": {
     "attributePosition": "auto",

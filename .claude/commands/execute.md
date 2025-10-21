@@ -21,7 +21,31 @@ Example: `/execute @specs/features/magic-link-auth/plan.md`
 
 ## Workflow
 
-### Step 0: Check for Existing Work
+### Step 0a: Extract Run ID from Plan
+
+**First action**: Read the plan and extract the RUN_ID from frontmatter.
+
+```bash
+# Extract runId from plan frontmatter
+RUN_ID=$(grep "^runId:" {plan-path} | awk '{print $2}')
+echo "RUN_ID: $RUN_ID"
+```
+
+**If RUN_ID not found:**
+Generate one now (for backwards compatibility with old plans):
+```bash
+RUN_ID=$(echo "{feature-name}-$(date +%s)" | shasum -a 256 | head -c 6)
+echo "Generated RUN_ID: $RUN_ID (plan missing runId)"
+```
+
+**Store RUN_ID for use in:**
+- Branch naming: `{run-id}-task-X-Y-name`
+- Filtering: `git branch | grep ^{run-id}-`
+- Cleanup: Identify which branches belong to this run
+
+**Announce:** "Executing with RUN_ID: {run-id}"
+
+### Step 0b: Check for Existing Work
 
 Before starting or resuming, delegate git state check to a subagent:
 
@@ -39,11 +63,14 @@ git log --oneline --grep="\[Task" -20
 gs ls
 gs branch tree
 git status
+
+# Filter branches for this RUN_ID
+git branch | grep "^  {run-id}-task-"
 ```
 
 2. Analyze results:
    - Look for commits with `[Task X.Y]` pattern in git log
-   - Check for task branches in gs ls output
+   - Check for task branches matching `{run-id}-task-` pattern
    - Match branch names to plan tasks
    - Determine which phase and task to resume from
 
@@ -134,7 +161,7 @@ For phases where tasks must run in order:
 
    6. Create branch and commit with gs branch create:
    ```bash
-   gs branch create task-{task-id}-{short-name} -m "[Task {task-id}] {task-name}
+   gs branch create {run-id}-task-{task-id}-{short-name} -m "[Task {task-id}] {task-name}
 
    {Brief summary of changes}
 
@@ -148,7 +175,7 @@ For phases where tasks must run in order:
    ```
 
    This will:
-   - Create a new branch `task-{task-id}-{short-name}`
+   - Create a new branch `{run-id}-task-{task-id}-{short-name}`
    - Commit all staged changes
    - Stack the branch on current branch automatically
 
@@ -214,9 +241,9 @@ For phases where tasks are independent:
    # Create .worktrees directory if needed
    mkdir -p .worktrees
 
-   # For each parallel task, create a worktree
-   git worktree add --detach ./.worktrees/task-{task-id-1} $CURRENT_BRANCH
-   git worktree add --detach ./.worktrees/task-{task-id-2} $CURRENT_BRANCH
+   # For each parallel task, create a worktree (namespaced by RUN_ID)
+   git worktree add --detach ./.worktrees/{run-id}-task-{task-id-1} $CURRENT_BRANCH
+   git worktree add --detach ./.worktrees/{run-id}-task-{task-id-2} $CURRENT_BRANCH
    # ... etc for each parallel task
    ```
 
@@ -234,8 +261,8 @@ For phases where tasks are independent:
    Store worktree info for later cleanup:
    ```javascript
    taskWorktrees = {
-     'task-3-1': {path: './.worktrees/task-3-1', baseBranch: 'task-2-3-...'},
-     'task-3-2': {path: './.worktrees/task-3-2', baseBranch: 'task-2-3-...'}
+     '{run-id}-task-3-1': {path: './.worktrees/{run-id}-task-3-1', baseBranch: '{run-id}-task-2-3-...'},
+     '{run-id}-task-3-2': {path: './.worktrees/{run-id}-task-3-2', baseBranch: '{run-id}-task-2-3-...'}
    }
    ```
 
@@ -291,7 +318,7 @@ For phases where tasks are independent:
 
    6. Create branch and commit with gs branch create:
    ```bash
-   gs branch create task-{task-id}-{short-name} -m "[Task {task-id}] {task-name}
+   gs branch create {run-id}-task-{task-id}-{short-name} -m "[Task {task-id}] {task-name}
 
    {Brief summary of changes}
 
@@ -305,7 +332,7 @@ For phases where tasks are independent:
    ```
 
    This will:
-   - Create a new branch `task-{task-id}-{short-name}`
+   - Create a new branch `{run-id}-task-{task-id}-{short-name}`
    - Commit all staged changes
    - Stack the branch on base branch automatically
 
@@ -348,16 +375,16 @@ For phases where tasks are independent:
    TASK: Clean up worktrees for Phase {phase-id} and verify git-spice stack
 
    WORKTREES TO CLEAN:
-   - ./.worktrees/task-{task-id-1} (branch: task-{task-id-1}-{short-name})
-   - ./.worktrees/task-{task-id-2} (branch: task-{task-id-2}-{short-name})
+   - ./.worktrees/{run-id}-task-{task-id-1} (branch: {run-id}-task-{task-id-1}-{short-name})
+   - ./.worktrees/{run-id}-task-{task-id-2} (branch: {run-id}-task-{task-id-2}-{short-name})
    # ... etc
 
    IMPLEMENTATION:
 
    1. Verify all branches exist and are accessible:
    ```bash
-   git branch -v | grep "task-{task-id-1}"
-   git branch -v | grep "task-{task-id-2}"
+   git branch -v | grep "{run-id}-task-{task-id-1}"
+   git branch -v | grep "{run-id}-task-{task-id-2}"
    # Should see all task branches listed
    ```
 
@@ -369,27 +396,27 @@ For phases where tasks are independent:
 
    3. Remove all worktrees:
    ```bash
-   git worktree remove ./.worktrees/task-{task-id-1}
-   git worktree remove ./.worktrees/task-{task-id-2}
+   git worktree remove ./.worktrees/{run-id}-task-{task-id-1}
+   git worktree remove ./.worktrees/{run-id}-task-{task-id-2}
    # ... etc
    ```
 
    4. Verify branches are still accessible after cleanup:
    ```bash
-   git branch -v | grep "task-"
-   # Should still see all task branches
+   git branch -v | grep "^  {run-id}-task-"
+   # Should still see all task branches for this run
    ```
 
    5. Create linear stack from parallel branches:
    ```bash
    # Stack parallel branches linearly (task order: 2.1 -> 2.2 -> 2.3 etc)
    # First task stays on base, subsequent tasks stack on previous
-   git checkout task-{task-id-2}-{short-name}
-   gs upstack onto task-{task-id-1}-{short-name}
+   git checkout {run-id}-task-{task-id-2}-{short-name}
+   gs upstack onto {run-id}-task-{task-id-1}-{short-name}
 
    # For 3+ parallel tasks, continue stacking:
-   # git checkout task-{task-id-3}-{short-name}
-   # gs upstack onto task-{task-id-2}-{short-name}
+   # git checkout {run-id}-task-{task-id-3}-{short-name}
+   # gs upstack onto {run-id}-task-{task-id-2}-{short-name}
    ```
 
    6. Verify git-spice stack structure:
@@ -399,17 +426,17 @@ For phases where tasks are independent:
 
    Expected: Linear stack (task number order):
    ```
-   ┏━□ task-2-2-validation-schemas (on task-2-1-models-layer)
-       ┏━┻□ task-2-1-models-layer (on task-1-2-install-tsx)
-     ┏━┻□ task-1-2-install-tsx
-   ┏━┻□ task-1-1-game-schema
+   ┏━□ {run-id}-task-2-2-validation-schemas (on {run-id}-task-2-1-models-layer)
+       ┏━┻□ {run-id}-task-2-1-models-layer (on {run-id}-task-1-2-install-tsx)
+     ┏━┻□ {run-id}-task-1-2-install-tsx
+   ┏━┻□ {run-id}-task-1-1-game-schema
    main
    ```
 
    7. Run integration tests:
    ```bash
    # Check out the top of the stack (last parallel task)
-   git checkout task-{task-id-2}-{short-name}
+   git checkout {run-id}-task-{task-id-2}-{short-name}
 
    # Run tests on the branch (includes all previous work)
    pnpm test
@@ -478,6 +505,7 @@ Use the `finishing-a-development-branch` skill to:
 ```markdown
 ✅ Feature Implementation Complete
 
+**RUN_ID**: {run-id}
 **Feature**: {feature-name}
 **Stack**: {count} task branches
 
@@ -511,9 +539,10 @@ Use the `finishing-a-development-branch` skill to:
 
 ### Review Changes
 ```bash
-gs log short              # View all branches and commits in stack
-gs log long               # Detailed view with commit messages
-git diff main..HEAD       # See all changes in current stack
+gs log short                      # View all branches and commits in stack
+gs log long                       # Detailed view with commit messages
+git diff main..HEAD               # See all changes in current stack
+git branch | grep "^  {run-id}-"  # List all branches for this run
 ```
 
 ### Submit for Review
