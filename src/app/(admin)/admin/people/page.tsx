@@ -6,15 +6,17 @@ import * as personModel from "@/lib/models/person";
 export default async function PeoplePage() {
   await requireValidatedSession();
 
-  const people = await personModel.findAll();
+  const people = await personModel.findAllWithCounts();
 
   // Transform people to match PersonListItem interface
   const peopleForManager = people.map((person) => ({
     id: person.id,
     name: person.name,
-    nominationsCount: person.nominations.length,
+    nominationsCount: person._count.nominations,
     role: null,
-    worksCount: 0, // TODO: Add works count when work-person relationship is implemented
+    // Count distinct works (filter out null workIds and count unique values)
+    worksCount: new Set(person.nominations.filter((n) => n.workId !== null).map((n) => n.workId))
+      .size,
   }));
 
   // Server action wrapper for delete
