@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { PickWizard } from "@/components/pick-wizard";
+import { PickWizard } from "@/components/game/pick-wizard";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as categoryModel from "@/lib/models/category";
 import * as gameModel from "@/lib/models/game";
