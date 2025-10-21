@@ -55,6 +55,8 @@ export const routes = {
       detail: (gameId: string) => `/admin/games/${gameId}`,
       /** List all games */
       index: () => "/admin/games",
+      /** Live winner marking page */
+      live: (gameId: string) => `/admin/games/${gameId}/live`,
       /** Create new game */
       new: () => "/admin/games/new",
     },
