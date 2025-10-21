@@ -23,5 +23,5 @@
     "target": "ES2017"
   },
   "exclude": ["node_modules", ".next", ".turbo", ".vercel", ".worktrees"],
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]
 }
