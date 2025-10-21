@@ -8,9 +8,41 @@ You are creating an execution plan from a feature specification for BigNight.Par
 
 User will provide: `/plan {spec-path}`
 
-Example: `/plan @specs/features/magic-link-auth.md`
+Example: `/plan @specs/a1b2c3-magic-link-auth/spec.md`
+
+Where `a1b2c3` is the runId and `magic-link-auth` is the feature slug.
 
 ## Workflow
+
+### Step 0: Extract Run ID and Feature Slug from Spec
+
+**First action**: Read the spec and extract the RUN_ID from frontmatter and determine the spec directory.
+
+```bash
+# Extract runId from spec frontmatter
+RUN_ID=$(grep "^runId:" {spec-path} | awk '{print $2}')
+echo "RUN_ID: $RUN_ID"
+
+# Get spec directory (e.g., specs/bdc63b-wikipedia-import/)
+SPEC_DIR=$(dirname {spec-path})
+
+# Extract feature slug from directory name pattern: {runId}-{feature-slug}
+FEATURE_SLUG=$(basename $SPEC_DIR | sed "s/^${RUN_ID}-//")
+echo "FEATURE_SLUG: $FEATURE_SLUG"
+```
+
+**If RUN_ID not found:**
+Generate one now (for backwards compatibility with old specs):
+```bash
+RUN_ID=$(echo "{feature-name}-$(date +%s)" | shasum -a 256 | head -c 6)
+echo "Generated RUN_ID: $RUN_ID (spec missing runId)"
+```
+
+**Spec Directory Pattern:**
+Specs follow the pattern: `specs/{runId}-{feature-slug}/spec.md`
+Plans are generated at: `specs/{runId}-{feature-slug}/plan.md`
+
+**Announce:** "Using RUN_ID: {run-id} for {feature-slug} implementation"
 
 ### Step 1: Invoke Task Decomposition Skill
 
@@ -43,18 +75,32 @@ Tasks should be PR-sized, thematically coherent units - not mechanical file spli
 The skill will report issues and STOP. User must fix spec and re-run `/plan`.
 
 **If validation passes:**
-The skill generates `{spec-directory}/plan.md` with:
+The skill generates `specs/{run-id}-{feature-slug}/plan.md` with:
+- RUN_ID in frontmatter (from Step 0)
+- Feature slug in frontmatter
 - Phase grouping (sequential/parallel strategies)
 - Task dependencies and file analysis
 - Execution time estimates
 - Complete implementation details
+
+**Plan frontmatter must include:**
+```yaml
+---
+runId: {run-id}
+feature: {feature-slug}
+created: {YYYY-MM-DD}
+status: ready
+---
+```
+
+The runId and feature slug are extracted from the spec directory path: `specs/{runId}-{feature-slug}/`
 
 ### Step 2: Review Plan Output
 
 After skill completes, review the generated plan:
 
 ```bash
-cat {spec-directory}/plan.md
+cat specs/{run-id}-{feature-slug}/plan.md
 ```
 
 Verify:
@@ -70,7 +116,9 @@ Provide comprehensive summary:
 ```markdown
 ✅ Execution Plan Generated
 
-**Location**: {spec-directory}/plan.md
+**RUN_ID**: {run-id}
+**Feature**: {feature-slug}
+**Location**: specs/{run-id}-{feature-slug}/plan.md
 
 ## Plan Summary
 
@@ -101,16 +149,16 @@ Provide comprehensive summary:
 
 ### Review Plan
 ```bash
-cat {spec-directory}/plan.md
+cat specs/{run-id}-{feature-slug}/plan.md
 ```
 
 ### Execute Plan
 ```bash
-/execute @{spec-directory}/plan.md
+/execute @specs/{run-id}-{feature-slug}/plan.md
 ```
 
 ### Modify Plan (if needed)
-Edit {spec-directory}/plan.md directly, then run `/execute`
+Edit specs/{run-id}-{feature-slug}/plan.md directly, then run `/execute`
 ```
 
 ## Error Handling

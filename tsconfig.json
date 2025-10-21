@@ -22,6 +22,6 @@
     "strict": true,
     "target": "ES2017"
   },
-  "exclude": ["node_modules"],
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]
+  "exclude": ["node_modules", ".next", ".turbo", ".vercel", ".worktrees"],
+  "include": ["**/*.ts", "**/*.tsx"]
 }
