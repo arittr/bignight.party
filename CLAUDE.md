@@ -127,24 +127,46 @@ router.push(routes.admin.events.detail(eventId));
 
 **Why:** Single source of truth, type-safe parameters, easy refactoring, no typos.
 
-### 2. Middleware Auth for ALL Protected Routes
+### 2. requireValidatedSession() for ALL Protected Routes
 
-**Never** check authentication in pages. Always use middleware (`src/middleware.ts`):
+**IMPORTANT:** Due to Edge runtime constraints, use `requireValidatedSession()` instead of raw `auth()`:
 
 ```typescript
-// ❌ BAD - Don't do this in pages
+// ❌ BAD - Missing database validation
 const session = await auth();
 if (!session?.user?.id) {
-  redirect("/sign-in");
+  redirect("/sign-in"); // Stale JWTs can pass!
 }
 
-// ✅ GOOD - Middleware handles this automatically
-// Pages can trust user is authenticated if middleware allows access
+// ✅ GOOD - Validates JWT + user exists in database
+import { requireValidatedSession } from "@/lib/auth/config";
+const session = await requireValidatedSession();
+// If we get here, user is authenticated AND exists in DB
 ```
 
-**Exception:** Pages CAN check business logic authorization (e.g., "is user a member of this game?"), but NOT authentication (e.g., "is user logged in?").
+**Why this matters:**
+- **Edge runtime constraint**: Middleware runs in Edge runtime, cannot query database
+- **Two-layer validation**: Middleware validates JWT signature, pages validate user exists
+- **Stale JWT protection**: User deleted from DB but JWT still valid = security issue
+- **Redirect loop prevention**: Clears JWT when user doesn't exist
 
-**Why:** Centralized logic, runs before page loads (faster), no duplication.
+**Pattern:**
+```typescript
+// Layouts and pages
+import { requireValidatedSession } from "@/lib/auth/config";
+
+export default async function ProtectedPage() {
+  const session = await requireValidatedSession();
+
+  // Optional: Business logic authorization
+  const isMember = await gameParticipantModel.exists(session.user.id, gameId);
+  if (!isMember) {
+    redirect(routes.dashboard()); // Business check, not auth
+  }
+}
+```
+
+**See:** `docs/constitutions/current/patterns.md` for complete details on Edge runtime authentication.
 
 ### 3. next-safe-action for ALL Server Actions
 
@@ -303,7 +325,7 @@ The app uses Socket.io for real-time updates:
 ## Common Pitfalls
 
 1. **Don't hardcode route strings** - Always use routes from `src/lib/routes.ts`
-2. **Don't check auth in pages** - Middleware handles authentication redirects
+2. **Don't use raw auth() in protected routes** - Always use `requireValidatedSession()` for stale JWT protection
 3. **Don't use type assertions (`as`)** - Use Zod validation or type guards instead
 4. **Don't import Prisma in services** - Services call models, never Prisma directly
 5. **Don't use switch on discriminated unions** - Always use ts-pattern with .exhaustive()
