@@ -7,7 +7,6 @@ import { useSaveIndicator } from "@/hooks/game/use-save-indicator";
 import { routes } from "@/lib/routes";
 import { CategorySidebar } from "./category-sidebar";
 import { NominationList } from "./nomination-list";
-import { PickProgressTracker } from "./pick-progress-tracker";
 import { SaveIndicator } from "./save-indicator";
 import { WizardNavigation } from "./wizard-navigation";
 
@@ -235,14 +234,6 @@ export function PickWizard({
               </div>
             </div>
           )}
-
-          {/* PickProgressTracker (desktop only, horizontal stepper) */}
-          <PickProgressTracker
-            categories={categories}
-            completedCategoryIds={submission.completedCategoryIds}
-            currentCategoryId={navigation.currentCategoryId}
-            onCategorySelect={navigation.navigateToCategory}
-          />
 
           {/* SaveIndicator (floating) */}
           {saveIndicator.status !== "idle" && (
