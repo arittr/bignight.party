@@ -1,4 +1,4 @@
-import { ImportForm } from "./_components/import-form";
+import { requireValidatedSession } from "@/lib/auth/config";
 
 /**
  * Wikipedia Import Page
@@ -12,6 +12,8 @@ import { ImportForm } from "./_components/import-form";
  * All interactivity is delegated to Client Components.
  */
 export default async function ImportPage() {
+  await requireValidatedSession();
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
@@ -19,9 +21,10 @@ export default async function ImportPage() {
         <p className="text-gray-600">
           Paste a Wikipedia URL to import event data including categories and nominations.
         </p>
+        <p className="text-gray-600 mt-4">
+          Import functionality is temporarily disabled during architecture migration.
+        </p>
       </div>
-
-      <ImportForm />
     </div>
   );
 }
