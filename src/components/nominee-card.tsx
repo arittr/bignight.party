@@ -29,6 +29,7 @@ export function NomineeCard({ nomination, isSelected, isLocked, onClick }: Nomin
   const year = nomination.work?.year;
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: TODO: fix the card in general
     <Card
       className={`
         group relative w-full cursor-pointer transition-all
@@ -40,7 +41,6 @@ export function NomineeCard({ nomination, isSelected, isLocked, onClick }: Nomin
         ${isLocked ? "cursor-not-allowed opacity-60" : ""}
       `}
       onClick={isLocked ? undefined : onClick}
-      // biome-ignore lint/a11y/useSemanticElements: Card is shadcn/ui div component, can't use <button>
       role="button"
       tabIndex={isLocked ? -1 : 0}
     >
