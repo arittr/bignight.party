@@ -37,7 +37,7 @@ export function CategorySidebar({
     <div className="h-full border-r bg-gray-50 p-4">
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-900">
           {completedCategoryIds.size} of {categories.length} completed
         </p>
       </div>
@@ -62,7 +62,7 @@ export function CategorySidebar({
                   {isCompleted && <Check className="h-4 w-4 text-green-600" />}
                   <span className="truncate">{category.name}</span>
                 </span>
-                <span className="text-xs text-gray-500">{category.points}pts</span>
+                <span className="text-xs text-gray-900 font-medium">{category.points}pts</span>
               </Button>
             );
           })}
