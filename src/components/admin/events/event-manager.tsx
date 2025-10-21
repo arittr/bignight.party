@@ -80,6 +80,10 @@ export function EventManager({ events, onDelete }: EventManagerProps) {
     router.push(routes.admin.events.new());
   };
 
+  const handleImport = () => {
+    router.push(routes.admin.import());
+  };
+
   if (events.length === 0) {
     return (
       <div>
@@ -97,6 +101,10 @@ export function EventManager({ events, onDelete }: EventManagerProps) {
             label: "Create Event",
             onClick: handleCreate,
           }}
+          secondaryAction={{
+            label: "Import Event",
+            onClick: handleImport,
+          }}
           title="No events yet"
         />
       </div>
@@ -107,9 +115,18 @@ export function EventManager({ events, onDelete }: EventManagerProps) {
     <div className="space-y-6">
       <AdminPageHeader
         actions={
-          <Button aria-label="Create new event" onClick={handleCreate}>
-            Create Event
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              aria-label="Import event from Wikipedia"
+              onClick={handleImport}
+              variant="outline"
+            >
+              Import Event
+            </Button>
+            <Button aria-label="Create new event" onClick={handleCreate}>
+              Create Event
+            </Button>
+          </div>
         }
         breadcrumbs={[
           { href: routes.admin.index(), label: "Admin" },
