@@ -41,34 +41,34 @@ export function NomineeCard({ nomination, isSelected, isLocked, onClick }: Nomin
       `}
       onClick={isLocked ? undefined : onClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start gap-4">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-6">
           {/* Image or placeholder */}
-          <div className="relative h-24 w-16 flex-shrink-0 overflow-hidden rounded bg-gray-200">
+          <div className="relative h-40 w-28 flex-shrink-0 overflow-hidden rounded bg-gray-200">
             {imageUrl ? (
               <Image
                 alt={title}
                 className="h-full w-full object-cover"
                 fill
-                sizes="64px"
+                sizes="112px"
                 src={imageUrl}
                 unoptimized
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400">
-                <ImageIcon className="h-8 w-8 text-gray-500" />
+                <ImageIcon className="h-12 w-12 text-gray-500" />
               </div>
             )}
           </div>
 
           {/* Content */}
           <div className="flex-1">
-            <div className="font-medium text-gray-900">
+            <div className="font-semibold text-lg text-gray-900">
               {title}
               {year && <span className="ml-1 text-gray-500">({year})</span>}
             </div>
             {nomination.nominationText && (
-              <div className="mt-1 text-sm text-gray-600 whitespace-normal break-words">
+              <div className="mt-2 text-base text-gray-600 whitespace-normal break-words">
                 {nomination.nominationText}
               </div>
             )}
