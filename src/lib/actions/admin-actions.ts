@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { adminAction } from "@/lib/actions/safe-action";
 import * as categoryModel from "@/lib/models/category";
 import * as nominationModel from "@/lib/models/nomination";
 import * as personModel from "@/lib/models/person";
 import * as workModel from "@/lib/models/work";
+import * as categoryService from "@/lib/services/category-service";
 import * as eventService from "@/lib/services/event-service";
 import * as gameService from "@/lib/services/game-service";
 import { categoryCreateSchema, categoryUpdateSchema } from "@/schemas/category-schema";
@@ -320,4 +322,56 @@ export const deleteNominationAction = adminAction
       revalidatePath("/admin/events");
     }
     return { success: true };
+  });
+
+// ============================================================================
+// LIVE WINNER MARKING ACTIONS
+// ============================================================================
+
+/**
+ * Mark a winner for a category during live ceremony
+ * Sets the winnerNominationId and reveals the category
+ */
+export const markWinnerAction = adminAction
+  .schema(
+    z.object({
+      categoryId: z.string(),
+      nominationId: z.string(),
+    })
+  )
+  .action(async ({ parsedInput }) => {
+    const category = await categoryService.markWinner(
+      parsedInput.categoryId,
+      parsedInput.nominationId
+    );
+
+    // Revalidate the live page and category
+    const game = await categoryModel.findById(parsedInput.categoryId);
+    if (game) {
+      revalidatePath(`/admin/events/${game.eventId}`);
+    }
+
+    return category;
+  });
+
+/**
+ * Clear the winner for a category
+ * Removes the winnerNominationId and unreveals the category
+ */
+export const clearWinnerAction = adminAction
+  .schema(
+    z.object({
+      categoryId: z.string(),
+    })
+  )
+  .action(async ({ parsedInput }) => {
+    const category = await categoryService.clearWinner(parsedInput.categoryId);
+
+    // Revalidate the live page and category
+    const game = await categoryModel.findById(parsedInput.categoryId);
+    if (game) {
+      revalidatePath(`/admin/events/${game.eventId}`);
+    }
+
+    return category;
   });
