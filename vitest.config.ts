@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "happy-dom",
-    setupFiles: ["./tests/setup/database.ts"],
+    setupFiles: ["./tests/setup/database.ts", "./tests/setup/test-setup.ts"],
     globals: true,
     fileParallelism: false,
   },
