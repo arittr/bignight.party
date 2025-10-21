@@ -13,6 +13,270 @@ This document defines the required patterns and libraries that **must** be used 
 
 ---
 
+## Required Pattern: Async params and searchParams (Next.js 15)
+
+**When:** ALL Server Components that receive `params` or `searchParams` props
+
+**Why:**
+- Next.js 15 breaking change: `params` and `searchParams` are now Promises
+- Enables better static/dynamic rendering optimization
+- Allows framework to defer data fetching operations
+- Prevents runtime errors from synchronous access
+
+### The Rules
+
+#### Server Components with Dynamic Routes
+
+All page components and layouts with dynamic route segments MUST await `params`:
+
+```typescript
+// ❌ BAD - Synchronous access (Next.js 15 error)
+type Props = {
+  params: { id: string };
+};
+
+export default async function EventDetailPage({ params }: Props) {
+  const event = await eventModel.findById(params.id); // ERROR!
+  return <div>{event.name}</div>;
+}
+```
+
+```typescript
+// ✅ GOOD - Await params before accessing
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function EventDetailPage({ params }: Props) {
+  const { id } = await params;
+  const event = await eventModel.findById(id);
+  return <div>{event.name}</div>;
+}
+```
+
+#### Server Components with Search Params
+
+All page components that use search parameters MUST await `searchParams`:
+
+```typescript
+// ❌ BAD - Synchronous access
+type Props = {
+  searchParams: { category?: string };
+};
+
+export default async function PicksPage({ searchParams }: Props) {
+  const categoryId = searchParams.category; // ERROR!
+  return <div>Category: {categoryId}</div>;
+}
+```
+
+```typescript
+// ✅ GOOD - Await searchParams before accessing
+type Props = {
+  searchParams: Promise<{ category?: string }>;
+};
+
+export default async function PicksPage({ searchParams }: Props) {
+  const { category } = await searchParams;
+  return <div>Category: {category}</div>;
+}
+```
+
+#### Client Components with Dynamic Routes
+
+Client components cannot use async/await directly, use `React.use()`:
+
+```typescript
+// ❌ BAD - Client components cannot be async
+"use client";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function GameClient({ params }: Props) {
+  const { id } = await params; // ERROR! Client components can't be async
+  return <div>Game: {id}</div>;
+}
+```
+
+```typescript
+// ✅ GOOD - Use React.use() to unwrap Promise
+"use client";
+
+import { use } from "react";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default function GameClient({ params }: Props) {
+  const { id } = use(params);
+  return <div>Game: {id}</div>;
+}
+```
+
+### Pattern: Multiple Dynamic Segments
+
+```typescript
+// ✅ GOOD - Await and destructure all segments
+type Props = {
+  params: Promise<{
+    eventId: string;
+    categoryId: string;
+    nominationId: string;
+  }>;
+};
+
+export default async function NominationPage({ params }: Props) {
+  const { eventId, categoryId, nominationId } = await params;
+
+  const nomination = await nominationModel.findById(nominationId);
+  return <div>{nomination.title}</div>;
+}
+```
+
+### Pattern: Combining params and searchParams
+
+```typescript
+// ✅ GOOD - Await both independently
+type Props = {
+  params: Promise<{ gameId: string }>;
+  searchParams: Promise<{ category?: string }>;
+};
+
+export default async function PickWizardPage({ params, searchParams }: Props) {
+  const { gameId } = await params;
+  const { category } = await searchParams;
+
+  const game = await gameModel.findById(gameId);
+  const currentCategory = category
+    ? await categoryModel.findById(category)
+    : game.categories[0];
+
+  return <PickWizard game={game} currentCategory={currentCategory} />;
+}
+```
+
+### Pattern: Using in generateMetadata
+
+Metadata functions also receive Promise params:
+
+```typescript
+// ✅ GOOD - Await params in generateMetadata
+import type { Metadata } from "next";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const event = await eventModel.findById(id);
+
+  return {
+    title: `${event.name} - BigNight.Party`,
+    description: event.description,
+  };
+}
+
+export default async function EventPage({ params }: Props) {
+  const { id } = await params;
+  const event = await eventModel.findById(id);
+  return <div>{event.name}</div>;
+}
+```
+
+### Common Mistakes
+
+#### ❌ Forgetting to await
+```typescript
+// ❌ BAD - TypeScript error, runtime error
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function Page({ params }: Props) {
+  const event = await eventModel.findById(params.id); // ERROR!
+  // params.id doesn't exist on Promise
+}
+```
+
+#### ❌ Wrong type annotation
+```typescript
+// ❌ BAD - Type doesn't match Next.js 15
+type Props = {
+  params: { id: string }; // Wrong! Should be Promise<{ id: string }>
+};
+
+export default async function Page({ params }: Props) {
+  const { id } = await params; // TypeScript error
+}
+```
+
+#### ❌ Destructuring in function signature
+```typescript
+// ❌ BAD - Cannot destructure Promise
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function Page({ params: { id } }: Props) {
+  // ERROR! Cannot destructure Promise
+}
+```
+
+```typescript
+// ✅ GOOD - Destructure after awaiting
+export default async function Page({ params }: Props) {
+  const { id } = await params;
+}
+```
+
+### Migration from Next.js 14
+
+**Before (Next.js 14):**
+```typescript
+type Props = {
+  params: { id: string };
+  searchParams: { query?: string };
+};
+
+export default async function Page({ params, searchParams }: Props) {
+  const event = await eventModel.findById(params.id);
+  const query = searchParams.query;
+  // ...
+}
+```
+
+**After (Next.js 15):**
+```typescript
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ query?: string }>;
+};
+
+export default async function Page({ params, searchParams }: Props) {
+  const { id } = await params;
+  const { query } = await searchParams;
+
+  const event = await eventModel.findById(id);
+  // ...
+}
+```
+
+### Automated Migration
+
+Use Next.js codemod for automatic migration:
+
+```bash
+npx @next/codemod@canary next-async-request-api .
+```
+
+This will update most cases automatically. Manual review required for complex cases.
+
+---
+
 ## Required Pattern: Server/Client Component Boundaries
 
 **When:** Building Next.js UI components with interactivity

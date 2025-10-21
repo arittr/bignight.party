@@ -110,7 +110,67 @@ async function handleDelete() {
 
 ## Mandatory Patterns
 
-### 1. Centralized Routes for ALL Navigation
+### 1. Async params and searchParams (Next.js 15)
+
+**IMPORTANT:** Next.js 15 breaking change - `params` and `searchParams` are now Promises and MUST be awaited:
+
+```typescript
+// ❌ BAD - Synchronous access (Next.js 15 error)
+type Props = {
+  params: { id: string };
+};
+
+export default async function EventDetailPage({ params }: Props) {
+  const event = await eventModel.findById(params.id); // ERROR!
+  return <div>{event.name}</div>;
+}
+
+// ✅ GOOD - Await params before accessing
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function EventDetailPage({ params }: Props) {
+  const { id } = await params;
+  const event = await eventModel.findById(id);
+  return <div>{event.name}</div>;
+}
+```
+
+**For searchParams:**
+```typescript
+// ✅ GOOD - Await searchParams before accessing
+type Props = {
+  searchParams: Promise<{ category?: string }>;
+};
+
+export default async function PicksPage({ searchParams }: Props) {
+  const { category } = await searchParams;
+  return <div>Category: {category}</div>;
+}
+```
+
+**For Client Components:**
+Use `React.use()` instead of `await`:
+```typescript
+"use client";
+import { use } from "react";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default function GameClient({ params }: Props) {
+  const { id } = use(params);
+  return <div>Game: {id}</div>;
+}
+```
+
+**Why:** Enables better static/dynamic rendering optimization. Synchronous access causes runtime errors in Next.js 15.
+
+**See:** `docs/constitutions/current/patterns.md` for complete examples and migration guide.
+
+### 2. Centralized Routes for ALL Navigation
 
 **Never** hardcode route strings. Always use `src/lib/routes.ts`:
 
@@ -127,7 +187,7 @@ router.push(routes.admin.events.detail(eventId));
 
 **Why:** Single source of truth, type-safe parameters, easy refactoring, no typos.
 
-### 2. requireValidatedSession() for ALL Protected Routes
+### 3. requireValidatedSession() for ALL Protected Routes
 
 **IMPORTANT:** Due to Edge runtime constraints, use `requireValidatedSession()` instead of raw `auth()`:
 
@@ -168,7 +228,7 @@ export default async function ProtectedPage() {
 
 **See:** `docs/constitutions/current/patterns.md` for complete details on Edge runtime authentication.
 
-### 3. next-safe-action for ALL Server Actions
+### 4. next-safe-action for ALL Server Actions
 
 ```typescript
 // src/lib/actions/safe-action.ts
@@ -186,7 +246,7 @@ export const submitPickAction = authenticatedAction
 
 **Never** create raw server actions without validation. All actions must use next-safe-action with Zod schemas.
 
-### 4. ts-pattern for ALL Discriminated Unions
+### 5. ts-pattern for ALL Discriminated Unions
 
 ```typescript
 import { match } from 'ts-pattern'
@@ -201,11 +261,11 @@ return match(event.status)
 
 **Never** use switch statements on discriminated unions. Always use ts-pattern with `.exhaustive()` to ensure all cases are handled.
 
-### 5. Zod Schemas for All Inputs
+### 6. Zod Schemas for All Inputs
 
 All Zod schemas live in `src/schemas/`. Server actions validate inputs using these schemas via next-safe-action.
 
-### 6. Proper Typing (Avoid Type Assertions)
+### 7. Proper Typing (Avoid Type Assertions)
 
 **Never** use `as` for type assertions without validation:
 
@@ -324,16 +384,17 @@ The app uses Socket.io for real-time updates:
 
 ## Common Pitfalls
 
-1. **Don't hardcode route strings** - Always use routes from `src/lib/routes.ts`
-2. **Don't use raw auth() in protected routes** - Always use `requireValidatedSession()` for stale JWT protection
-3. **Don't use type assertions (`as`)** - Use Zod validation or type guards instead
-4. **Don't import Prisma in services** - Services call models, never Prisma directly
-5. **Don't use switch on discriminated unions** - Always use ts-pattern with .exhaustive()
-6. **Don't put business logic in models** - Models are data access only
-7. **Don't put event handlers in Server Components** - Extract to client components
-8. **Don't call redirect() in inline form actions** - Use standalone server action functions
-9. **Don't skip next-safe-action** - All server actions must use it
-10. **Don't forget ADMIN_EMAILS** - Admin routes won't work without it in .env.local
+1. **Don't access params/searchParams synchronously** - Always await params/searchParams in Next.js 15 (use `React.use()` in Client Components)
+2. **Don't hardcode route strings** - Always use routes from `src/lib/routes.ts`
+3. **Don't use raw auth() in protected routes** - Always use `requireValidatedSession()` for stale JWT protection
+4. **Don't use type assertions (`as`)** - Use Zod validation or type guards instead
+5. **Don't import Prisma in services** - Services call models, never Prisma directly
+6. **Don't use switch on discriminated unions** - Always use ts-pattern with .exhaustive()
+7. **Don't put business logic in models** - Models are data access only
+8. **Don't put event handlers in Server Components** - Extract to client components
+9. **Don't call redirect() in inline form actions** - Use standalone server action functions
+10. **Don't skip next-safe-action** - All server actions must use it
+11. **Don't forget ADMIN_EMAILS** - Admin routes won't work without it in .env.local
 
 ## Environment Setup
 
