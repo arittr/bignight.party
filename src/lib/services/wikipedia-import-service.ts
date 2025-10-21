@@ -121,7 +121,6 @@ export async function previewImport(url: string) {
  * @throws WikipediaAPIError if Wikipedia API fails
  * @throws ImportServiceError if database operation fails
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex orchestration of deduplication and transaction logic
 export async function commitImport(url: string) {
   // Parse and transform
   let parsed = await wikipediaParser.parse(url);

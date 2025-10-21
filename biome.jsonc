@@ -100,17 +100,15 @@
       },
       "nursery": {
         "noNextAsyncClientComponent": "error",
-        "noSecrets": "warn",
+        "noSecrets": {
+          "level": "info",
+          "options": {
+            "entropyThreshold": 60
+          }
+        },
         "useExhaustiveSwitchCases": "error",
         "useReactFunctionComponents": "error"
       },
-      "performance": {
-        "noBarrelFile": "off",
-        "noDelete": "error",
-        "noReExportAll": "error",
-        "recommended": true
-      },
-      "recommended": true,
       "security": {
         "noDangerouslySetInnerHtml": "error",
         "recommended": true
