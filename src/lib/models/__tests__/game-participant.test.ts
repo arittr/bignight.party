@@ -93,10 +93,20 @@ describe("gameParticipantModel.findByUserId", () => {
 
     // Create two games
     const game1 = await testPrisma.game.create({
-      data: buildGame({ id: "game-gp-2-1", eventId: event.id, name: "Game 1", accessCode: "GP2CODE1" }),
+      data: buildGame({
+        id: "game-gp-2-1",
+        eventId: event.id,
+        name: "Game 1",
+        accessCode: "GP2CODE1",
+      }),
     });
     const game2 = await testPrisma.game.create({
-      data: buildGame({ id: "game-gp-2-2", eventId: event.id, name: "Game 2", accessCode: "GP2CODE2" }),
+      data: buildGame({
+        id: "game-gp-2-2",
+        eventId: event.id,
+        name: "Game 2",
+        accessCode: "GP2CODE2",
+      }),
     });
 
     // Create participants with different join times
