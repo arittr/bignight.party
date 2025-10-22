@@ -5,9 +5,8 @@ import type { LeaderboardPlayer } from "@/types/leaderboard";
 import { LeaderboardClient } from "../leaderboard-client";
 
 // Mock the useLeaderboardSocket hook
-const mockUseLeaderboardSocket = vi.fn<
-  (gameId: string, initialData: LeaderboardPlayer[]) => UseLeaderboardSocketReturn
->();
+const mockUseLeaderboardSocket =
+  vi.fn<(gameId: string, initialData: LeaderboardPlayer[]) => UseLeaderboardSocketReturn>();
 
 vi.mock("@/hooks/game/use-leaderboard-socket", () => ({
   useLeaderboardSocket: (gameId: string, initialData: LeaderboardPlayer[]) =>
