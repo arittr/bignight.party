@@ -732,3 +732,491 @@ describe("pickModel cascading deletes", () => {
     expect(pickExists).toBeNull();
   });
 });
+
+describe("pickModel.getLeaderboard", () => {
+  it("returns empty array for game with no revealed categories", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-lb-1" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-lb-1" }),
+    });
+
+    const user = await testPrisma.user.create({
+      data: buildUser({ id: "user-lb-1" }),
+    });
+
+    const category = await testPrisma.category.create({
+      data: buildCategory({
+        eventId: event.id,
+        id: "category-lb-1",
+        isRevealed: false,
+        points: 10,
+      }),
+    });
+
+    const nomination = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category.id, id: "nomination-lb-1" }),
+    });
+
+    // User has pick but category not revealed
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category.id,
+        gameId: game.id,
+        nominationId: nomination.id,
+        userId: user.id,
+      },
+    });
+
+    const leaderboard = await pickModel.getLeaderboard(game.id);
+
+    // User should still appear but with 0 score
+    expect(leaderboard).toHaveLength(1);
+    expect(leaderboard[0].totalScore).toBe(0);
+    expect(leaderboard[0].correctCount).toBe(0);
+  });
+
+  it("calculates correct scores for revealed winners", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-lb-2" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-lb-2" }),
+    });
+
+    const user = await testPrisma.user.create({
+      data: buildUser({ email: "user@example.com", id: "user-lb-2", name: "Test User" }),
+    });
+
+    // Create two categories
+    const category1 = await testPrisma.category.create({
+      data: buildCategory({
+        eventId: event.id,
+        id: "category-lb-2-1",
+        isRevealed: true,
+        name: "Category 1",
+        order: 1,
+        points: 10,
+      }),
+    });
+
+    const category2 = await testPrisma.category.create({
+      data: buildCategory({
+        eventId: event.id,
+        id: "category-lb-2-2",
+        isRevealed: true,
+        name: "Category 2",
+        order: 2,
+        points: 5,
+      }),
+    });
+
+    // Create nominations
+    const nom1Winner = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category1.id, id: "nom-lb-2-1-winner" }),
+    });
+
+    const nom2Winner = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category2.id, id: "nom-lb-2-2-winner" }),
+    });
+
+    // Set winners
+    await testPrisma.category.update({
+      data: { winnerNominationId: nom1Winner.id },
+      where: { id: category1.id },
+    });
+
+    await testPrisma.category.update({
+      data: { winnerNominationId: nom2Winner.id },
+      where: { id: category2.id },
+    });
+
+    // User picks both winners correctly
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category1.id,
+        gameId: game.id,
+        nominationId: nom1Winner.id,
+        userId: user.id,
+      },
+    });
+
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category2.id,
+        gameId: game.id,
+        nominationId: nom2Winner.id,
+        userId: user.id,
+      },
+    });
+
+    const leaderboard = await pickModel.getLeaderboard(game.id);
+
+    expect(leaderboard).toHaveLength(1);
+    expect(leaderboard[0].userId).toBe(user.id);
+    expect(leaderboard[0].totalScore).toBe(15); // 10 + 5
+    expect(leaderboard[0].correctCount).toBe(2);
+    expect(leaderboard[0].rank).toBe(1);
+    expect(leaderboard[0].name).toBe("Test User");
+    expect(leaderboard[0].email).toBe("user@example.com");
+  });
+
+  it("only includes users with complete picks", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-lb-3" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-lb-3" }),
+    });
+
+    const user1 = await testPrisma.user.create({
+      data: buildUser({ email: "user-lb-3-1@example.com", id: "user-lb-3-1", name: "Complete User" }),
+    });
+
+    const user2 = await testPrisma.user.create({
+      data: buildUser({ email: "user-lb-3-2@example.com", id: "user-lb-3-2", name: "Incomplete User" }),
+    });
+
+    // Create two categories
+    const category1 = await testPrisma.category.create({
+      data: buildCategory({
+        eventId: event.id,
+        id: "category-lb-3-1",
+        order: 1,
+        points: 10,
+      }),
+    });
+
+    const category2 = await testPrisma.category.create({
+      data: buildCategory({
+        eventId: event.id,
+        id: "category-lb-3-2",
+        order: 2,
+        points: 5,
+      }),
+    });
+
+    const nom1 = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category1.id, id: "nom-lb-3-1" }),
+    });
+
+    const nom2 = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category2.id, id: "nom-lb-3-2" }),
+    });
+
+    // User1 has picks for both categories
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category1.id,
+        gameId: game.id,
+        nominationId: nom1.id,
+        userId: user1.id,
+      },
+    });
+
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category2.id,
+        gameId: game.id,
+        nominationId: nom2.id,
+        userId: user1.id,
+      },
+    });
+
+    // User2 only has pick for category1 (incomplete)
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category1.id,
+        gameId: game.id,
+        nominationId: nom1.id,
+        userId: user2.id,
+      },
+    });
+
+    const leaderboard = await pickModel.getLeaderboard(game.id);
+
+    // Only user1 should be included
+    expect(leaderboard).toHaveLength(1);
+    expect(leaderboard[0].userId).toBe(user1.id);
+  });
+
+  it("sorts correctly by score DESC, correct count DESC, name ASC", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-lb-4" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-lb-4" }),
+    });
+
+    // Create three users with different names for sorting
+    const userAlice = await testPrisma.user.create({
+      data: buildUser({ email: "alice-lb-4@example.com", id: "user-lb-4-alice", name: "Alice" }),
+    });
+
+    const userBob = await testPrisma.user.create({
+      data: buildUser({ email: "bob-lb-4@example.com", id: "user-lb-4-bob", name: "Bob" }),
+    });
+
+    const userCharlie = await testPrisma.user.create({
+      data: buildUser({ email: "charlie-lb-4@example.com", id: "user-lb-4-charlie", name: "Charlie" }),
+    });
+
+    // Create one category
+    const category = await testPrisma.category.create({
+      data: buildCategory({
+        eventId: event.id,
+        id: "category-lb-4",
+        isRevealed: true,
+        order: 1,
+        points: 10,
+      }),
+    });
+
+    const nomWinner = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category.id, id: "nom-lb-4-winner" }),
+    });
+
+    const nomLoser = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category.id, id: "nom-lb-4-loser" }),
+    });
+
+    // Set winner
+    await testPrisma.category.update({
+      data: { winnerNominationId: nomWinner.id },
+      where: { id: category.id },
+    });
+
+    // Bob picks correctly (highest score)
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category.id,
+        gameId: game.id,
+        nominationId: nomWinner.id,
+        userId: userBob.id,
+      },
+    });
+
+    // Alice picks incorrectly
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category.id,
+        gameId: game.id,
+        nominationId: nomLoser.id,
+        userId: userAlice.id,
+      },
+    });
+
+    // Charlie picks incorrectly
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category.id,
+        gameId: game.id,
+        nominationId: nomLoser.id,
+        userId: userCharlie.id,
+      },
+    });
+
+    const leaderboard = await pickModel.getLeaderboard(game.id);
+
+    expect(leaderboard).toHaveLength(3);
+    // Bob first (correct pick)
+    expect(leaderboard[0].name).toBe("Bob");
+    expect(leaderboard[0].totalScore).toBe(10);
+    // Alice second (incorrect, but alphabetically before Charlie)
+    expect(leaderboard[1].name).toBe("Alice");
+    expect(leaderboard[1].totalScore).toBe(0);
+    // Charlie third
+    expect(leaderboard[2].name).toBe("Charlie");
+    expect(leaderboard[2].totalScore).toBe(0);
+  });
+
+  it("assigns correct rank numbers including ties", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-lb-5" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-lb-5" }),
+    });
+
+    // Create two categories
+    const category1 = await testPrisma.category.create({
+      data: buildCategory({
+        eventId: event.id,
+        id: "category-lb-5-1",
+        isRevealed: true,
+        order: 1,
+        points: 10,
+      }),
+    });
+
+    const category2 = await testPrisma.category.create({
+      data: buildCategory({
+        eventId: event.id,
+        id: "category-lb-5-2",
+        isRevealed: true,
+        order: 2,
+        points: 5,
+      }),
+    });
+
+    const nom1Winner = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category1.id, id: "nom-lb-5-1-winner" }),
+    });
+
+    const nom1Loser = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category1.id, id: "nom-lb-5-1-loser" }),
+    });
+
+    const nom2Winner = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category2.id, id: "nom-lb-5-2-winner" }),
+    });
+
+    // Set winners
+    await testPrisma.category.update({
+      data: { winnerNominationId: nom1Winner.id },
+      where: { id: category1.id },
+    });
+
+    await testPrisma.category.update({
+      data: { winnerNominationId: nom2Winner.id },
+      where: { id: category2.id },
+    });
+
+    // Create three users
+    const user1 = await testPrisma.user.create({
+      data: buildUser({ email: "user-lb-5-1@example.com", id: "user-lb-5-1", name: "User 1" }),
+    });
+
+    const user2 = await testPrisma.user.create({
+      data: buildUser({ email: "user-lb-5-2@example.com", id: "user-lb-5-2", name: "User 2" }),
+    });
+
+    const user3 = await testPrisma.user.create({
+      data: buildUser({ email: "user-lb-5-3@example.com", id: "user-lb-5-3", name: "User 3" }),
+    });
+
+    // User1: 2 correct (15 points, rank 1)
+    await testPrisma.pick.createMany({
+      data: [
+        {
+          categoryId: category1.id,
+          gameId: game.id,
+          nominationId: nom1Winner.id,
+          userId: user1.id,
+        },
+        {
+          categoryId: category2.id,
+          gameId: game.id,
+          nominationId: nom2Winner.id,
+          userId: user1.id,
+        },
+      ],
+    });
+
+    // User2: 1 correct (10 points, rank 2)
+    await testPrisma.pick.createMany({
+      data: [
+        {
+          categoryId: category1.id,
+          gameId: game.id,
+          nominationId: nom1Winner.id,
+          userId: user2.id,
+        },
+        {
+          categoryId: category2.id,
+          gameId: game.id,
+          nominationId: nom1Loser.id, // Wrong for category 2
+          userId: user2.id,
+        },
+      ],
+    });
+
+    // User3: 1 correct (10 points, rank 2 - tie with user2)
+    await testPrisma.pick.createMany({
+      data: [
+        {
+          categoryId: category1.id,
+          gameId: game.id,
+          nominationId: nom1Winner.id,
+          userId: user3.id,
+        },
+        {
+          categoryId: category2.id,
+          gameId: game.id,
+          nominationId: nom1Loser.id, // Wrong for category 2
+          userId: user3.id,
+        },
+      ],
+    });
+
+    const leaderboard = await pickModel.getLeaderboard(game.id);
+
+    expect(leaderboard).toHaveLength(3);
+    // User1 rank 1
+    expect(leaderboard[0].rank).toBe(1);
+    expect(leaderboard[0].totalScore).toBe(15);
+    // User2 and User3 both rank 2 (tied)
+    expect(leaderboard[1].rank).toBe(2);
+    expect(leaderboard[1].totalScore).toBe(10);
+    expect(leaderboard[2].rank).toBe(2);
+    expect(leaderboard[2].totalScore).toBe(10);
+  });
+
+  it("returns empty array for nonexistent game", async () => {
+    const leaderboard = await pickModel.getLeaderboard("nonexistent-game");
+
+    expect(leaderboard).toEqual([]);
+  });
+
+  it("uses user email as name when name is null", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-lb-6" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-lb-6" }),
+    });
+
+    const user = await testPrisma.user.create({
+      data: buildUser({ email: "test@example.com", id: "user-lb-6", name: null }),
+    });
+
+    const category = await testPrisma.category.create({
+      data: buildCategory({
+        eventId: event.id,
+        id: "category-lb-6",
+        order: 1,
+      }),
+    });
+
+    const nomination = await testPrisma.nomination.create({
+      data: buildNomination({ categoryId: category.id, id: "nom-lb-6" }),
+    });
+
+    await testPrisma.pick.create({
+      data: {
+        categoryId: category.id,
+        gameId: game.id,
+        nominationId: nomination.id,
+        userId: user.id,
+      },
+    });
+
+    const leaderboard = await pickModel.getLeaderboard(game.id);
+
+    expect(leaderboard).toHaveLength(1);
+    expect(leaderboard[0].name).toBe("test@example.com");
+  });
+});
