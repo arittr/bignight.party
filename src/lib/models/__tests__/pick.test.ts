@@ -877,11 +877,19 @@ describe("pickModel.getLeaderboard", () => {
     });
 
     const user1 = await testPrisma.user.create({
-      data: buildUser({ email: "user-lb-3-1@example.com", id: "user-lb-3-1", name: "Complete User" }),
+      data: buildUser({
+        email: "user-lb-3-1@example.com",
+        id: "user-lb-3-1",
+        name: "Complete User",
+      }),
     });
 
     const user2 = await testPrisma.user.create({
-      data: buildUser({ email: "user-lb-3-2@example.com", id: "user-lb-3-2", name: "Incomplete User" }),
+      data: buildUser({
+        email: "user-lb-3-2@example.com",
+        id: "user-lb-3-2",
+        name: "Incomplete User",
+      }),
     });
 
     // Create two categories
@@ -967,7 +975,11 @@ describe("pickModel.getLeaderboard", () => {
     });
 
     const userCharlie = await testPrisma.user.create({
-      data: buildUser({ email: "charlie-lb-4@example.com", id: "user-lb-4-charlie", name: "Charlie" }),
+      data: buildUser({
+        email: "charlie-lb-4@example.com",
+        id: "user-lb-4-charlie",
+        name: "Charlie",
+      }),
     });
 
     // Create one category
