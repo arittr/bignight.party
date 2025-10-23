@@ -19,6 +19,40 @@ export async function findAll() {
   });
 }
 
+/**
+ * Find all games with participant counts
+ *
+ * Uses Prisma aggregation to fetch participant counts in a single query,
+ * eliminating N+1 query problems. This is the optimized version of findAll()
+ * for admin list pages that display participant counts.
+ *
+ * @returns Games with event, picks, and participant counts
+ *
+ * @example
+ * ```tsx
+ * const games = await gameModel.findAllWithCounts();
+ * games.forEach(game => {
+ *   console.log(`${game.name}: ${game._count.participants} participants`);
+ * });
+ * ```
+ */
+export async function findAllWithCounts() {
+  return prisma.game.findMany({
+    include: {
+      _count: {
+        select: {
+          participants: true,
+        },
+      },
+      event: true,
+      picks: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
 export async function findById(id: string) {
   return prisma.game.findUnique({
     include: {
