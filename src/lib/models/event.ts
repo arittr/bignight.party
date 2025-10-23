@@ -19,6 +19,38 @@ export async function findAll() {
   });
 }
 
+/**
+ * Find all events with category counts
+ *
+ * Uses Prisma aggregation to fetch category counts without loading full category objects,
+ * providing better performance for admin list pages that only need counts.
+ *
+ * @returns Events with games and category counts
+ *
+ * @example
+ * ```tsx
+ * const events = await eventModel.findAllWithCategoryCounts();
+ * events.forEach(event => {
+ *   console.log(`${event.name}: ${event._count.categories} categories`);
+ * });
+ * ```
+ */
+export async function findAllWithCategoryCounts() {
+  return prisma.event.findMany({
+    include: {
+      _count: {
+        select: {
+          categories: true,
+        },
+      },
+      games: true,
+    },
+    orderBy: {
+      eventDate: "desc",
+    },
+  });
+}
+
 export async function findById(id: string) {
   return prisma.event.findUnique({
     include: {
