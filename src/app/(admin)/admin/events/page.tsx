@@ -2,23 +2,16 @@ import { EventManager } from "@/components/admin/events/event-manager";
 import { deleteEventAction } from "@/lib/actions/admin-actions";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as eventModel from "@/lib/models/event";
+import { transformEventsToListItems } from "@/lib/utils/data-transforms";
 
 export default async function EventsPage() {
   await requireValidatedSession();
 
-  const events = await eventModel.findAll();
+  // Use optimized query with category counts (no N+1 queries)
+  const events = await eventModel.findAllWithCategoryCounts();
 
-  // Transform events to match EventListItem interface
-  const eventsForManager = events.map((event) => ({
-    _count: {
-      categories: event.categories.length,
-    },
-    description: event.description,
-    eventDate: event.eventDate,
-    id: event.id,
-    name: event.name,
-    slug: event.slug,
-  }));
+  // Transform events to match EventListItem interface using centralized utility
+  const eventsForManager = transformEventsToListItems(events);
 
   // Server action wrapper for delete
   async function handleDelete(eventId: string) {
