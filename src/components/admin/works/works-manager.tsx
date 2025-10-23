@@ -6,17 +6,9 @@ import { toast } from "@/components/admin/shared/toast";
 import { AdminEmptyState } from "@/components/admin/ui/admin-empty-state";
 import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
 import { Button } from "@/components/ui/button";
-import type { ResourceItem } from "@/hooks/admin/use-resource-manager";
 import { useResourceManager } from "@/hooks/admin/use-resource-manager";
 import { routes } from "@/lib/routes";
-import { WorkList } from "./work-list";
-
-interface WorkListItem extends ResourceItem {
-  title: string;
-  type: WorkType;
-  year: number | null;
-  nominationsCount: number;
-}
+import { WorkList, type WorkListItem } from "./work-list";
 
 export interface WorksManagerProps {
   works: WorkListItem[];
