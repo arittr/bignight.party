@@ -1,15 +1,22 @@
 "use client";
 
 import type { WorkType } from "@prisma/client";
-import { useRouter } from "next/navigation";
-import * as React from "react";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { toast } from "@/components/admin/shared/toast";
 import { AdminEmptyState } from "@/components/admin/ui/admin-empty-state";
 import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
 import { Button } from "@/components/ui/button";
+import type { ResourceItem } from "@/hooks/admin/use-resource-manager";
+import { useResourceManager } from "@/hooks/admin/use-resource-manager";
 import { routes } from "@/lib/routes";
-import { WorkList, type WorkListItem } from "./work-list";
+import { WorkList } from "./work-list";
+
+interface WorkListItem extends ResourceItem {
+  title: string;
+  type: WorkType;
+  year: number | null;
+  nominationsCount: number;
+}
 
 export interface WorksManagerProps {
   works: WorkListItem[];
@@ -18,48 +25,34 @@ export interface WorksManagerProps {
 }
 
 export function WorksManager({ works, typeFilter, onDelete }: WorksManagerProps) {
-  const router = useRouter();
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [workToDelete, setWorkToDelete] = React.useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = React.useState(false);
-
-  const handleView = (work: WorkListItem) => {
-    router.push(routes.admin.works.detail(work.id));
-  };
-
-  const handleEdit = (work: WorkListItem) => {
-    router.push(routes.admin.works.detail(work.id));
-  };
-
-  const handleDeleteClick = (work: WorkListItem) => {
-    setWorkToDelete(work.id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!workToDelete || !onDelete) return;
-
-    setIsDeleting(true);
-    try {
-      await onDelete(workToDelete);
-      toast.success("Work deleted successfully");
-      setDeleteDialogOpen(false);
-      setWorkToDelete(null);
-      router.refresh();
-    } catch (error) {
-      toast.error("Failed to delete work", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-      });
-    } finally {
-      setIsDeleting(false);
+  const manager = useResourceManager(
+    {
+      onDelete: onDelete
+        ? async (workId: string) => {
+            try {
+              await onDelete(workId);
+              toast.success("Work deleted successfully");
+            } catch (error) {
+              toast.error("Failed to delete work", {
+                description:
+                  error instanceof Error ? error.message : "An unexpected error occurred",
+              });
+              throw error;
+            }
+          }
+        : undefined,
+      resources: works,
+      searchFields: ["title"],
+    },
+    {
+      createRoute: routes.admin.works.new(),
+      deleteSuccessMessage: "Work deleted successfully",
+      editRoute: routes.admin.works.detail,
+      viewRoute: routes.admin.works.detail,
     }
-  };
+  );
 
-  const handleCreate = () => {
-    router.push(routes.admin.works.new());
-  };
-
-  if (works.length === 0) {
+  if (manager.isEmpty) {
     return (
       <div>
         <AdminPageHeader
@@ -74,7 +67,7 @@ export function WorksManager({ works, typeFilter, onDelete }: WorksManagerProps)
           message="Works represent films, TV shows, albums, and other creative content. Create your first work to get started."
           primaryAction={{
             label: "Create Work",
-            onClick: handleCreate,
+            onClick: manager.handleCreate,
           }}
           title="No works yet"
         />
@@ -86,7 +79,7 @@ export function WorksManager({ works, typeFilter, onDelete }: WorksManagerProps)
     <div className="space-y-6">
       <AdminPageHeader
         actions={
-          <Button aria-label="Create new work" onClick={handleCreate}>
+          <Button aria-label="Create new work" onClick={manager.handleCreate}>
             Create Work
           </Button>
         }
@@ -99,20 +92,24 @@ export function WorksManager({ works, typeFilter, onDelete }: WorksManagerProps)
       />
 
       <WorkList
-        onDelete={handleDeleteClick}
-        onEdit={handleEdit}
-        onView={handleView}
+        onDelete={manager.handleDeleteClick}
+        onEdit={manager.handleEdit}
+        onView={manager.handleView}
         typeFilter={typeFilter}
-        works={works}
+        works={manager.filteredResources}
       />
 
       <ConfirmDialog
         confirmLabel="Delete"
         description="This will permanently delete the work and all associated nominations. This action cannot be undone."
-        isLoading={isDeleting}
-        onConfirm={handleDeleteConfirm}
-        onOpenChange={setDeleteDialogOpen}
-        open={deleteDialogOpen}
+        isLoading={manager.isDeleting}
+        onConfirm={manager.handleDeleteConfirm}
+        onOpenChange={(open) => {
+          if (!open) {
+            manager.handleDeleteCancel();
+          }
+        }}
+        open={manager.deleteDialogOpen}
         title="Delete Work?"
         variant="destructive"
       />
