@@ -159,6 +159,7 @@ export interface WorkListItem {
   type: "FILM" | "TV_SHOW" | "ALBUM" | "SONG" | "PLAY" | "BOOK";
   year: number | null;
   nominationsCount: number;
+  [key: string]: unknown;
 }
 
 export function transformWorkToListItem(work: WorkWithNominationCount): WorkListItem {
