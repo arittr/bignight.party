@@ -213,8 +213,9 @@ describe("data-transforms", () => {
           nominations: 3,
         },
         id: "person_1",
+        imageUrl: null,
         name: "Margot Robbie",
-        slug: "margot-robbie",
+        nominations: [{ workId: "work_1" }, { workId: "work_2" }, { workId: null }],
       };
 
       const result = transformPersonToListItem(person);
@@ -222,79 +223,107 @@ describe("data-transforms", () => {
       expect(result).toEqual({
         id: "person_1",
         name: "Margot Robbie",
-        nominationCount: 3,
-        slug: "margot-robbie",
+        nominationsCount: 3,
+        role: null,
+        worksCount: 2,
       });
     });
 
-    it("should handle missing _count field", () => {
+    it("should handle person with no works", () => {
       const person: PersonWithNominationCount = {
+        _count: {
+          nominations: 1,
+        },
         id: "person_2",
+        imageUrl: null,
         name: "Ryan Gosling",
-        slug: "ryan-gosling",
+        nominations: [{ workId: null }],
       };
 
       const result = transformPersonToListItem(person);
 
-      expect(result.nominationCount).toBe(0);
+      expect(result.nominationsCount).toBe(1);
+      expect(result.worksCount).toBe(0);
     });
   });
 
   describe("transformPeopleToListItems", () => {
     it("should transform multiple people", () => {
       const people: PersonWithNominationCount[] = [
-        { _count: { nominations: 5 }, id: "p1", name: "Person 1", slug: "person-1" },
-        { id: "p2", name: "Person 2", slug: "person-2" },
+        {
+          _count: { nominations: 5 },
+          id: "p1",
+          imageUrl: null,
+          name: "Person 1",
+          nominations: [
+            { workId: "work_1" },
+            { workId: "work_1" },
+            { workId: "work_2" },
+            { workId: null },
+            { workId: null },
+          ],
+        },
+        {
+          _count: { nominations: 0 },
+          id: "p2",
+          imageUrl: null,
+          name: "Person 2",
+          nominations: [],
+        },
       ];
 
       const result = transformPeopleToListItems(people);
 
       expect(result).toHaveLength(2);
-      expect(result[0].nominationCount).toBe(5);
-      expect(result[1].nominationCount).toBe(0);
+      expect(result[0].nominationsCount).toBe(5);
+      expect(result[0].worksCount).toBe(2);
+      expect(result[1].nominationsCount).toBe(0);
+      expect(result[1].worksCount).toBe(0);
     });
   });
 
   describe("transformWorkToListItem", () => {
     it("should transform work with nomination count", () => {
       const work: WorkWithNominationCount = {
-        _count: {
-          nominations: 8,
-        },
         id: "work_1",
-        releaseYear: 2023,
-        slug: "barbie",
+        nominations: [
+          { id: "n1" },
+          { id: "n2" },
+          { id: "n3" },
+          { id: "n4" },
+          { id: "n5" },
+          { id: "n6" },
+          { id: "n7" },
+          { id: "n8" },
+        ],
         title: "Barbie",
         type: "FILM",
+        year: 2023,
       };
 
       const result = transformWorkToListItem(work);
 
       expect(result).toEqual({
         id: "work_1",
-        nominationCount: 8,
-        releaseYear: 2023,
-        slug: "barbie",
+        nominationsCount: 8,
         title: "Barbie",
         type: "FILM",
+        year: 2023,
       });
     });
 
-    it("should handle null releaseYear", () => {
+    it("should handle null year", () => {
       const work: WorkWithNominationCount = {
-        _count: {
-          nominations: 0,
-        },
         id: "work_2",
-        releaseYear: null,
-        slug: "test-work",
+        nominations: [],
         title: "Test Work",
         type: "TV_SHOW",
+        year: null,
       };
 
       const result = transformWorkToListItem(work);
 
-      expect(result.releaseYear).toBeNull();
+      expect(result.year).toBeNull();
     });
 
     it("should handle all work types", () => {
@@ -309,12 +338,11 @@ describe("data-transforms", () => {
 
       for (const type of types) {
         const work: WorkWithNominationCount = {
-          _count: { nominations: 0 },
           id: "work_1",
-          releaseYear: 2023,
-          slug: "test",
+          nominations: [],
           title: "Test",
           type,
+          year: 2023,
         };
 
         const result = transformWorkToListItem(work);
@@ -327,27 +355,26 @@ describe("data-transforms", () => {
     it("should transform multiple works", () => {
       const works: WorkWithNominationCount[] = [
         {
-          _count: { nominations: 5 },
           id: "w1",
-          releaseYear: 2023,
-          slug: "work-1",
+          nominations: [{ id: "n1" }, { id: "n2" }, { id: "n3" }, { id: "n4" }, { id: "n5" }],
           title: "Work 1",
           type: "FILM",
+          year: 2023,
         },
         {
           id: "w2",
-          releaseYear: 2024,
-          slug: "work-2",
+          nominations: [],
           title: "Work 2",
           type: "TV_SHOW",
+          year: 2024,
         },
       ];
 
       const result = transformWorksToListItems(works);
 
       expect(result).toHaveLength(2);
-      expect(result[0].nominationCount).toBe(5);
-      expect(result[1].nominationCount).toBe(0);
+      expect(result[0].nominationsCount).toBe(5);
+      expect(result[1].nominationsCount).toBe(0);
     });
   });
 

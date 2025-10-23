@@ -5,25 +5,11 @@ import { toast } from "@/components/admin/shared/toast";
 import { AdminEmptyState } from "@/components/admin/ui/admin-empty-state";
 import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
 import { Button } from "@/components/ui/button";
-import type { ResourceItem } from "@/hooks/admin/use-resource-manager";
 import { useResourceManager } from "@/hooks/admin/use-resource-manager";
 import { routes } from "@/lib/routes";
 import { GameList, type GameWithRelations } from "./game-list";
 
-interface GameListItem extends ResourceItem {
-  name: string;
-  accessCode: string;
-  status: "SETUP" | "OPEN" | "LIVE" | "COMPLETED";
-  picksLockAt: Date | null;
-  event: {
-    id: string;
-    name: string;
-  };
-  _count?: {
-    participants: number;
-  };
-}
-
+// GameWithRelations is already compatible with ResourceItem since it has an id
 export interface GameManagerProps {
   games: GameWithRelations[];
   onDelete?: (gameId: string) => Promise<void>;

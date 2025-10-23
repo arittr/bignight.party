@@ -12,13 +12,14 @@ export interface WorkListItem {
   type: WorkType;
   year: number | null;
   nominationsCount: number;
+  [key: string]: unknown;
 }
 
 export interface WorkListProps {
   works: WorkListItem[];
-  onView?: (work: WorkListItem) => void;
-  onEdit?: (work: WorkListItem) => void;
-  onDelete?: (work: WorkListItem) => void;
+  onView?: (workId: string) => void;
+  onEdit?: (workId: string) => void;
+  onDelete?: (workId: string) => void;
   typeFilter?: WorkType | null;
   className?: string;
 }
@@ -94,19 +95,19 @@ export function WorkList({
   if (onView) {
     rowActions.push({
       label: "View",
-      onClick: onView,
+      onClick: (work) => onView(work.id),
     });
   }
   if (onEdit) {
     rowActions.push({
       label: "Edit",
-      onClick: onEdit,
+      onClick: (work) => onEdit(work.id),
     });
   }
   if (onDelete) {
     rowActions.push({
       label: "Delete",
-      onClick: onDelete,
+      onClick: (work) => onDelete(work.id),
       variant: "destructive",
     });
   }
