@@ -329,9 +329,12 @@ describe("useResourceManager", () => {
     });
 
     it("should set isDeleting during delete operation", async () => {
-      const mockOnDelete = vi
-        .fn()
-        .mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
+      let resolveDelete: (() => void) | undefined;
+      const deletePromise = new Promise<void>((resolve) => {
+        resolveDelete = resolve;
+      });
+
+      const mockOnDelete = vi.fn().mockReturnValue(deletePromise);
 
       const { result } = renderHook(() =>
         useResourceManager(
@@ -344,18 +347,31 @@ describe("useResourceManager", () => {
         )
       );
 
+      // Trigger delete dialog
       act(() => {
         result.current.handleDeleteClick("1");
       });
 
-      const deletePromise = act(async () => {
-        await result.current.handleDeleteConfirm();
+      expect(result.current.deleteDialogOpen).toBe(true);
+
+      // Start delete (don't await)
+      let confirmPromise: Promise<void> | undefined;
+      act(() => {
+        confirmPromise = result.current.handleDeleteConfirm();
       });
 
-      // Should be deleting immediately after confirm
+      // Check isDeleting is true while operation is in progress
       expect(result.current.isDeleting).toBe(true);
 
-      await deletePromise;
+      // Resolve the delete operation
+      act(() => {
+        if (resolveDelete) resolveDelete();
+      });
+
+      // Wait for confirm to complete
+      await act(async () => {
+        if (confirmPromise) await confirmPromise;
+      });
 
       // Should no longer be deleting after completion
       expect(result.current.isDeleting).toBe(false);

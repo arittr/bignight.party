@@ -189,11 +189,14 @@ export function formatDateForDisplay(date: Date | null): string {
  * Utility to format status for display
  */
 export function formatStatusForDisplay(status: "SETUP" | "OPEN" | "LIVE" | "COMPLETED"): string {
-  // NOTE: Object keys match Prisma enum values (intentional SCREAMING_SNAKE_CASE)
   const statusMap = {
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     COMPLETED: "Completed",
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     LIVE: "Live",
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     OPEN: "Open",
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     SETUP: "Setup",
   };
   return statusMap[status];
@@ -205,13 +208,18 @@ export function formatStatusForDisplay(status: "SETUP" | "OPEN" | "LIVE" | "COMP
 export function formatWorkTypeForDisplay(
   type: "FILM" | "TV_SHOW" | "ALBUM" | "SONG" | "PLAY" | "BOOK"
 ): string {
-  // NOTE: Object keys match Prisma enum values (intentional SCREAMING_SNAKE_CASE)
   const typeMap = {
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     ALBUM: "Album",
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     BOOK: "Book",
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     FILM: "Film",
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     PLAY: "Play",
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     SONG: "Song",
+    // biome-ignore lint/style/useNamingConvention: Prisma enum value
     TV_SHOW: "TV Show",
   };
   return typeMap[type];
