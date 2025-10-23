@@ -3,6 +3,7 @@ import { WorksManager } from "@/components/admin/works/works-manager";
 import { deleteWorkAction } from "@/lib/actions/admin-actions";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as workModel from "@/lib/models/work";
+import { transformWorksToListItems } from "@/lib/utils/data-transforms";
 
 interface WorksPageProps {
   searchParams: Promise<{
@@ -19,14 +20,8 @@ export default async function WorksPage(props: WorksPageProps) {
   // Fetch works based on type filter
   const works = typeFilter ? await workModel.findByType(typeFilter) : await workModel.findAll();
 
-  // Transform works to match WorkListItem interface
-  const worksForManager = works.map((work) => ({
-    id: work.id,
-    nominationsCount: work.nominations.length,
-    title: work.title,
-    type: work.type,
-    year: work.year,
-  }));
+  // Transform works to match WorkListItem interface using centralized utility
+  const worksForManager = transformWorksToListItems(works);
 
   // Server action wrapper for delete
   async function handleDelete(workId: string) {
