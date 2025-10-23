@@ -1,17 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import * as React from "react";
 import { ConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import { toast } from "@/components/admin/shared/toast";
 import { AdminEmptyState } from "@/components/admin/ui/admin-empty-state";
 import { AdminPageHeader } from "@/components/admin/ui/admin-page-header";
 import { Button } from "@/components/ui/button";
+import type { ResourceItem } from "@/hooks/admin/use-resource-manager";
+import { useResourceManager } from "@/hooks/admin/use-resource-manager";
 import { routes } from "@/lib/routes";
 import { EventList } from "./event-list";
 
-interface EventListItem {
-  id: string;
+interface EventListItem extends ResourceItem {
   name: string;
   slug: string;
   eventDate: Date;
@@ -28,63 +28,38 @@ export interface EventManagerProps {
 
 export function EventManager({ events, onDelete }: EventManagerProps) {
   const router = useRouter();
-  const [filterValue, setFilterValue] = React.useState("");
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [eventToDelete, setEventToDelete] = React.useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = React.useState(false);
-
-  const filteredEvents = React.useMemo(() => {
-    if (!filterValue) return events;
-
-    const lowerFilter = filterValue.toLowerCase();
-    return events.filter(
-      (event) =>
-        event.name.toLowerCase().includes(lowerFilter) ||
-        event.slug.toLowerCase().includes(lowerFilter)
-    );
-  }, [events, filterValue]);
-
-  const handleView = (eventId: string) => {
-    router.push(routes.admin.events.detail(eventId));
-  };
-
-  const handleEdit = (eventId: string) => {
-    router.push(routes.admin.events.detail(eventId));
-  };
-
-  const handleDeleteClick = (eventId: string) => {
-    setEventToDelete(eventId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!eventToDelete || !onDelete) return;
-
-    setIsDeleting(true);
-    try {
-      await onDelete(eventToDelete);
-      toast.success("Event deleted successfully");
-      setDeleteDialogOpen(false);
-      setEventToDelete(null);
-      router.refresh();
-    } catch (error) {
-      toast.error("Failed to delete event", {
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-      });
-    } finally {
-      setIsDeleting(false);
+  const manager = useResourceManager(
+    {
+      onDelete: onDelete
+        ? async (eventId: string) => {
+            try {
+              await onDelete(eventId);
+              toast.success("Event deleted successfully");
+            } catch (error) {
+              toast.error("Failed to delete event", {
+                description:
+                  error instanceof Error ? error.message : "An unexpected error occurred",
+              });
+              throw error;
+            }
+          }
+        : undefined,
+      resources: events,
+      searchFields: ["name", "slug"],
+    },
+    {
+      createRoute: routes.admin.events.new(),
+      deleteSuccessMessage: "Event deleted successfully",
+      editRoute: routes.admin.events.detail,
+      viewRoute: routes.admin.events.detail,
     }
-  };
-
-  const handleCreate = () => {
-    router.push(routes.admin.events.new());
-  };
+  );
 
   const handleImport = () => {
     router.push(routes.admin.import());
   };
 
-  if (events.length === 0) {
+  if (manager.isEmpty) {
     return (
       <div>
         <AdminPageHeader
@@ -99,7 +74,7 @@ export function EventManager({ events, onDelete }: EventManagerProps) {
           message="Events represent awards ceremonies like the Oscars or Golden Globes. Create your first event to get started."
           primaryAction={{
             label: "Create Event",
-            onClick: handleCreate,
+            onClick: manager.handleCreate,
           }}
           secondaryAction={{
             label: "Import Event",
@@ -123,7 +98,7 @@ export function EventManager({ events, onDelete }: EventManagerProps) {
             >
               Import Event
             </Button>
-            <Button aria-label="Create new event" onClick={handleCreate}>
+            <Button aria-label="Create new event" onClick={manager.handleCreate}>
               Create Event
             </Button>
           </div>
@@ -137,21 +112,25 @@ export function EventManager({ events, onDelete }: EventManagerProps) {
       />
 
       <EventList
-        events={filteredEvents}
-        filterValue={filterValue}
-        onDelete={handleDeleteClick}
-        onEdit={handleEdit}
-        onFilterChange={setFilterValue}
-        onView={handleView}
+        events={manager.filteredResources}
+        filterValue={manager.filterValue}
+        onDelete={manager.handleDeleteClick}
+        onEdit={manager.handleEdit}
+        onFilterChange={manager.setFilterValue}
+        onView={manager.handleView}
       />
 
       <ConfirmDialog
         confirmLabel="Delete"
         description="This will permanently delete the event and all associated categories and nominations. This action cannot be undone."
-        isLoading={isDeleting}
-        onConfirm={handleDeleteConfirm}
-        onOpenChange={setDeleteDialogOpen}
-        open={deleteDialogOpen}
+        isLoading={manager.isDeleting}
+        onConfirm={manager.handleDeleteConfirm}
+        onOpenChange={(open) => {
+          if (!open) {
+            manager.handleDeleteCancel();
+          }
+        }}
+        open={manager.deleteDialogOpen}
         title="Delete Event?"
         variant="destructive"
       />

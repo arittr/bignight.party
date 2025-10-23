@@ -5,6 +5,8 @@
  * component props, eliminating duplicated transformation code across the admin section.
  */
 
+import type { ResourceItem } from "@/hooks/admin/use-resource-manager";
+
 /**
  * Transforms a Prisma Event with category count to EventListItem interface
  */
@@ -19,8 +21,7 @@ export interface EventWithCategoryCount {
   };
 }
 
-export interface EventListItem {
-  id: string;
+export interface EventListItem extends ResourceItem {
   name: string;
   slug: string;
   eventDate: Date;

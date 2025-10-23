@@ -1,12 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ControllerRenderProps } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { AdminForm, AdminFormField } from "@/components/admin/ui/admin-form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { AdminForm } from "@/components/admin/ui/admin-form";
+import { FormFieldGroup } from "@/components/admin/ui/form-field-group";
 import { eventCreateSchema } from "@/schemas/event-schema";
 
 // Use z.input type to handle coerce.date() properly
@@ -49,74 +47,43 @@ export function EventForm({
       onSubmit={onSubmit}
       submitLabel={submitLabel}
     >
-      <AdminFormField label="Name" name="name" required>
-        {(field) => {
-          const typedField = field as ControllerRenderProps<EventFormData, "name">;
-          return (
-            <Input
-              {...typedField}
-              aria-label="Event name"
-              placeholder="97th Academy Awards"
-              type="text"
-            />
-          );
-        }}
-      </AdminFormField>
+      <FormFieldGroup<EventFormData, "name">
+        ariaLabel="Event name"
+        label="Name"
+        name="name"
+        placeholder="97th Academy Awards"
+        required
+        type="text"
+      />
 
-      <AdminFormField
+      <FormFieldGroup<EventFormData, "slug">
+        ariaLabel="Event slug"
         description="URL-friendly identifier (lowercase letters, numbers, and hyphens only)"
         label="Slug"
         name="slug"
+        placeholder="oscars-2025"
         required
-      >
-        {(field) => {
-          const typedField = field as ControllerRenderProps<EventFormData, "slug">;
-          return (
-            <Input {...typedField} aria-label="Event slug" placeholder="oscars-2025" type="text" />
-          );
-        }}
-      </AdminFormField>
+        type="text"
+      />
 
-      <AdminFormField
+      <FormFieldGroup<EventFormData, "eventDate">
+        ariaLabel="Event date"
         description="Enter the date when the ceremony takes place"
         label="Event Date"
         name="eventDate"
         required
-      >
-        {(field) => {
-          const typedField = field as ControllerRenderProps<EventFormData, "eventDate">;
-          return (
-            <Input
-              aria-label="Event date"
-              onChange={(e) => typedField.onChange(new Date(e.target.value))}
-              type="date"
-              value={
-                typedField.value instanceof Date
-                  ? typedField.value.toISOString().split("T")[0]
-                  : String(typedField.value).split("T")[0]
-              }
-            />
-          );
-        }}
-      </AdminFormField>
+        type="date"
+      />
 
-      <AdminFormField
+      <FormFieldGroup<EventFormData, "description">
+        ariaLabel="Event description"
         description="Optional description of the event"
         label="Description"
         name="description"
-      >
-        {(field) => {
-          const typedField = field as ControllerRenderProps<EventFormData, "description">;
-          return (
-            <Textarea
-              {...typedField}
-              aria-label="Event description"
-              placeholder="The 97th Academy Awards ceremony, presented by the Academy of Motion Picture Arts and Sciences..."
-              rows={4}
-            />
-          );
-        }}
-      </AdminFormField>
+        placeholder="The 97th Academy Awards ceremony, presented by the Academy of Motion Picture Arts and Sciences..."
+        rows={4}
+        type="textarea"
+      />
     </AdminForm>
   );
 }
