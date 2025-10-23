@@ -134,7 +134,14 @@ export function FormFieldGroup<TFieldValues extends FieldValues, TName extends P
 
   return (
     <AdminFormField description={description} label={label} name={name} required={required}>
+      {/* biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Type switching logic for different field types */}
       {(field) => {
+        // Type guard: Check that field is an object before accessing properties
+        if (!field || typeof field !== "object") {
+          throw new Error("Invalid field from AdminFormField");
+        }
+
+        // Now we can safely cast - AdminFormField guarantees this is ControllerRenderProps
         const typedField = field as ControllerRenderProps<TFieldValues, TName>;
 
         if (type === "text") {

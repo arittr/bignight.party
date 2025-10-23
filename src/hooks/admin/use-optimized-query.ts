@@ -168,6 +168,7 @@ export function useOptimizedQuery<T>({
         return ongoingFetch.current;
       }
 
+      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex state management for optimized queries with caching, deduplication, and error handling
       const fetchPromise = (async () => {
         setIsLoading(true);
         setError(null);
