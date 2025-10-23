@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import type { AdminTableColumn, AdminTableRowAction } from "@/components/admin/ui/admin-table";
 import { AdminTable } from "@/components/admin/ui/admin-table";
 
@@ -18,17 +17,19 @@ export interface PersonListProps {
   onEdit?: (person: PersonListItem) => void;
   onDelete?: (person: PersonListItem) => void;
   className?: string;
+  filterValue?: string;
+  onFilterChange?: (value: string) => void;
 }
 
-export function PersonList({ people, onView, onEdit, onDelete, className }: PersonListProps) {
-  const [searchQuery, setSearchQuery] = React.useState("");
-
-  const filteredPeople = React.useMemo(() => {
-    if (!searchQuery) return people;
-    const query = searchQuery.toLowerCase();
-    return people.filter((person) => person.name.toLowerCase().includes(query));
-  }, [people, searchQuery]);
-
+export function PersonList({
+  people,
+  onView,
+  onEdit,
+  onDelete,
+  className,
+  filterValue,
+  onFilterChange,
+}: PersonListProps) {
   const columns: AdminTableColumn<PersonListItem>[] = [
     {
       key: "name",
@@ -81,11 +82,11 @@ export function PersonList({ people, onView, onEdit, onDelete, className }: Pers
       ariaLabel="People list"
       className={className}
       columns={columns}
-      data={filteredPeople}
+      data={people}
       emptyState="No people found. Create your first person to get started."
       filterPlaceholder="Search by name..."
-      filterValue={searchQuery}
-      onFilterChange={setSearchQuery}
+      filterValue={filterValue}
+      onFilterChange={onFilterChange}
       rowActions={rowActions.length > 0 ? rowActions : undefined}
     />
   );

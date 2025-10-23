@@ -3,9 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { AdminForm, AdminFormField } from "@/components/admin/ui/admin-form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { AdminForm } from "@/components/admin/ui/admin-form";
+import { FormFieldGroup } from "@/components/admin/ui/form-field-group";
 
 const personFormSchema = z.object({
   bio: z.string().optional(),
@@ -56,83 +55,42 @@ export function PersonForm({
       onSubmit={onSubmit}
       submitLabel={submitLabel}
     >
-      <AdminFormField label="Name" name="name" required>
-        {(field: unknown) => {
-          const f = field as {
-            value: string;
-            onChange: (value: string) => void;
-            onBlur: () => void;
-          };
-          return (
-            <Input
-              aria-label="Person name"
-              onBlur={f.onBlur}
-              onChange={(e) => f.onChange(e.target.value)}
-              placeholder="Enter person's name"
-              value={f.value}
-            />
-          );
-        }}
-      </AdminFormField>
+      <FormFieldGroup<PersonFormData, "name">
+        ariaLabel="Person name"
+        label="Name"
+        name="name"
+        placeholder="Enter person's name"
+        required
+        type="text"
+      />
 
-      <AdminFormField description="e.g., Actor, Director, Producer" label="Role" name="role">
-        {(field: unknown) => {
-          const f = field as {
-            value: string;
-            onChange: (value: string) => void;
-            onBlur: () => void;
-          };
-          return (
-            <Input
-              aria-label="Person role"
-              onBlur={f.onBlur}
-              onChange={(e) => f.onChange(e.target.value)}
-              placeholder="Enter person's role"
-              value={f.value}
-            />
-          );
-        }}
-      </AdminFormField>
+      <FormFieldGroup<PersonFormData, "role">
+        ariaLabel="Person role"
+        description="e.g., Actor, Director, Producer"
+        label="Role"
+        name="role"
+        placeholder="Enter person's role"
+        type="text"
+      />
 
-      <AdminFormField description="Brief biography or description" label="Bio" name="bio">
-        {(field: unknown) => {
-          const f = field as {
-            value: string;
-            onChange: (value: string) => void;
-            onBlur: () => void;
-          };
-          return (
-            <Textarea
-              aria-label="Person bio"
-              onBlur={f.onBlur}
-              onChange={(e) => f.onChange(e.target.value)}
-              placeholder="Enter person's bio"
-              rows={4}
-              value={f.value}
-            />
-          );
-        }}
-      </AdminFormField>
+      <FormFieldGroup<PersonFormData, "bio">
+        ariaLabel="Person bio"
+        description="Brief biography or description"
+        label="Bio"
+        name="bio"
+        placeholder="Enter person's bio"
+        rows={4}
+        type="textarea"
+      />
 
-      <AdminFormField description="URL to person's image" label="Image URL" name="imageUrl">
-        {(field: unknown) => {
-          const f = field as {
-            value: string;
-            onChange: (value: string) => void;
-            onBlur: () => void;
-          };
-          return (
-            <Input
-              aria-label="Person image URL"
-              onBlur={f.onBlur}
-              onChange={(e) => f.onChange(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              type="url"
-              value={f.value}
-            />
-          );
-        }}
-      </AdminFormField>
+      <FormFieldGroup<PersonFormData, "imageUrl">
+        ariaLabel="Person image URL"
+        description="URL to person's image"
+        label="Image URL"
+        name="imageUrl"
+        placeholder="https://example.com/image.jpg"
+        type="text"
+      />
     </AdminForm>
   );
 }
