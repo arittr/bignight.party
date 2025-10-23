@@ -104,25 +104,34 @@ export function transformGamesToListItems(games: GameWithParticipantCount[]): Ga
 export interface PersonWithNominationCount {
   id: string;
   name: string;
-  slug: string;
-  _count?: {
+  imageUrl: string | null;
+  _count: {
     nominations: number;
   };
+  nominations: {
+    workId: string | null;
+  }[];
 }
 
-export interface PersonListItem {
-  id: string;
+export interface PersonListItem extends ResourceItem {
   name: string;
-  slug: string;
-  nominationCount: number;
+  role: string | null;
+  worksCount: number;
+  nominationsCount: number;
 }
 
 export function transformPersonToListItem(person: PersonWithNominationCount): PersonListItem {
+  // Count distinct works (filter out null workIds and count unique values)
+  const worksCount = new Set(
+    person.nominations.filter((n) => n.workId !== null).map((n) => n.workId)
+  ).size;
+
   return {
     id: person.id,
     name: person.name,
-    nominationCount: person._count?.nominations ?? 0,
-    slug: person.slug,
+    nominationsCount: person._count.nominations,
+    role: null, // Role is not stored in Person model currently
+    worksCount,
   };
 }
 
