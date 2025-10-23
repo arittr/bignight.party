@@ -138,9 +138,7 @@ export function GameForm({
               }}
               type="datetime-local"
               value={
-                typedField.value
-                  ? format(new Date(typedField.value), "yyyy-MM-dd'T'HH:mm")
-                  : ""
+                typedField.value ? format(new Date(typedField.value), "yyyy-MM-dd'T'HH:mm") : ""
               }
             />
           );
