@@ -148,31 +148,26 @@ export function transformPeopleToListItems(people: PersonWithNominationCount[]):
 export interface WorkWithNominationCount {
   id: string;
   title: string;
-  slug: string;
   type: "FILM" | "TV_SHOW" | "ALBUM" | "SONG" | "PLAY" | "BOOK";
-  releaseYear: number | null;
-  _count?: {
-    nominations: number;
-  };
+  year: number | null;
+  nominations: { id: string }[];
 }
 
 export interface WorkListItem {
   id: string;
   title: string;
-  slug: string;
   type: "FILM" | "TV_SHOW" | "ALBUM" | "SONG" | "PLAY" | "BOOK";
-  releaseYear: number | null;
-  nominationCount: number;
+  year: number | null;
+  nominationsCount: number;
 }
 
 export function transformWorkToListItem(work: WorkWithNominationCount): WorkListItem {
   return {
     id: work.id,
-    nominationCount: work._count?.nominations ?? 0,
-    releaseYear: work.releaseYear,
-    slug: work.slug,
+    nominationsCount: work.nominations.length,
     title: work.title,
     type: work.type,
+    year: work.year,
   };
 }
 
