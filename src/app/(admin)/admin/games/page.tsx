@@ -1,28 +1,13 @@
 import { GameManager } from "@/components/admin/games/game-manager";
 import { deleteGameAction } from "@/lib/actions/admin-actions";
 import { requireValidatedSession } from "@/lib/auth/config";
-import prisma from "@/lib/db/prisma";
 import * as gameModel from "@/lib/models/game";
 
 export default async function GamesPage() {
   await requireValidatedSession();
 
-  const games = await gameModel.findAll();
-
-  // Get participants count for each game
-  const gamesWithCounts = await Promise.all(
-    games.map(async (game) => {
-      const participantsCount = await prisma.gameParticipant.count({
-        where: { gameId: game.id },
-      });
-      return {
-        ...game,
-        _count: {
-          participants: participantsCount,
-        },
-      };
-    })
-  );
+  // Use optimized query with participant counts (no N+1 queries)
+  const games = await gameModel.findAllWithCounts();
 
   // Server action wrapper for delete
   async function handleDelete(gameId: string) {
@@ -33,5 +18,5 @@ export default async function GamesPage() {
     }
   }
 
-  return <GameManager games={gamesWithCounts} onDelete={handleDelete} />;
+  return <GameManager games={games} onDelete={handleDelete} />;
 }
