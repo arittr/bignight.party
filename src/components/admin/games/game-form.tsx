@@ -7,27 +7,22 @@ import { RefreshCw } from "lucide-react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AdminForm, AdminFormField } from "@/components/admin/ui/admin-form";
+import { FormFieldGroup } from "@/components/admin/ui/form-field-group";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { gameCreateSchema } from "@/schemas/game-schema";
 
-type GameFormInput = z.input<typeof gameCreateSchema>;
+// Use z.input type to handle coerce properly
+type GameFormData = z.input<typeof gameCreateSchema>;
 
 export interface GameFormProps {
   events: Event[];
-  onSubmit: (data: z.infer<typeof gameCreateSchema>) => void | Promise<void>;
+  initialData?: Partial<GameFormData>;
+  onSubmit: (data: GameFormData) => void | Promise<void>;
   onCancel?: () => void;
-  defaultValues?: Partial<GameFormInput>;
   isLoading?: boolean;
   error?: string | null;
-  className?: string;
+  submitLabel?: string;
 }
 
 /**
@@ -36,19 +31,19 @@ export interface GameFormProps {
  */
 export function GameForm({
   events,
+  initialData,
   onSubmit,
   onCancel,
-  defaultValues,
   isLoading = false,
   error,
-  className,
+  submitLabel = "Save Game",
 }: GameFormProps) {
-  const form = useForm<GameFormInput>({
+  const form = useForm<GameFormData>({
     defaultValues: {
-      accessCode: defaultValues?.accessCode ?? "",
-      eventId: defaultValues?.eventId ?? "",
-      name: defaultValues?.name ?? "",
-      picksLockAt: defaultValues?.picksLockAt,
+      accessCode: initialData?.accessCode ?? "",
+      eventId: initialData?.eventId ?? "",
+      name: initialData?.name ?? "",
+      picksLockAt: initialData?.picksLockAt,
     },
     resolver: zodResolver(gameCreateSchema),
   });
@@ -63,62 +58,37 @@ export function GameForm({
     form.setValue("accessCode", code);
   };
 
-  const formatDateTimeLocal = (date: Date | undefined) => {
-    if (!date) return "";
-    const d = new Date(date);
-    return format(d, "yyyy-MM-dd'T'HH:mm");
-  };
-
-  const handleSubmit = (data: GameFormInput) => {
-    // Schema will validate and transform the data, adding the default status if not provided
-    onSubmit(data as z.infer<typeof gameCreateSchema>);
-  };
-
   return (
     <AdminForm
       ariaLabel="Game form"
-      cancelLabel="Cancel"
-      className={className}
       error={error}
       form={form}
       isLoading={isLoading}
       onCancel={onCancel}
-      onSubmit={handleSubmit}
-      submitLabel="Save Game"
+      onSubmit={onSubmit}
+      submitLabel={submitLabel}
     >
-      <AdminFormField label="Game Name" name="name" required>
-        {(field) => {
-          const typedField = field as { value: string; onChange: (value: string) => void };
-          return (
-            <Input
-              aria-label="Game name"
-              onChange={(e) => typedField.onChange(e.target.value)}
-              placeholder="e.g., Oscars 2025 - Friends Group"
-              value={typedField.value}
-            />
-          );
-        }}
-      </AdminFormField>
+      <FormFieldGroup<GameFormData, "name">
+        ariaLabel="Game name"
+        label="Game Name"
+        name="name"
+        placeholder="e.g., Oscars 2025 - Friends Group"
+        required
+        type="text"
+      />
 
-      <AdminFormField label="Event" name="eventId" required>
-        {(field) => {
-          const typedField = field as { value: string; onChange: (value: string) => void };
-          return (
-            <Select onValueChange={typedField.onChange} value={typedField.value}>
-              <SelectTrigger aria-label="Select event">
-                <SelectValue placeholder="Select an event" />
-              </SelectTrigger>
-              <SelectContent>
-                {events.map((event) => (
-                  <SelectItem key={event.id} value={event.id}>
-                    {event.name} - {format(new Date(event.eventDate), "MMM d, yyyy")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          );
-        }}
-      </AdminFormField>
+      <FormFieldGroup<GameFormData, "eventId">
+        ariaLabel="Event"
+        label="Event"
+        name="eventId"
+        options={events.map((event) => ({
+          label: `${event.name} - ${format(new Date(event.eventDate), "MMM d, yyyy")}`,
+          value: event.id,
+        }))}
+        placeholder="Select an event"
+        required
+        type="select"
+      />
 
       <AdminFormField
         description="Uppercase letters and numbers only. Click the button to auto-generate."
@@ -167,7 +137,11 @@ export function GameForm({
                 typedField.onChange(value ? new Date(value) : undefined);
               }}
               type="datetime-local"
-              value={formatDateTimeLocal(typedField.value)}
+              value={
+                typedField.value
+                  ? format(new Date(typedField.value), "yyyy-MM-dd'T'HH:mm")
+                  : ""
+              }
             />
           );
         }}
