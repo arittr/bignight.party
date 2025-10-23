@@ -14,13 +14,14 @@ export interface GameWithRelations extends Game {
   _count?: {
     participants: number;
   };
+  [key: string]: unknown;
 }
 
 export interface GameListProps {
   games: GameWithRelations[];
-  onView: (game: GameWithRelations) => void;
-  onEdit: (game: GameWithRelations) => void;
-  onDelete: (game: GameWithRelations) => void;
+  onView: (gameId: string) => void;
+  onEdit: (gameId: string) => void;
+  onDelete: (gameId: string) => void;
   filterValue?: string;
   onFilterChange?: (value: string) => void;
   className?: string;
@@ -82,15 +83,15 @@ export function GameList({
   const rowActions: AdminTableRowAction<GameWithRelations>[] = [
     {
       label: "View",
-      onClick: onView,
+      onClick: (game) => onView(game.id),
     },
     {
       label: "Edit",
-      onClick: onEdit,
+      onClick: (game) => onEdit(game.id),
     },
     {
       label: "Delete",
-      onClick: onDelete,
+      onClick: (game) => onDelete(game.id),
       variant: "destructive",
     },
   ];

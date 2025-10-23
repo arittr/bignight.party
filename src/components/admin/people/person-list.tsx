@@ -9,13 +9,14 @@ export interface PersonListItem {
   role?: string | null;
   worksCount: number;
   nominationsCount: number;
+  [key: string]: unknown;
 }
 
 export interface PersonListProps {
   people: PersonListItem[];
-  onView?: (person: PersonListItem) => void;
-  onEdit?: (person: PersonListItem) => void;
-  onDelete?: (person: PersonListItem) => void;
+  onView?: (personId: string) => void;
+  onEdit?: (personId: string) => void;
+  onDelete?: (personId: string) => void;
   className?: string;
   filterValue?: string;
   onFilterChange?: (value: string) => void;
@@ -60,19 +61,19 @@ export function PersonList({
   if (onView) {
     rowActions.push({
       label: "View",
-      onClick: onView,
+      onClick: (person) => onView(person.id),
     });
   }
   if (onEdit) {
     rowActions.push({
       label: "Edit",
-      onClick: onEdit,
+      onClick: (person) => onEdit(person.id),
     });
   }
   if (onDelete) {
     rowActions.push({
       label: "Delete",
-      onClick: onDelete,
+      onClick: (person) => onDelete(person.id),
       variant: "destructive",
     });
   }
