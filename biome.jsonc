@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.2/schema.json",
   "assist": {
     "actions": {
       "source": {
@@ -29,7 +29,9 @@
       "!coverage",
       "!.turbo",
       "!.vercel",
-      "!.worktrees"
+      "!.worktrees",
+      "!**/*.gen.ts",
+      "!**/*.generated.ts"
     ]
   },
   "formatter": {
@@ -100,17 +102,16 @@
       },
       "nursery": {
         "noNextAsyncClientComponent": "error",
+        "useExhaustiveSwitchCases": "error"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "error",
         "noSecrets": {
           "level": "info",
           "options": {
             "entropyThreshold": 60
           }
         },
-        "useExhaustiveSwitchCases": "error",
-        "useReactFunctionComponents": "error"
-      },
-      "security": {
-        "noDangerouslySetInnerHtml": "error",
         "recommended": true
       },
       "style": {
@@ -147,7 +148,8 @@
             ],
             "strictCase": false
           }
-        }
+        },
+        "useReactFunctionComponents": "error"
       },
       "suspicious": {
         "noConsole": "warn",
@@ -192,7 +194,7 @@
       "includes": ["src/**/__tests__/**", "src/**/__mocks__/**", "tests/**"],
       "linter": {
         "rules": {
-          "nursery": {
+          "security": {
             "noSecrets": "off"
           },
           "suspicious": {
