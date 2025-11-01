@@ -293,7 +293,7 @@ This will update most cases automatically. Manual review required for complex ca
 - All components are Server Components by default
 - Can directly call services, models, or fetch data
 - Can use async/await for data fetching
-- Can use server actions in form `action` prop
+- Can call serverClient (oRPC) for data fetching and mutations
 - **CANNOT** use event handlers (onClick, onChange, onSubmit function)
 - **CANNOT** use React hooks (useState, useEffect, useContext)
 - **CANNOT** use browser APIs (window, document, localStorage)
@@ -406,13 +406,21 @@ export function TypeFilter() {
 }
 ```
 
-### Pattern: Inline Server Action Wrappers
+### Pattern: Inline Form Actions for oRPC Mutations
 
-When using form actions in Server Components, extract FormData and call centralized actions:
+When using form actions in Server Components, extract FormData and call oRPC procedures via serverClient:
 
 ```typescript
 // src/app/(admin)/admin/works/[id]/page.tsx
+import { serverClient } from '@/lib/api/server-client'
+import { requireValidatedSession } from '@/lib/auth/config'
+
+type Props = {
+  params: Promise<{ id: string }>
+}
+
 export default async function WorkDetailPage({ params }: Props) {
+  await requireValidatedSession()
   const { id } = await params;
 
   return (
@@ -425,8 +433,8 @@ export default async function WorkDetailPage({ params }: Props) {
         const type = formData.get("type");
         const year = formData.get("year");
 
-        // Call centralized next-safe-action action
-        await updateWorkAction({
+        // Call oRPC procedure via serverClient (no HTTP overhead)
+        await serverClient.admin.updateWork({
           id,
           ...(title && { title: title as string }),
           ...(type && { type: type as WorkType }),
@@ -445,29 +453,38 @@ export default async function WorkDetailPage({ params }: Props) {
 
 **Why this pattern:**
 - Keeps form handling colocated with UI
-- Still uses centralized next-safe-action for validation
-- Inline wrapper only extracts FormData and calls validated action
+- serverClient calls oRPC procedures directly (no HTTP overhead)
+- Inline wrapper only extracts FormData and validates before calling
 - Simple mutations without redirects or complex error handling
 
-### Pattern: Standalone Server Actions for Redirects
+### Pattern: Server Actions for Redirects
 
-**IMPORTANT:** If you need to call `redirect()`, use a standalone server action function, NOT an inline form action.
+**IMPORTANT:** If you need to call `redirect()`, use a standalone server action function.
 
 ```typescript
 // src/app/(admin)/admin/works/[id]/page.tsx
+import { serverClient } from '@/lib/api/server-client'
+import { requireValidatedSession } from '@/lib/auth/config'
+import { redirect } from 'next/navigation'
+
+type Props = {
+  params: Promise<{ id: string }>
+}
+
 export default async function WorkDetailPage({ params }: Props) {
+  await requireValidatedSession()
   const { id } = await params;
-  const work = await workModel.findById(id);
+  const work = await serverClient.admin.getWork({ id });
 
   // Standalone server action for delete with redirect
   async function handleDelete() {
     "use server";
 
     try {
-      await deleteWorkAction({ id });
+      await serverClient.admin.deleteWork({ id });
       redirect("/admin/works"); // ✅ redirect() in standalone function
     } catch (error) {
-      // Foreign key constraint error will be caught here
+      // Error handling
       throw error;
     }
   }
@@ -480,7 +497,7 @@ export default async function WorkDetailPage({ params }: Props) {
       <form action={async (formData: FormData) => {
         "use server";
         const title = formData.get("title");
-        await updateWorkAction({ id, title: title as string });
+        await serverClient.admin.updateWork({ id, title: title as string });
         // ✅ No redirect - page stays on same route
       }}>
         <input name="title" defaultValue={work.title} />
@@ -500,7 +517,7 @@ export default async function WorkDetailPage({ params }: Props) {
 
 **Why redirects need standalone functions:**
 - Next.js redirect() must be at the top level of a server action
-- Inline form actions can't reliably handle redirects
+- oRPC calls via serverClient don't interfere with redirect()
 - Standalone functions provide proper error boundaries
 - Easier to test and reason about
 
@@ -1507,83 +1524,92 @@ router.push(routes.admin.events.detail(eventId));
 
 ---
 
-## Required Pattern: next-safe-action
+## Required Pattern: oRPC Contract-First API
 
-**When:** ALL server actions without exception
+**When:** ALL remote procedure calls (mutations and queries)
 
 **Why:**
-- Automatic input validation with Zod
-- Type-safe middleware (auth, logging)
-- Consistent error handling
-- Input/output type inference
+- Type-safe end-to-end (TypeScript on client and server)
+- Automatic input validation with Zod in contracts
+- No HTTP overhead in Server Components (serverClient)
+- React Query integration in Client Components
+- OpenRPC standard for API contracts
 
-### Setup
+### Contract Definition
 
 ```typescript
-// src/lib/actions/safe-action.ts
-import { createSafeActionClient } from 'next-safe-action'
-import { auth } from '@/lib/auth/config'
+// src/lib/api/contracts/pick.ts
+import { z } from 'zod'
 
-// Base action client
-export const action = createSafeActionClient()
-
-// Authenticated action client
-export const authenticatedAction = createSafeActionClient({
-  async middleware() {
-    const session = await auth()
-    if (!session?.user) {
-      throw new Error('Unauthorized')
-    }
-    return { userId: session.user.id, userRole: session.user.role }
-  },
+export const submitPickContract = z.object({
+  gameId: z.string(),
+  categoryId: z.string(),
+  nominationId: z.string(),
 })
 
-// Admin action client
-export const adminAction = createSafeActionClient({
-  async middleware() {
-    const session = await auth()
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      throw new Error('Forbidden')
-    }
-    return { userId: session.user.id }
-  },
-})
+export type SubmitPickInput = z.infer<typeof submitPickContract>
+export type SubmitPickOutput = { success: boolean; pick: Pick }
 ```
 
-### Usage
+### oRPC Procedure
 
 ```typescript
-// src/lib/actions/pick-actions.ts
-import { authenticatedAction } from './safe-action'
-import { pickSchema } from '@/schemas/pick-schema'
+// src/lib/api/routers/pick.ts
+import { authenticatedProcedure } from '@/lib/api/procedures'
+import { submitPickContract } from '@/lib/api/contracts/pick'
 import { pickService } from '@/lib/services/pick-service'
 
-export const submitPickAction = authenticatedAction
-  .schema(pickSchema)
-  .action(async ({ parsedInput, ctx }) => {
-    // parsedInput is fully validated and typed
-    // ctx.userId is available from middleware
-    return pickService.submitPick(ctx.userId, parsedInput)
+export const pickRouter = {
+  submit: authenticatedProcedure.handler(async ({ input, ctx }) => {
+    // input is validated by procedure's contract layer
+    // ctx.userId comes from auth middleware
+    const pick = await pickService.submitPick(ctx.userId, input)
+    return { success: true, pick }
   })
+}
 ```
 
+### Usage in Server Components
+
 ```typescript
-// In a client component
+// In a Server Component
+import { serverClient } from '@/lib/api/server-client'
+import { requireValidatedSession } from '@/lib/auth/config'
+
+export default async function PickPage() {
+  const session = await requireValidatedSession()
+
+  // Call oRPC procedure directly (no HTTP)
+  const result = await serverClient.pick.submit({
+    gameId: '123',
+    categoryId: '456',
+    nominationId: '789',
+  })
+
+  return <div>Pick submitted: {result.success}</div>
+}
+```
+
+### Usage in Client Components
+
+```typescript
+// In a Client Component
 'use client'
-import { useAction } from 'next-safe-action/hooks'
-import { submitPickAction } from '@/lib/actions/pick-actions'
+import { orpc } from '@/lib/api/client'
 
 export function PickForm() {
-  const { execute, status, data, serverError } = useAction(submitPickAction)
+  // Use React Query integration
+  const mutation = orpc.pick.submit.useMutation()
 
   const handleSubmit = async (formData: FormData) => {
-    const result = await execute({
+    const result = await mutation.mutateAsync({
+      gameId: formData.get('gameId'),
       categoryId: formData.get('categoryId'),
-      nomineeId: formData.get('nomineeId'),
+      nominationId: formData.get('nominationId'),
     })
 
-    if (result?.serverError) {
-      // Handle error
+    if (result?.success) {
+      // Handle success
     }
   }
 
@@ -2103,7 +2129,7 @@ export const submitPickAction = authenticatedAction
 
 ## Migration Guides
 
-### From raw server actions to next-safe-action
+### From raw server actions to oRPC procedures
 
 **Before:**
 ```typescript
@@ -2112,7 +2138,7 @@ export async function updatePick(data: unknown) {
   const session = await auth()
   if (!session) throw new Error('Unauthorized')
 
-  // Unsafe!
+  // Unsafe - no validation!
   return prisma.pick.update({
     where: { id: data.id },
     data: data,
@@ -2122,11 +2148,16 @@ export async function updatePick(data: unknown) {
 
 **After:**
 ```typescript
-export const updatePickAction = authenticatedAction
-  .schema(pickSchema)
-  .action(async ({ parsedInput, ctx }) => {
-    return pickService.updatePick(ctx.userId, parsedInput)
+// src/lib/api/routers/pick.ts
+export const pickRouter = {
+  update: authenticatedProcedure.handler(async ({ input, ctx }) => {
+    // input is validated by contract layer
+    return pickService.updatePick(ctx.userId, input)
   })
+}
+
+// In a Server Component
+const result = await serverClient.pick.update(input)
 ```
 
 ### From switch to ts-pattern
@@ -2162,12 +2193,22 @@ function getMessage(status: EventStatus) {
 
 When reviewing PRs, verify:
 
-### Server Actions
-- [ ] Uses `createSafeActionClient()`
-- [ ] Has Zod schema validation
-- [ ] Returns typed result
-- [ ] Uses middleware for auth/permissions
-- [ ] Calls service layer (not models directly)
+### oRPC Procedures
+- [ ] Procedures have proper Zod contract validation
+- [ ] Contract layer defines input/output types
+- [ ] Procedures call service layer (not models directly)
+- [ ] Authentication via authenticatedProcedure or adminProcedure
+- [ ] Return types match contract
+
+### Server Components
+- [ ] Uses serverClient from `@/lib/api/server-client`
+- [ ] Calls oRPC procedures directly (not HTTP)
+- [ ] No form actions importing from deleted `@/lib/actions/`
+
+### Client Components
+- [ ] Uses orpc from `@/lib/api/client`
+- [ ] Uses React Query mutations (`.useMutation()`)
+- [ ] Proper error handling with toast notifications
 
 ### Pattern Matching
 - [ ] All discriminated unions use `ts-pattern`
@@ -2180,7 +2221,7 @@ When reviewing PRs, verify:
 - [ ] No business logic in models
 - [ ] No direct Prisma queries in services
 - [ ] No `next/*` imports in services/models
-- [ ] Actions only call services, not models
+- [ ] oRPC routers only call services, not models directly
 
 ### Type Safety
 - [ ] No `any` types (Biome enforces this)
