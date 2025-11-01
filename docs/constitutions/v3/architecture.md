@@ -6,7 +6,7 @@
 ┌─────────────────────────────────────┐
 │        UI Components (RSC)          │
 ├─────────────────────────────────────┤
-│       Server Actions / API          │
+│      oRPC Procedures (API)          │
 ├─────────────────────────────────────┤
 │       Services (Business Logic)     │
 ├─────────────────────────────────────┤
@@ -21,15 +21,15 @@
 ### UI Components
 - React Server Components and Client Components
 - Forms, displays, user interactions
-- Call Server Actions for mutations
+- Call oRPC procedures for mutations (via serverClient in RSC, orpc client in client components)
 - Subscribe to WebSocket events for real-time updates
 
-### Server Actions
-- Entry points for mutations
+### oRPC Procedures
+- Type-safe remote procedure calls
 - Authentication and authorization checks
-- Input validation with Zod schemas
+- Input validation with Zod schemas (in contract layer)
 - Call Service layer for business logic
-- **Must use**: `next-safe-action` (see patterns.md)
+- **Architecture**: Contract-first API design with openRPC standard
 
 ### Services
 - Business logic and orchestration
@@ -78,18 +78,18 @@
 - ❌ `next/*`
 - ❌ Actions
 
-**Actions** (`src/lib/actions/`):
+**oRPC Procedures** (`src/lib/api/routers/`):
 - ✅ Services
-- ✅ `next-safe-action`
-- ✅ Schemas (`src/schemas/`)
-- ✅ Auth
-- ❌ Models directly
-- ❌ `@prisma/client`
+- ✅ oRPC contracts
+- ✅ Auth context
+- ✅ Models (for simple CRUD)
+- ❌ Direct Prisma imports (call models instead)
 
 **UI Components** (`src/components/`, `src/app/`):
-- ✅ Actions (via `useAction` in Client Components, or form `action` in Server Components)
-- ✅ Server Components can import services (read-only)
-- ✅ Client Components for interactivity ("use client" directive required)
+- ✅ serverClient from `@/lib/api/server-client` (Server Components only)
+- ✅ orpc from `@/lib/api/client` (Client Components only)
+- ✅ Server Components can call serverClient without HTTP overhead
+- ✅ Client Components can call orpc with React Query integration
 - ❌ Models
 - ❌ Direct Prisma
 - ❌ Event handlers in Server Components (see patterns.md)
@@ -121,10 +121,12 @@ bignight.party/
 │   │   ├── game/         # Game-specific components
 │   │   └── admin/        # Admin components
 │   ├── lib/
-│   │   ├── actions/      # Server Actions
-│   │   │   ├── pick-actions.ts
-│   │   │   ├── admin-actions.ts
-│   │   │   └── auth-actions.ts
+│   │   ├── api/         # oRPC API layer
+│   │   │   ├── routers/     # Domain routers (admin, auth, etc)
+│   │   │   ├── contracts/   # oRPC contracts (input/output types)
+│   │   │   ├── client.ts    # HTTP client for Client Components
+│   │   │   ├── server-client.ts  # Direct client for Server Components
+│   │   │   └── root.ts      # Root router definition
 │   │   ├── auth/
 │   │   │   └── config.ts # Auth.js configuration
 │   │   ├── db/
@@ -171,9 +173,9 @@ bignight.party/
 ```
 Admin marks winner
   ↓
-Server Action validates
+oRPC procedure receives call
   ↓
-Service updates database
+Service validates and updates database
   ↓
 Service emits WebSocket event
   ↓
@@ -502,8 +504,8 @@ ADMIN_EMAILS=admin@example.com,other-admin@example.com
 
 Before merging, verify:
 
-- [ ] All server actions use `next-safe-action`
-- [ ] All Zod schemas defined in `src/schemas/`
+- [ ] All oRPC procedures use proper contracts (input validation)
+- [ ] All Zod schemas defined in `src/lib/api/contracts/`
 - [ ] All pattern matching uses `ts-pattern`
 - [ ] All `.exhaustive()` called on matches
 - [ ] No Prisma imports outside `src/lib/models/`
@@ -512,16 +514,18 @@ Before merging, verify:
 - [ ] Services don't import `next/*`
 - [ ] Models contain no business logic
 - [ ] Protected pages use `requireValidatedSession()` not raw `auth()`
+- [ ] Server Components use serverClient from `@/lib/api/server-client`
+- [ ] Client Components use orpc from `@/lib/api/client`
 
 ### Prohibited Violations
 
 These patterns are **explicitly forbidden**:
 
 - ❌ Switch statements on discriminated unions
-- ❌ Raw server actions without validation
+- ❌ Direct Prisma calls in oRPC procedures (use models)
 - ❌ Prisma queries in service layer
 - ❌ Business logic in model layer
-- ❌ Direct database access from actions
+- ❌ Importing actions from `@/lib/actions/` (directory no longer exists)
 - ❌ `any` type anywhere (enforced by Biome)
 - ❌ Services importing `next/*`
 - ❌ Models importing anything except Prisma
