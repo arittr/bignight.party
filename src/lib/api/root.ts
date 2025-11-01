@@ -1,13 +1,14 @@
 import { publicProcedure } from "./procedures";
+import { adminRouter } from "./routers/admin";
 
 /**
  * Root router - combines all domain routers.
- * This is a placeholder that will be expanded as domain routers are added.
  */
 export const appRouter = {
   health: publicProcedure.handler(() => {
     return { status: "ok" };
   }),
+  admin: adminRouter,
 };
 
 /**

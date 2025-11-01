@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { deleteEventAction, updateEventAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as eventModel from "@/lib/models/event";
 import { routes } from "@/lib/routes";
 
-export default async function EventDetailPage({ params }: { params: { id: string } }) {
+export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireValidatedSession();
 
-  const event = await eventModel.findById(params.id);
+  const { id } = await params;
+  const event = await eventModel.findById(id);
 
   if (!event) {
     notFound();
@@ -22,10 +23,10 @@ export default async function EventDetailPage({ params }: { params: { id: string
     const description = formData.get("description") as string;
     const eventDate = formData.get("eventDate") as string;
 
-    await updateEventAction({
+    await serverClient.admin.updateEvent({
       description: description || undefined,
       eventDate: new Date(eventDate),
-      id: params.id,
+      id,
       name,
       slug,
     });
@@ -34,7 +35,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
   async function handleDeleteEvent() {
     "use server";
 
-    await deleteEventAction({ id: params.id });
+    await serverClient.admin.deleteEvent({ id });
     redirect(routes.admin.events.index());
   }
 

@@ -1,8 +1,7 @@
 import type { WorkType } from "@prisma/client";
 import { WorksManager } from "@/components/admin/works/works-manager";
-import { deleteWorkAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import { requireValidatedSession } from "@/lib/auth/config";
-import * as workModel from "@/lib/models/work";
 import { transformWorksToListItems } from "@/lib/utils/data-transforms";
 
 interface WorksPageProps {
@@ -17,17 +16,20 @@ export default async function WorksPage(props: WorksPageProps) {
   const searchParams = await props.searchParams;
   const typeFilter = searchParams.type as WorkType | undefined;
 
-  // Fetch works based on type filter
-  const works = typeFilter ? await workModel.findByType(typeFilter) : await workModel.findAll();
+  // Fetch works via oRPC server client (no HTTP overhead)
+  const allWorks = await serverClient.admin.listWorks();
+
+  // Apply type filter client-side (consider adding to contract if needed frequently)
+  const works = typeFilter ? allWorks.filter((w) => w.type === typeFilter) : allWorks;
 
   // Transform works to match WorkListItem interface using centralized utility
   const worksForManager = transformWorksToListItems(works);
 
-  // Server action wrapper for delete
+  // Server action wrapper for delete using oRPC
   async function handleDelete(workId: string) {
     "use server";
-    const result = await deleteWorkAction({ id: workId });
-    if (!result?.data?.success) {
+    const result = await serverClient.admin.deleteWork({ id: workId });
+    if (!result?.success) {
       throw new Error("Failed to delete work");
     }
   }
