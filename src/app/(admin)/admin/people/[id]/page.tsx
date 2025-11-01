@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { deletePersonAction, updatePersonAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as personModel from "@/lib/models/person";
 
@@ -21,7 +21,7 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
 
   async function handleUpdate(formData: FormData) {
     "use server";
-    await updatePersonAction({
+    await serverClient.admin.updatePerson({
       externalId: formData.get("externalId") as string | undefined,
       id: formData.get("id") as string,
       imageUrl: formData.get("imageUrl") as string | undefined,
@@ -32,13 +32,11 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
   async function handleDelete() {
     "use server";
     try {
-      const result = await deletePersonAction({ id });
-      if (result?.serverError) {
-        // Foreign key constraint error - person has nominations
-        return;
-      }
+      await serverClient.admin.deletePerson({ id });
       redirect("/admin/people");
-    } catch (_error) {}
+    } catch (_error) {
+      // Foreign key constraint error - person has nominations
+    }
   }
 
   return (

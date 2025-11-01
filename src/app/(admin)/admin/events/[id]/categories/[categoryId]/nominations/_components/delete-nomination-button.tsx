@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteNominationAction } from "@/lib/actions/admin-actions";
+import { orpc } from "@/lib/api/client";
 
 type DeleteNominationButtonProps = {
   nominationId: string;
@@ -11,9 +11,11 @@ export function DeleteNominationButton({
   nominationId,
   nominationText,
 }: DeleteNominationButtonProps) {
+  const mutation = (orpc.admin.deleteNomination as any).useMutation?.();
+
   async function handleDelete(_formData: FormData) {
     if (confirm(`Are you sure you want to delete: "${nominationText}"?`)) {
-      await deleteNominationAction({ id: nominationId });
+      mutation.mutate({ id: nominationId });
     }
   }
 
