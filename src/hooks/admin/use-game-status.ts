@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 import { match } from "ts-pattern";
 import { toast } from "@/components/admin/shared/toast";
@@ -57,7 +58,7 @@ export function useGameStatus({
   const [currentStatus, setCurrentStatus] = useState<GameStatus>(initialStatus);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const updateGameMutation = (orpc.admin.updateGame as any).useMutation?.();
+  const updateGameMutation = useMutation(orpc.admin.updateGame.mutationOptions());
 
   /**
    * Get available transitions from current status using ts-pattern

@@ -3,6 +3,7 @@
 import { createORPCClient } from "@orpc/client";
 import { LinkFetchClient } from "@orpc/client/fetch";
 import { StandardRPCLink } from "@orpc/client/standard";
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import type { AppRouter } from "./root";
 
 /**
@@ -15,9 +16,12 @@ import type { AppRouter } from "./root";
  * ```tsx
  * "use client";
  * import { orpc } from "@/lib/api/client";
+ * import { useMutation } from "@tanstack/react-query";
  *
  * export function JoinGameButton({ code }: { code: string }) {
- *   const mutation = orpc.game.join.useMutation();
+ *   const mutation = useMutation(
+ *     orpc.game.join.mutationOptions()
+ *   );
  *
  *   return (
  *     <button onClick={() => mutation.mutate({ code })}>
@@ -41,9 +45,11 @@ const link = new StandardRPCLink(fetchClient, {
   url: `${getBaseUrl()}/api/rpc`,
 });
 
-// Type assertion needed because oRPC infers types at runtime
-// The server-side client will provide proper type safety
-export const orpc = createORPCClient(link) as any as AppRouter;
+// Create base client
+const baseClient = createORPCClient<AppRouter>(link);
+
+// Create TanStack Query utilities - type is inferred from baseClient
+export const orpc = createTanstackQueryUtils(baseClient);
 
 // Alias for clarity - use 'api' to call oRPC procedures
 export const api = orpc;

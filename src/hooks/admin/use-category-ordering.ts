@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { toast } from "@/components/admin/shared/toast";
 import { orpc } from "@/lib/api/client";
@@ -63,7 +64,7 @@ export function useCategoryOrdering({
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const updateCategoryMutation = (orpc.admin.updateCategory as any).useMutation?.();
+  const updateCategoryMutation = useMutation(orpc.admin.updateCategory.mutationOptions());
 
   const reorder = useCallback((fromIndex: number, toIndex: number) => {
     setCategories((prev) => {

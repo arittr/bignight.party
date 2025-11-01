@@ -1,4 +1,3 @@
-import { publicProcedure } from "./procedures";
 import { adminRouter } from "./routers/admin";
 import { authRouter } from "./routers/auth";
 import { gameRouter } from "./routers/game";
@@ -6,11 +5,11 @@ import { pickRouter } from "./routers/pick";
 
 /**
  * Root router - combines all domain routers.
+ *
+ * Note: All procedures are nested under domain routers to ensure
+ * proper type inference with TanStack Query integration.
  */
 export const appRouter = {
-  health: publicProcedure.handler(() => {
-    return { status: "ok" };
-  }),
   auth: authRouter,
   admin: adminRouter,
   game: gameRouter,

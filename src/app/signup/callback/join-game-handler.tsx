@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { orpc } from "@/lib/api/client";
@@ -17,7 +18,7 @@ export function JoinGameHandler({ accessCode }: JoinGameHandlerProps) {
   const [gameId, setGameId] = useState<string | null>(null);
   const [shouldJoin, setShouldJoin] = useState(false);
 
-  const resolveCodeMutation = (orpc.game.resolveAccessCode as any).useMutation?.({
+  const resolveCodeMutation = useMutation(orpc.game.resolveAccessCode.mutationOptions({
     onError: () => {
       setError("Invalid invite code");
     },
@@ -39,9 +40,9 @@ export function JoinGameHandler({ accessCode }: JoinGameHandlerProps) {
       // Otherwise, trigger join
       setShouldJoin(true);
     },
-  });
+  }));
 
-  const joinGameMutation = (orpc.game.join as any).useMutation?.({
+  const joinGameMutation = useMutation(orpc.game.join.mutationOptions({
     onError: () => {
       setError("Failed to join game");
     },
@@ -51,7 +52,7 @@ export function JoinGameHandler({ accessCode }: JoinGameHandlerProps) {
         router.push(routes.dashboard());
       }, 2000);
     },
-  });
+  }));
 
   // Resolve the access code on mount
   useEffect(() => {

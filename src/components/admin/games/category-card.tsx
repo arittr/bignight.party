@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { orpc } from "@/lib/api/client";
 
@@ -29,8 +30,8 @@ export function CategoryCard({ category, nominations }: CategoryCardProps) {
     category.winnerNominationId ?? ""
   );
 
-  const markWinnerMutation = (orpc.admin.markWinner as any).useMutation?.();
-  const clearWinnerMutation = (orpc.admin.clearWinner as any).useMutation?.();
+  const markWinnerMutation = useMutation(orpc.admin.markWinner.mutationOptions());
+  const clearWinnerMutation = useMutation(orpc.admin.clearWinner.mutationOptions());
 
   const isLoading = markWinnerMutation.isPending || clearWinnerMutation.isPending;
 
