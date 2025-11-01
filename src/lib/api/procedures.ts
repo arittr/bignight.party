@@ -1,5 +1,5 @@
 import { os } from "@orpc/server";
-import { auth } from "@/lib/auth/config";
+import { requireValidatedSessionOrThrow } from "@/lib/auth/config";
 
 /**
  * Context type for all procedures.
@@ -19,14 +19,11 @@ export const publicProcedure = os;
 
 /**
  * Authenticated procedure - Requires valid session.
- * Validates JWT and provides user context (userId, userRole, userEmail).
+ * Validates JWT AND user exists in database (protects against stale JWTs).
+ * Provides user context (userId, userRole, userEmail).
  */
 export const authenticatedProcedure = publicProcedure.use(async ({ context, next }) => {
-  const session = await auth();
-
-  if (!session?.user) {
-    throw new Error("Unauthorized: You must be logged in to perform this action");
-  }
+  const session = await requireValidatedSessionOrThrow();
 
   return next({
     context: {
@@ -39,14 +36,10 @@ export const authenticatedProcedure = publicProcedure.use(async ({ context, next
 
 /**
  * Admin procedure - Requires ADMIN role.
- * Validates session and checks for ADMIN role before allowing access.
+ * Validates session, checks user exists in database, and verifies ADMIN role.
  */
 export const adminProcedure = publicProcedure.use(async ({ context, next }) => {
-  const session = await auth();
-
-  if (!session?.user) {
-    throw new Error("Unauthorized: You must be logged in to perform this action");
-  }
+  const session = await requireValidatedSessionOrThrow();
 
   if (session.user.role !== "ADMIN") {
     throw new Error("Forbidden: This action requires admin privileges");
