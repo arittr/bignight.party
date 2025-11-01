@@ -1,9 +1,8 @@
 "use client";
 
-import { useAction } from "next-safe-action/hooks";
 import { useCallback, useState } from "react";
 import { toast } from "@/components/admin/shared/toast";
-import { createNominationAction, deleteNominationAction } from "@/lib/actions/admin-actions";
+import { orpc } from "@/lib/api/client";
 
 export interface NominationItem {
   id: string;
@@ -65,8 +64,8 @@ export function useNominationManager({
   const [nominations, setNominations] = useState<NominationItem[]>(initialNominations);
   const [isLoading, setIsLoading] = useState(false);
 
-  const createAction = useAction(createNominationAction);
-  const deleteAction = useAction(deleteNominationAction);
+  const createNominationMutation = (orpc.admin.createNomination as any).useMutation?.();
+  const deleteNominationMutation = (orpc.admin.deleteNomination as any).useMutation?.();
 
   const canAddMore = nominations.length < maxNominations;
 
@@ -87,28 +86,15 @@ export function useNominationManager({
 
   const executeAddNomination = useCallback(
     async (data: Record<string, unknown>) => {
-      // Type assertion: data will be validated by the action's schema
-      const result = await createAction.executeAsync({
+      const nomination = await createNominationMutation.mutateAsync({
         categoryId,
         ...data,
-      } as never);
+      } as any);
 
-      if (result?.serverError) {
-        throw new Error(result.serverError);
-      }
-
-      if (result?.validationErrors) {
-        const errorMessage = Object.values(result.validationErrors).flat().join(", ");
-        throw new Error(errorMessage);
-      }
-
-      if (result?.data) {
-        const nomination = result.data;
-        setNominations((prev) => [...prev, nomination]);
-        toast.success("Nomination added successfully");
-      }
+      setNominations((prev) => [...prev, nomination as any]);
+      toast.success("Nomination added successfully");
     },
-    [categoryId, createAction]
+    [categoryId, createNominationMutation]
   );
 
   const addNomination = useCallback(
@@ -141,11 +127,7 @@ export function useNominationManager({
         // Optimistic update
         setNominations((prev) => prev.filter((nom) => nom.id !== id));
 
-        const result = await deleteAction.executeAsync({ id });
-
-        if (result?.serverError) {
-          throw new Error(result.serverError);
-        }
+        await deleteNominationMutation.mutateAsync({ id });
 
         toast.success("Nomination removed successfully");
       } catch (error) {
@@ -159,7 +141,7 @@ export function useNominationManager({
         setIsLoading(false);
       }
     },
-    [nominations, deleteAction]
+    [nominations, deleteNominationMutation]
   );
 
   return {

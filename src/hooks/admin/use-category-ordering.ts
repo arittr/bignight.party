@@ -1,9 +1,8 @@
 "use client";
 
-import { useAction } from "next-safe-action/hooks";
 import { useCallback, useState } from "react";
 import { toast } from "@/components/admin/shared/toast";
-import { updateCategoryAction } from "@/lib/actions/admin-actions";
+import { orpc } from "@/lib/api/client";
 
 export interface CategoryOrderItem {
   id: string;
@@ -64,7 +63,7 @@ export function useCategoryOrdering({
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const updateAction = useAction(updateCategoryAction);
+  const updateCategoryMutation = (orpc.admin.updateCategory as any).useMutation?.();
 
   const reorder = useCallback((fromIndex: number, toIndex: number) => {
     setCategories((prev) => {
@@ -89,19 +88,13 @@ export function useCategoryOrdering({
     try {
       // Save each category's new order
       const updatePromises = categories.map((category) =>
-        updateAction.executeAsync({
+        updateCategoryMutation.mutateAsync({
           id: category.id,
           order: category.order,
         })
       );
 
-      const results = await Promise.all(updatePromises);
-
-      // Check for errors
-      const errors = results.filter((r) => r?.serverError || r?.validationErrors);
-      if (errors.length > 0) {
-        throw new Error("Failed to update some categories");
-      }
+      await Promise.all(updatePromises);
 
       setIsDirty(false);
       toast.success("Category order saved successfully");
@@ -116,7 +109,7 @@ export function useCategoryOrdering({
     } finally {
       setIsSaving(false);
     }
-  }, [categories, updateAction, onOrderSaved]);
+  }, [categories, updateCategoryMutation, onOrderSaved]);
 
   const reset = useCallback(() => {
     setCategories(originalCategories);

@@ -1,10 +1,9 @@
 "use client";
 
-import { useAction } from "next-safe-action/hooks";
 import { useCallback, useMemo, useState } from "react";
 import { match } from "ts-pattern";
 import { toast } from "@/components/admin/shared/toast";
-import { updateGameAction } from "@/lib/actions/admin-actions";
+import { orpc } from "@/lib/api/client";
 
 export type GameStatus = "SETUP" | "OPEN" | "LIVE" | "COMPLETED";
 
@@ -58,7 +57,7 @@ export function useGameStatus({
   const [currentStatus, setCurrentStatus] = useState<GameStatus>(initialStatus);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const updateAction = useAction(updateGameAction);
+  const updateGameMutation = (orpc.admin.updateGame as any).useMutation?.();
 
   /**
    * Get available transitions from current status using ts-pattern
@@ -120,19 +119,10 @@ export function useGameStatus({
    */
   const executeTransition = useCallback(
     async (targetStatus: GameStatus, originalStatus: GameStatus) => {
-      const result = await updateAction.executeAsync({
+      await updateGameMutation.mutateAsync({
         id: gameId,
         status: targetStatus,
       });
-
-      if (result?.serverError) {
-        throw new Error(result.serverError);
-      }
-
-      if (result?.validationErrors) {
-        const errorMessage = Object.values(result.validationErrors).flat().join(", ");
-        throw new Error(errorMessage);
-      }
 
       const successMessage = getTransitionMessage(originalStatus, targetStatus);
       toast.success(successMessage);
@@ -141,7 +131,7 @@ export function useGameStatus({
         onStatusChanged(targetStatus);
       }
     },
-    [gameId, updateAction, getTransitionMessage, onStatusChanged]
+    [gameId, updateGameMutation, getTransitionMessage, onStatusChanged]
   );
 
   /**

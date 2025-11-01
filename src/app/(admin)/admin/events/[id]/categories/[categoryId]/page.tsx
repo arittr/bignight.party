@@ -1,10 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  deleteCategoryAction,
-  deleteNominationAction,
-  updateCategoryAction,
-} from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import * as categoryModel from "@/lib/models/category";
 import * as nominationModel from "@/lib/models/nomination";
 
@@ -34,7 +30,7 @@ export default async function CategoryDetailPage(props: Props) {
     const points = Number.parseInt(formData.get("points") as string, 10);
     const isRevealed = formData.get("isRevealed") === "on";
 
-    await updateCategoryAction({
+    await serverClient.admin.updateCategory({
       id: params.categoryId,
       isRevealed,
       name,
@@ -46,14 +42,14 @@ export default async function CategoryDetailPage(props: Props) {
   async function handleDelete() {
     "use server";
 
-    await deleteCategoryAction({ id: params.categoryId });
+    await serverClient.admin.deleteCategory({ id: params.categoryId });
     redirect(`/admin/events/${params.id}`);
   }
 
   async function handleDeleteNomination(nominationId: string) {
     "use server";
 
-    await deleteNominationAction({ id: nominationId });
+    await serverClient.admin.deleteNomination({ id: nominationId });
   }
 
   return (

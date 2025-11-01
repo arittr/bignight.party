@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createCategoryAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import * as eventModel from "@/lib/models/event";
 
 type Props = {
@@ -23,7 +23,7 @@ export default async function NewCategoryPage(props: Props) {
     const points = Number.parseInt(formData.get("points") as string, 10);
     const isRevealed = formData.get("isRevealed") === "on";
 
-    const result = await createCategoryAction({
+    await serverClient.admin.createCategory({
       eventId: params.id,
       isRevealed,
       name,
@@ -31,9 +31,7 @@ export default async function NewCategoryPage(props: Props) {
       points,
     });
 
-    if (result?.data) {
-      redirect(`/admin/events/${params.id}`);
-    }
+    redirect(`/admin/events/${params.id}`);
   }
 
   return (

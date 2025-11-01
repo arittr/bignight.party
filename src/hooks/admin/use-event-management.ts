@@ -1,13 +1,8 @@
 "use client";
 
-import { useAction } from "next-safe-action/hooks";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "@/components/admin/shared/toast";
-import {
-  createEventAction,
-  deleteEventAction,
-  updateEventAction,
-} from "@/lib/actions/admin-actions";
+import { orpc } from "@/lib/api/client";
 
 export interface EventListItem {
   id: string;
@@ -63,9 +58,9 @@ export function useEventManagement({
   const [events, setEvents] = useState<EventListItem[]>(initialEvents);
   const [isLoading, setIsLoading] = useState(false);
 
-  const createAction = useAction(createEventAction);
-  const updateAction = useAction(updateEventAction);
-  const deleteAction = useAction(deleteEventAction);
+  const createEventMutation = (orpc.admin.createEvent as any).useMutation?.();
+  const updateEventMutation = (orpc.admin.updateEvent as any).useMutation?.();
+  const deleteEventMutation = (orpc.admin.deleteEvent as any).useMutation?.();
 
   // Sync with initial events when they change
   useEffect(() => {
@@ -78,47 +73,34 @@ export function useEventManagement({
     throw error;
   }, []);
 
-  const createEvent = useCallback(
+  const handleCreateEvent = useCallback(
     async (data: Record<string, unknown>) => {
       setIsLoading(true);
 
       try {
-        // Type assertion: data will be validated by the action's schema
-        const result = await createAction.executeAsync(data as never);
+        const event = await createEventMutation.mutateAsync(data as any);
 
-        if (result?.serverError) {
-          throw new Error(result.serverError);
-        }
+        setEvents((prev) => [
+          ...prev,
+          {
+            categoryCount: 0,
+            eventDate: event.eventDate,
+            id: event.id,
+            name: event.name,
+          },
+        ]);
 
-        if (result?.validationErrors) {
-          const errorMessage = Object.values(result.validationErrors).flat().join(", ");
-          throw new Error(errorMessage);
-        }
-
-        if (result?.data) {
-          const event = result.data;
-          setEvents((prev) => [
-            ...prev,
-            {
-              categoryCount: 0,
-              eventDate: event.eventDate,
-              id: event.id,
-              name: event.name,
-            },
-          ]);
-
-          toast.success("Event created successfully");
-        }
+        toast.success("Event created successfully");
       } catch (error) {
         handleActionError(error, "Failed to create event");
       } finally {
         setIsLoading(false);
       }
     },
-    [createAction, handleActionError]
+    [createEventMutation, handleActionError]
   );
 
-  const updateEvent = useCallback(
+  const handleUpdateEvent = useCallback(
     async (id: string, data: Record<string, unknown>) => {
       setIsLoading(true);
 
@@ -138,17 +120,7 @@ export function useEventManagement({
           )
         );
 
-        // Type assertion: data will be validated by the action's schema
-        const result = await updateAction.executeAsync({ id, ...data } as never);
-
-        if (result?.serverError) {
-          throw new Error(result.serverError);
-        }
-
-        if (result?.validationErrors) {
-          const errorMessage = Object.values(result.validationErrors).flat().join(", ");
-          throw new Error(errorMessage);
-        }
+        await updateEventMutation.mutateAsync({ id, ...data } as any);
 
         toast.success("Event updated successfully");
       } catch (error) {
@@ -162,10 +134,10 @@ export function useEventManagement({
         setIsLoading(false);
       }
     },
-    [events, updateAction]
+    [events, updateEventMutation]
   );
 
-  const deleteEvent = useCallback(
+  const handleDeleteEvent = useCallback(
     async (id: string) => {
       setIsLoading(true);
 
@@ -176,11 +148,7 @@ export function useEventManagement({
         // Optimistic update
         setEvents((prev) => prev.filter((event) => event.id !== id));
 
-        const result = await deleteAction.executeAsync({ id });
-
-        if (result?.serverError) {
-          throw new Error(result.serverError);
-        }
+        await deleteEventMutation.mutateAsync({ id });
 
         toast.success("Event deleted successfully");
       } catch (error) {
@@ -194,7 +162,7 @@ export function useEventManagement({
         setIsLoading(false);
       }
     },
-    [events, deleteAction]
+    [events, deleteEventMutation]
   );
 
   const refreshEvents = useCallback((newEvents: EventListItem[]) => {
@@ -202,11 +170,11 @@ export function useEventManagement({
   }, []);
 
   return {
-    createEvent,
-    deleteEvent,
+    createEvent: handleCreateEvent,
+    deleteEvent: handleDeleteEvent,
     events,
     isLoading,
     refreshEvents,
-    updateEvent,
+    updateEvent: handleUpdateEvent,
   };
 }
