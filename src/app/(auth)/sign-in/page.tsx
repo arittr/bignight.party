@@ -1,17 +1,37 @@
 "use client";
 
-import { useAction } from "next-safe-action/hooks";
 import { useId, useState } from "react";
-import { signInAction } from "@/lib/actions/auth-actions";
+import { api } from "@/lib/api/client";
 
 export default function SignInPage() {
   const emailId = useId();
   const [email, setEmail] = useState("");
-  const { execute, status } = useAction(signInAction, {
-    onSuccess: () => {
-      setEmail("");
-    },
-  });
+  const [status, setStatus] = useState<"idle" | "executing" | "hasSucceeded" | "hasErrored">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+  const mutation = (api.auth.signIn as any).useMutation?.() || null;
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus("executing");
+    setErrorMessage("");
+
+    try {
+      const result = await (api.auth.signIn as any)({
+        email,
+      });
+
+      if (result.success) {
+        setEmail("");
+        setStatus("hasSucceeded");
+      } else {
+        setStatus("hasErrored");
+        setErrorMessage(result.message || "Failed to send magic link. Please try again.");
+      }
+    } catch (error) {
+      setStatus("hasErrored");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to send magic link. Please try again.");
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -25,13 +45,7 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <form
-          className="mt-8 space-y-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            execute({ email });
-          }}
-        >
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="-space-y-px rounded-md shadow-sm">
             <div>
               <label className="sr-only" htmlFor={emailId}>
@@ -62,7 +76,7 @@ export default function SignInPage() {
           {status === "hasErrored" && (
             <div className="rounded-md bg-red-50 p-4">
               <p className="text-sm font-medium text-red-800">
-                Failed to send magic link. Please try again.
+                {errorMessage}
               </p>
             </div>
           )}
