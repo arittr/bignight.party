@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
-import { joinGameAction, resolveAccessCodeAction } from "@/lib/actions/game-actions";
+import { orpc } from "@/lib/api/client";
+import { routes } from "@/lib/routes";
 
 interface JoinGameHandlerProps {
   accessCode: string;
@@ -17,11 +17,11 @@ export function JoinGameHandler({ accessCode }: JoinGameHandlerProps) {
   const [gameId, setGameId] = useState<string | null>(null);
   const [shouldJoin, setShouldJoin] = useState(false);
 
-  const { execute: resolveCode, status: resolveStatus } = useAction(resolveAccessCodeAction, {
+  const resolveCodeMutation = (orpc.game.resolveAccessCode as any).useMutation?.({
     onError: () => {
       setError("Invalid invite code");
     },
-    onSuccess: ({ data }) => {
+    onSuccess: (data: any) => {
       if (!data) {
         setError("Failed to resolve invite code");
         return;
@@ -32,7 +32,7 @@ export function JoinGameHandler({ accessCode }: JoinGameHandlerProps) {
 
       // If already a member, just redirect
       if (isMember) {
-        router.push(`/game/${resolvedGameId}/pick`);
+        router.push(routes.game.pick(resolvedGameId));
         return;
       }
 
@@ -41,33 +41,33 @@ export function JoinGameHandler({ accessCode }: JoinGameHandlerProps) {
     },
   });
 
-  const { execute: joinGame, status: joinStatus } = useAction(joinGameAction, {
+  const joinGameMutation = (orpc.game.join as any).useMutation?.({
     onError: () => {
       setError("Failed to join game");
     },
     onSuccess: () => {
       setGameName("the game");
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push(routes.dashboard());
       }, 2000);
     },
   });
 
   // Resolve the access code on mount
   useEffect(() => {
-    resolveCode({ accessCode });
-  }, [accessCode, resolveCode]);
+    resolveCodeMutation?.mutate({ accessCode });
+  }, [accessCode]);
 
   // Join the game once we have the gameId and shouldJoin is true
   useEffect(() => {
     if (shouldJoin && gameId) {
-      joinGame({ gameId });
+      joinGameMutation?.mutate({ gameId });
       setShouldJoin(false);
     }
-  }, [shouldJoin, gameId, joinGame]);
+  }, [shouldJoin, gameId]);
 
-  const isLoading = resolveStatus === "executing" || joinStatus === "executing";
-  const hasSucceeded = joinStatus === "hasSucceeded";
+  const isLoading = resolveCodeMutation?.isPending || joinGameMutation?.isPending;
+  const hasSucceeded = joinGameMutation?.isSuccess;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">

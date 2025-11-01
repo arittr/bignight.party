@@ -1,6 +1,8 @@
 import { publicProcedure } from "./procedures";
 import { adminRouter } from "./routers/admin";
 import { authRouter } from "./routers/auth";
+import { gameRouter } from "./routers/game";
+import { pickRouter } from "./routers/pick";
 
 /**
  * Root router - combines all domain routers.
@@ -11,6 +13,8 @@ export const appRouter = {
   }),
   auth: authRouter,
   admin: adminRouter,
+  game: gameRouter,
+  pick: pickRouter,
 };
 
 /**

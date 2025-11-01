@@ -1,6 +1,5 @@
-import { useAction } from "next-safe-action/hooks";
 import { useEffect, useMemo, useState } from "react";
-import { submitPickAction } from "@/lib/actions/pick-actions";
+import { orpc } from "@/lib/api/client";
 
 export interface UsePickSubmissionProps {
   gameId: string;
@@ -27,7 +26,7 @@ export interface UsePickSubmissionReturn {
  * Handles:
  * - Pick selection state management
  * - Optimistic UI updates (immediate feedback)
- * - Server action execution
+ * - oRPC mutation execution
  * - Completed categories tracking
  *
  * @param props - Game ID, current category, existing picks, and callbacks
@@ -50,9 +49,9 @@ export function usePickSubmission({
     setSelectedNominationId(existingPick?.nominationId || null);
   }, [currentCategoryId, existingPicks]);
 
-  // Submit pick action with callbacks
-  const { execute, isExecuting } = useAction(submitPickAction, {
-    onError: (_error) => {
+  // Submit pick mutation with callbacks
+  const mutation = (orpc.pick.submitPick as any).useMutation?.({
+    onError: (_error: any) => {
       onError?.();
     },
     onSuccess: () => {
@@ -69,7 +68,7 @@ export function usePickSubmission({
     onSaving?.();
 
     // Submit to server
-    execute({
+    mutation?.mutate({
       categoryId: currentCategoryId,
       gameId,
       nominationId,
@@ -85,7 +84,7 @@ export function usePickSubmission({
   return {
     completedCategoryIds,
     handleSelect,
-    isSubmitting: isExecuting,
+    isSubmitting: mutation?.isPending ?? false,
     selectedNominationId,
   };
 }
