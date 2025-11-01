@@ -232,35 +232,74 @@ export default async function ProtectedPage() {
 
 **See:** `docs/constitutions/current/patterns.md` for complete details on Edge runtime authentication.
 
-### 4. oRPC Procedures for ALL Remote Calls
+### 4. oRPC Contract-First for ALL Remote Calls
 
-All mutations and queries use oRPC (Open RPC) for type-safe contract-first API design:
+**MANDATORY**: All mutations and queries use oRPC contract-first pattern with `implement(contract)`:
 
 ```typescript
-// src/lib/api/contracts/pick.ts - Contract definition
-export const submitPickContract = z.object({
-  gameId: z.string(),
-  categoryId: z.string(),
-  nominationId: z.string(),
+// STEP 1: Define contract using oc.input().output()
+// src/lib/api/contracts/pick.ts
+import { oc } from '@orpc/contract'
+import { z } from 'zod'
+
+export const submitPickContract = oc
+  .input(z.object({
+    gameId: z.string(),
+    categoryId: z.string(),
+    nominationId: z.string(),
+  }))
+  .output(z.object({
+    success: z.boolean(),
+    pick: z.custom<Pick>(), // Prisma type
+  }))
+
+export const pickContract = oc.router({
+  submitPick: submitPickContract,
 })
 
-// src/lib/api/routers/pick.ts - Procedure implementation
-export const pickRouter = {
-  submit: authenticatedProcedure.handler(async ({ input, ctx }) => {
-    return pickService.submitPick(ctx.userId, input)
-  })
-}
+// STEP 2: Implement router using implement(contract)
+// src/lib/api/routers/pick.ts
+import { implement } from '@orpc/server'
+import { pickContract } from '@/lib/api/contracts/pick'
 
-// In Server Components
+const pickBuilder = implement(pickContract)
+
+export const pickRouter = pickBuilder.router({
+  submitPick: pickBuilder.submitPick
+    .use(authenticatedProcedure) // Chain auth
+    .handler(async ({ input, ctx }) => {
+      // Full type safety from contract
+      const pick = await pickService.submitPick(ctx.userId, input)
+      return { success: true, pick }
+    }),
+})
+
+// STEP 3: Call from Server Components
 import { serverClient } from "@/lib/api/server-client"
-const result = await serverClient.pick.submit({ gameId, categoryId, nominationId })
+const result = await serverClient.pick.submitPick({
+  gameId, categoryId, nominationId
+})
 
-// In Client Components
+// STEP 4: Call from Client Components
+import { useMutation } from "@tanstack/react-query"
 import { orpc } from "@/lib/api/client"
-const mutation = orpc.pick.submit.useMutation()
+
+const mutation = useMutation(
+  orpc.pick.submitPick.mutationOptions() // Use .mutationOptions()!
+)
 ```
 
-**Never** create raw server actions. All RPC calls must use oRPC with contract validation.
+**Critical Requirements:**
+- ✅ Define contracts with `oc.input().output()` from `@orpc/contract`
+- ✅ Implement routers with `implement(contract)` from `@orpc/server`
+- ✅ Client uses `RPCLink` (see `src/lib/api/client.ts`)
+- ✅ Client Components use `useMutation(orpc.*.mutationOptions())`
+
+**Never:**
+- ❌ Create raw server actions
+- ❌ Use ad-hoc procedures with `{ input }: any`
+- ❌ Use `LinkFetchClient` or `StandardRPCLink` (use `RPCLink`)
+- ❌ Call `orpc.*.useMutation()` directly (doesn't exist)
 
 ### 5. ts-pattern for ALL Discriminated Unions
 
