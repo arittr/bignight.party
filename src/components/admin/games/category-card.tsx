@@ -1,8 +1,7 @@
 "use client";
 
-import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
-import { clearWinnerAction, markWinnerAction } from "@/lib/actions/admin-actions";
+import { orpc } from "@/lib/api/client";
 
 export interface NominationWithPickCount {
   id: string;
@@ -30,10 +29,10 @@ export function CategoryCard({ category, nominations }: CategoryCardProps) {
     category.winnerNominationId ?? ""
   );
 
-  const { execute: markWinner, isExecuting: isMarkingWinner } = useAction(markWinnerAction);
-  const { execute: clearWinner, isExecuting: isClearingWinner } = useAction(clearWinnerAction);
+  const markWinnerMutation = (orpc.admin.markWinner as any).useMutation?.();
+  const clearWinnerMutation = (orpc.admin.clearWinner as any).useMutation?.();
 
-  const isLoading = isMarkingWinner || isClearingWinner;
+  const isLoading = markWinnerMutation.isPending || clearWinnerMutation.isPending;
 
   // Sort nominations by pick count descending
   const sortedNominations = [...nominations].sort((a, b) => b.pickCount - a.pickCount);
@@ -45,13 +44,13 @@ export function CategoryCard({ category, nominations }: CategoryCardProps) {
     const nominationId = e.target.value;
     if (nominationId && nominationId !== category.winnerNominationId) {
       setSelectedNominationId(nominationId);
-      markWinner({ categoryId: category.id, nominationId });
+      markWinnerMutation.mutate({ categoryId: category.id, nominationId });
     }
   };
 
   const handleClearWinner = () => {
     setSelectedNominationId("");
-    clearWinner({ categoryId: category.id });
+    clearWinnerMutation.mutate({ categoryId: category.id });
   };
 
   return (
@@ -126,7 +125,7 @@ export function CategoryCard({ category, nominations }: CategoryCardProps) {
             onClick={handleClearWinner}
             type="button"
           >
-            {isClearingWinner ? "Clearing..." : "Clear Winner"}
+            {clearWinnerMutation.isPending ? "Clearing..." : "Clear Winner"}
           </button>
         )}
       </div>

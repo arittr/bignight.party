@@ -2,7 +2,7 @@ import type { GameStatus } from "@prisma/client";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { match } from "ts-pattern";
-import { deleteGameAction, updateGameAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as eventModel from "@/lib/models/event";
 import * as gameModel from "@/lib/models/game";
@@ -33,7 +33,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     const status = formData.get("status") as GameStatus;
     const picksLockAt = formData.get("picksLockAt") as string;
 
-    await updateGameAction({
+    await serverClient.admin.updateGame({
       accessCode,
       eventId,
       id,
@@ -46,7 +46,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
   async function handleDeleteGame() {
     "use server";
 
-    await deleteGameAction({ id });
+    await serverClient.admin.deleteGame({ id });
     redirect(routes.admin.games.index());
   }
 

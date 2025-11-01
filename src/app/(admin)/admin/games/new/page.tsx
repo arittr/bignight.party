@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createGameAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import * as eventModel from "@/lib/models/event";
 
 export default async function NewGamePage() {
@@ -14,16 +14,14 @@ export default async function NewGamePage() {
     const accessCode = formData.get("accessCode") as string;
     const picksLockAt = formData.get("picksLockAt") as string;
 
-    const result = await createGameAction({
+    await serverClient.admin.createGame({
       accessCode,
       eventId,
       name,
       picksLockAt: picksLockAt ? new Date(picksLockAt) : undefined,
     });
 
-    if (result?.data) {
-      redirect("/admin/games");
-    }
+    redirect("/admin/games");
   }
 
   return (
