@@ -51,62 +51,66 @@ pnpm db:reset
 ### Layered Architecture (MANDATORY)
 
 ```
-UI Components (RSC) → Server Actions → Services → Models → Prisma
+UI Components (RSC) → oRPC Procedures → Services → Models → Prisma
 ```
 
 **Layer Boundaries** (strictly enforced):
 
 - **Models** (`src/lib/models/`): Prisma queries only, no business logic
   - ✅ Can import: `@prisma/client`, `src/lib/db/prisma`, `src/types/`
-  - ❌ Cannot import: Services, Actions, `next/*`
+  - ❌ Cannot import: Services, oRPC, `next/*`
 
 - **Services** (`src/lib/services/`): Business logic and orchestration
   - ✅ Can import: Models, other services, `ts-pattern`, `zod`
-  - ❌ Cannot import: `@prisma/client` directly, `next/*`, Actions
+  - ❌ Cannot import: `@prisma/client` directly, `next/*`, oRPC
 
-- **Actions** (`src/lib/actions/`): Server Actions with validation
-  - ✅ Can import: Services, `next-safe-action`, schemas, auth
-  - ❌ Cannot import: Models directly, `@prisma/client`
+- **oRPC Procedures** (`src/lib/api/routers/`): Type-safe RPC endpoints
+  - ✅ Can import: Services, oRPC contracts, auth
+  - ❌ Cannot import: Prisma directly (call models instead)
 
 - **UI Components** (`src/app/`, `src/components/`): React Server/Client Components
-  - ✅ Can import: Actions (via `useAction` or form `action`), Services (read-only in Server Components)
-  - ❌ Cannot import: Models, direct Prisma
+  - ✅ Server Components: Import serverClient from `@/lib/api/server-client`
+  - ✅ Client Components: Import orpc from `@/lib/api/client`
+  - ❌ Cannot import: Models, direct Prisma, `@/lib/actions/` (deleted)
   - ❌ Event handlers (onClick, onChange) in Server Components
 
-**Why this matters:** Violating layer boundaries breaks the architecture. Services must call Models (never Prisma directly). Actions must call Services (never Models directly). This separation enables testing, reusability, and maintainability.
+**Why this matters:** Violating layer boundaries breaks the architecture. Services must call Models (never Prisma directly). oRPC procedures must call Services. This separation enables testing, reusability, and maintainability.
 
 ### Server/Client Component Boundaries
 
 **Server Components** (default):
 - Can be async, fetch data directly
-- Can use server actions in form `action` prop
+- Can call serverClient for oRPC procedures (no HTTP overhead)
 - **Cannot** use onClick, onChange, or React hooks
 
 **Client Components** (require `"use client"`):
 - Can use event handlers and React hooks
+- Can call orpc for oRPC procedures (via HTTP with React Query)
 - **Cannot** be async functions
 - Use sparingly for interactivity only
 
-**Pattern: Inline Form Actions** (for simple mutations without redirects):
+**Pattern: Inline Form Actions with oRPC** (for simple mutations without redirects):
 ```typescript
 <form action={async (formData: FormData) => {
   "use server";
+  import { serverClient } from "@/lib/api/server-client";
   const title = formData.get("title");
-  await updateAction({ id, title: title as string });
+  await serverClient.admin.updateWork({ id, title: title as string });
   // NO redirect() here
 }}>
 ```
 
-**Pattern: Standalone Server Actions** (for redirects):
+**Pattern: Standalone Server Actions for Redirects**:
 ```typescript
 async function handleDelete() {
   "use server";
-  await deleteAction({ id });
+  import { serverClient } from "@/lib/api/server-client";
+  await serverClient.admin.deleteWork({ id });
   redirect("/list"); // ✅ redirect() in standalone function only
 }
 ```
 
-**Why this matters:** Next.js redirect() must be at the top level of a server action. Inline form actions cannot reliably handle redirects.
+**Why this matters:** Next.js redirect() must be at the top level of a server action. serverClient calls oRPC procedures directly without HTTP overhead.
 
 ## Mandatory Patterns
 
@@ -228,23 +232,35 @@ export default async function ProtectedPage() {
 
 **See:** `docs/constitutions/current/patterns.md` for complete details on Edge runtime authentication.
 
-### 4. next-safe-action for ALL Server Actions
+### 4. oRPC Procedures for ALL Remote Calls
+
+All mutations and queries use oRPC (Open RPC) for type-safe contract-first API design:
 
 ```typescript
-// src/lib/actions/safe-action.ts
-export const action = createSafeActionClient()
-export const authenticatedAction = createSafeActionClient({ /* auth middleware */ })
-export const adminAction = createSafeActionClient({ /* admin middleware */ })
+// src/lib/api/contracts/pick.ts - Contract definition
+export const submitPickContract = z.object({
+  gameId: z.string(),
+  categoryId: z.string(),
+  nominationId: z.string(),
+})
 
-// Usage
-export const submitPickAction = authenticatedAction
-  .schema(pickSchema)
-  .action(async ({ parsedInput, ctx }) => {
-    return pickService.submitPick(ctx.userId, parsedInput)
+// src/lib/api/routers/pick.ts - Procedure implementation
+export const pickRouter = {
+  submit: authenticatedProcedure.handler(async ({ input, ctx }) => {
+    return pickService.submitPick(ctx.userId, input)
   })
+}
+
+// In Server Components
+import { serverClient } from "@/lib/api/server-client"
+const result = await serverClient.pick.submit({ gameId, categoryId, nominationId })
+
+// In Client Components
+import { orpc } from "@/lib/api/client"
+const mutation = orpc.pick.submit.useMutation()
 ```
 
-**Never** create raw server actions without validation. All actions must use next-safe-action with Zod schemas.
+**Never** create raw server actions. All RPC calls must use oRPC with contract validation.
 
 ### 5. ts-pattern for ALL Discriminated Unions
 
@@ -393,8 +409,10 @@ The app uses Socket.io for real-time updates:
 7. **Don't put business logic in models** - Models are data access only
 8. **Don't put event handlers in Server Components** - Extract to client components
 9. **Don't call redirect() in inline form actions** - Use standalone server action functions
-10. **Don't skip next-safe-action** - All server actions must use it
-11. **Don't forget ADMIN_EMAILS** - Admin routes won't work without it in .env.local
+10. **Don't import from deleted `src/lib/actions/`** - Use oRPC via serverClient or orpc instead
+11. **Don't call oRPC from services** - Services should not know about RPC layer
+12. **Don't use raw server actions** - All RPC calls must use oRPC with contract validation
+13. **Don't forget ADMIN_EMAILS** - Admin routes won't work without it in .env.local
 
 ## Environment Setup
 
@@ -418,7 +436,11 @@ ADMIN_EMAILS=your-email@example.com
 - `docs/constitutions/current/` - Architecture patterns and mandatory practices
 - `prisma/schema.prisma` - Database schema
 - `src/lib/routes.ts` - Centralized route definitions (use for ALL navigation)
-- `src/lib/actions/safe-action.ts` - Server action client setup
+- `src/lib/api/server-client.ts` - oRPC server client for Server Components
+- `src/lib/api/client.ts` - oRPC HTTP client for Client Components
+- `src/lib/api/root.ts` - Root router with all domain routers
+- `src/lib/api/contracts/` - oRPC contract definitions (Zod schemas)
+- `src/lib/api/routers/` - oRPC procedure implementations
 - `src/lib/auth/config.ts` - Auth.js configuration with admin role assignment
 - `src/middleware.ts` - Route protection and authentication
 - `.claude/commands/` - Custom slash command definitions

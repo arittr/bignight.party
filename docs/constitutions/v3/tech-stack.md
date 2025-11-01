@@ -45,17 +45,22 @@
 
 ## Backend
 
-### Next.js API Routes
-- **Purpose**: Serverless API endpoints
-- **When**: REST endpoints, webhooks
-- **Why**: Co-located with frontend, automatic deployment
-
-### next-safe-action
-- **Purpose**: Type-safe server actions with validation
-- **When**: ALL server actions (mandatory)
-- **Why**: Automatic validation, consistent error handling, type inference
+### oRPC (Open RPC)
+- **Purpose**: Contract-first type-safe API framework
+- **Packages**: `@orpc/server`, `@orpc/client`, `@orpc/client/fetch`
+- **When**: ALL remote procedure calls (mandatory)
+- **Why**: Type-safe end-to-end, OpenRPC standard, contract validation, no serialization overhead
 - **Version**: Latest stable
+- **Usage**:
+  - Server-side: `src/lib/api/routers/`, `src/lib/api/contracts/`
+  - Server Components: `serverClient` from `@/lib/api/server-client` (no HTTP)
+  - Client Components: `orpc` from `@/lib/api/client` (with React Query)
 - **See**: patterns.md for usage
+
+### Next.js API Routes
+- **Purpose**: oRPC procedure handler endpoint
+- **When**: Single handler for all RPC calls at `/api/rpc`
+- **Why**: Centralized API gateway for all procedures
 
 ### Prisma
 - **Purpose**: Type-safe ORM
@@ -82,10 +87,10 @@
 
 ### Zod
 - **Purpose**: Runtime validation and type inference
-- **When**: All input validation, schema definition
+- **When**: All input validation, contract definition
 - **Why**: Type-safe validation, excellent DX
 - **Version**: Latest stable
-- **Location**: Schemas in `src/schemas/`
+- **Location**: oRPC contracts in `src/lib/api/contracts/`, Zod schemas in `src/schemas/`
 
 ### ts-pattern
 - **Purpose**: Exhaustive pattern matching
@@ -167,8 +172,8 @@ These libraries are **explicitly forbidden**:
 - **Use instead**: Prisma
 
 ### ❌ Express
-- **Why**: Next.js API routes provide everything we need
-- **Use instead**: Next.js API Routes / Server Actions
+- **Why**: Next.js API routes with oRPC provide everything we need
+- **Use instead**: Next.js API Routes / oRPC procedures
 
 ### ❌ Axios
 - **Why**: Native fetch is sufficient and built-in
