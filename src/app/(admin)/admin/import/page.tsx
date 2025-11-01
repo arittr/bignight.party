@@ -1,4 +1,5 @@
 import { requireValidatedSession } from "@/lib/auth/config";
+import { ImportForm } from "./_components/import-form";
 
 /**
  * Wikipedia Import Page
@@ -21,10 +22,9 @@ export default async function ImportPage() {
         <p className="text-gray-600">
           Paste a Wikipedia URL to import event data including categories and nominations.
         </p>
-        <p className="text-gray-600 mt-4">
-          Import functionality is temporarily disabled during architecture migration.
-        </p>
       </div>
+
+      <ImportForm />
     </div>
   );
 }
