@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createEventAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 
 export default function NewEventPage() {
   async function handleCreateEvent(formData: FormData) {
@@ -11,16 +11,14 @@ export default function NewEventPage() {
     const description = formData.get("description") as string;
     const eventDate = formData.get("eventDate") as string;
 
-    const result = await createEventAction({
+    const result = await serverClient.admin.createEvent({
       description: description || undefined,
       eventDate: new Date(eventDate),
       name,
       slug,
     });
 
-    if (result?.data?.id) {
-      redirect(`/admin/events/${result.data.id}`);
-    }
+    redirect(`/admin/events/${result.id}`);
   }
 
   return (

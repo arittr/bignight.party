@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createNominationAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import * as categoryModel from "@/lib/models/category";
 import * as personModel from "@/lib/models/person";
 import * as workModel from "@/lib/models/work";
@@ -33,16 +33,14 @@ export default async function NewNominationPage({ params }: PageProps) {
     const workId = formData.get("workId") as string;
     const personId = formData.get("personId") as string;
 
-    const result = await createNominationAction({
+    await serverClient.admin.createNomination({
       categoryId,
       nominationText,
       personId: personId || undefined,
       workId: workId || undefined,
     });
 
-    if (result?.data) {
-      redirect(`/admin/events/${eventId}/categories/${categoryId}`);
-    }
+    redirect(`/admin/events/${eventId}/categories/${categoryId}`);
   }
 
   return (

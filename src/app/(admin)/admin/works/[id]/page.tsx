@@ -1,7 +1,7 @@
 import { WorkType } from "@prisma/client";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { deleteWorkAction, updateWorkAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as workModel from "@/lib/models/work";
 
@@ -24,7 +24,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
   // Delete action with error handling
   async function handleDelete() {
     "use server";
-    await deleteWorkAction({ id: params.id });
+    await serverClient.admin.deleteWork({ id: params.id });
     redirect("/admin/works");
   }
 
@@ -52,7 +52,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
               const imageUrl = formData.get("imageUrl");
               const externalId = formData.get("externalId");
 
-              await updateWorkAction({
+              await serverClient.admin.updateWork({
                 id: params.id,
                 ...(title && { title: title as string }),
                 ...(type && { type: type as WorkType }),
