@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
-import { joinGameAction } from "@/lib/actions/game-actions";
+import { orpc } from "@/lib/api/client";
+import { routes } from "@/lib/routes";
 
 interface JoinGameButtonProps {
   gameId: string;
@@ -14,12 +14,12 @@ export function JoinGameButton({ gameId, gameName }: JoinGameButtonProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
-  const { execute, isPending } = useAction(joinGameAction, {
-    onError: ({ error }) => {
-      setError(error.serverError || "Failed to join game. Please try again.");
+  const mutation = (orpc.game.join as any).useMutation?.({
+    onError: (err: any) => {
+      setError(err?.message || "Failed to join game. Please try again.");
     },
     onSuccess: () => {
-      router.push(`/game/${gameId}/pick`);
+      router.push(routes.game.pick(gameId));
     },
   });
 
@@ -27,11 +27,11 @@ export function JoinGameButton({ gameId, gameName }: JoinGameButtonProps) {
     <div>
       <button
         className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-        disabled={isPending}
-        onClick={() => execute({ gameId })}
+        disabled={mutation?.isPending}
+        onClick={() => mutation?.mutate({ gameId })}
         type="button"
       >
-        {isPending ? "Joining..." : `Join ${gameName}`}
+        {mutation?.isPending ? "Joining..." : `Join ${gameName}`}
       </button>
 
       {error && (
