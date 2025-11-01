@@ -1,19 +1,18 @@
 import { GameManager } from "@/components/admin/games/game-manager";
-import { deleteGameAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 import { requireValidatedSession } from "@/lib/auth/config";
-import * as gameModel from "@/lib/models/game";
 
 export default async function GamesPage() {
   await requireValidatedSession();
 
-  // Use optimized query with participant counts (no N+1 queries)
-  const games = await gameModel.findAllWithCounts();
+  // Fetch games via oRPC server client (no HTTP overhead)
+  const games = await serverClient.admin.listGames();
 
-  // Server action wrapper for delete
+  // Server action wrapper for delete using oRPC
   async function handleDelete(gameId: string) {
     "use server";
-    const result = await deleteGameAction({ id: gameId });
-    if (!result?.data?.success) {
+    const result = await serverClient.admin.deleteGame({ id: gameId });
+    if (!result?.success) {
       throw new Error("Failed to delete game");
     }
   }
