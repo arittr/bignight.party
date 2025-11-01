@@ -1,7 +1,7 @@
 import { WorkType } from "@prisma/client";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createWorkAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 
 export default function NewWorkPage() {
   async function handleCreate(formData: FormData) {
@@ -13,7 +13,7 @@ export default function NewWorkPage() {
     const imageUrl = formData.get("imageUrl");
     const externalId = formData.get("externalId");
 
-    await createWorkAction({
+    await serverClient.admin.createWork({
       title,
       type,
       ...(year && { year: Number(year) }),

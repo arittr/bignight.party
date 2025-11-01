@@ -1,19 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createPersonAction } from "@/lib/actions/admin-actions";
+import { serverClient } from "@/lib/api/server-client";
 
 export default function NewPersonPage() {
   async function handleCreate(formData: FormData) {
     "use server";
-    const result = await createPersonAction({
+    await serverClient.admin.createPerson({
       externalId: formData.get("externalId") as string | undefined,
       imageUrl: formData.get("imageUrl") as string | undefined,
       name: formData.get("name") as string,
     });
 
-    if (!result?.serverError) {
-      redirect("/admin/people");
-    }
+    redirect("/admin/people");
   }
 
   return (
