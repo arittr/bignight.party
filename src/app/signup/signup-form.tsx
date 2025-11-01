@@ -1,8 +1,7 @@
 "use client";
 
-import { useAction } from "next-safe-action/hooks";
 import { useEffect, useId, useState } from "react";
-import { signInAction } from "@/lib/actions/auth-actions";
+import { api } from "@/lib/api/client";
 
 interface SignupFormProps {
   code?: string;
@@ -11,15 +10,8 @@ interface SignupFormProps {
 export function SignupForm({ code }: SignupFormProps) {
   const emailId = useId();
   const [email, setEmail] = useState("");
-  const { execute, status } = useAction(signInAction, {
-    onSuccess: () => {
-      setEmail("");
-      // Store the code in sessionStorage if it exists
-      if (code) {
-        sessionStorage.setItem("pendingInviteCode", code);
-      }
-    },
-  });
+  const [status, setStatus] = useState<"idle" | "executing" | "hasSucceeded" | "hasErrored">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Store code in sessionStorage when component mounts
   useEffect(() => {
@@ -28,14 +20,35 @@ export function SignupForm({ code }: SignupFormProps) {
     }
   }, [code]);
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus("executing");
+    setErrorMessage("");
+
+    try {
+      const result = await (api.auth.signUp as any)({
+        email,
+      });
+
+      if (result.success) {
+        setEmail("");
+        // Store the code in sessionStorage if it exists
+        if (code) {
+          sessionStorage.setItem("pendingInviteCode", code);
+        }
+        setStatus("hasSucceeded");
+      } else {
+        setStatus("hasErrored");
+        setErrorMessage(result.message || "Failed to send magic link. Please try again.");
+      }
+    } catch (error) {
+      setStatus("hasErrored");
+      setErrorMessage(error instanceof Error ? error.message : "Failed to send magic link. Please try again.");
+    }
+  };
+
   return (
-    <form
-      className="mt-8 space-y-6"
-      onSubmit={(e) => {
-        e.preventDefault();
-        execute({ email });
-      }}
-    >
+    <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
       <div className="-space-y-px rounded-md shadow-sm">
         <div>
           <label className="sr-only" htmlFor={emailId}>
@@ -71,7 +84,7 @@ export function SignupForm({ code }: SignupFormProps) {
       {status === "hasErrored" && (
         <div className="rounded-md bg-red-50 p-4">
           <p className="text-sm font-medium text-red-800">
-            Failed to send magic link. Please try again.
+            {errorMessage}
           </p>
         </div>
       )}

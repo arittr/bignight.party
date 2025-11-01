@@ -35,3 +35,6 @@ const link = new StandardRPCLink(fetchClient, {
 // Type assertion needed because oRPC infers types at runtime
 // The server-side client will provide proper type safety
 export const orpc = createORPCClient(link) as any as AppRouter;
+
+// Alias for clarity - use 'api' to call oRPC procedures
+export const api = orpc;
