@@ -118,3 +118,40 @@ export async function requireValidatedSession() {
 
   return session;
 }
+
+/**
+ * Require a validated session or throw an error.
+ *
+ * Similar to requireValidatedSession but throws instead of redirecting.
+ * Use in API routes, server actions, and oRPC procedures where throwing
+ * is more appropriate than redirecting.
+ *
+ * Validates:
+ * 1. Session exists
+ * 2. User exists in database (protects against stale JWTs)
+ *
+ * @throws {Error} If session is invalid or user doesn't exist
+ *
+ * @example
+ * ```tsx
+ * // In an oRPC procedure middleware
+ * const session = await requireValidatedSessionOrThrow();
+ * // If we get here, session is guaranteed valid
+ * ```
+ */
+export async function requireValidatedSessionOrThrow() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized: You must be logged in to perform this action");
+  }
+
+  // Validate user still exists in database (protect against stale JWTs)
+  const userExists = await userModel.exists(session.user.id);
+
+  if (!userExists) {
+    throw new Error("Unauthorized: User account no longer exists");
+  }
+
+  return session;
+}
