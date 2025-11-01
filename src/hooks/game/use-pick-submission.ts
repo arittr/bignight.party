@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { orpc } from "@/lib/api/client";
 
 export interface UsePickSubmissionProps {
@@ -50,14 +51,16 @@ export function usePickSubmission({
   }, [currentCategoryId, existingPicks]);
 
   // Submit pick mutation with callbacks
-  const mutation = (orpc.pick.submitPick as any).useMutation?.({
-    onError: (_error: any) => {
-      onError?.();
-    },
-    onSuccess: () => {
-      onSaved?.();
-    },
-  });
+  const mutation = useMutation(
+    orpc.pick.submitPick.mutationOptions({
+      onError: (_error: any) => {
+        onError?.();
+      },
+      onSuccess: () => {
+        onSaved?.();
+      },
+    })
+  );
 
   // Handle nomination selection with optimistic UI update
   const handleSelect = (nominationId: string, isLocked: boolean) => {

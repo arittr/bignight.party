@@ -1,4 +1,5 @@
 import type { Category, Event, Game, Nomination, Person, Work } from "@prisma/client";
+import { z } from "zod";
 import { adminProcedure } from "@/lib/api/procedures";
 import * as categoryModel from "@/lib/models/category";
 import * as eventModel from "@/lib/models/event";
@@ -10,6 +11,7 @@ import * as categoryService from "@/lib/services/category-service";
 import * as eventService from "@/lib/services/event-service";
 import * as gameService from "@/lib/services/game-service";
 import * as wikipediaImportService from "@/lib/services/wikipedia-import-service";
+import { wikipediaUrlSchema } from "@/schemas/wikipedia-import-schema";
 
 /**
  * Admin Router - All operations require ADMIN role
@@ -386,13 +388,47 @@ export const adminRouter = {
   // WIKIPEDIA IMPORT PROCEDURES
   // ============================================================================
 
-  previewWikipediaImport: adminProcedure.handler(async ({ input }: { input: any }) => {
-    const preview = await wikipediaImportService.previewImport(input.url);
-    return preview;
-  }),
+  previewWikipediaImport: adminProcedure
+    .input(wikipediaUrlSchema)
+    .output(
+      z.object({
+        event: z.object({
+          name: z.string(),
+          slug: z.string(),
+          description: z.string().optional(),
+          date: z.date(),
+        }),
+        categoryCount: z.number().int().min(0),
+        nominationCount: z.number().int().min(0),
+        categories: z
+          .array(
+            z.object({
+              name: z.string(),
+              pointValue: z.number().int(),
+              nominationCount: z.number().int().min(0),
+            })
+          )
+          .optional(),
+        url: z.string().url(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const preview = await wikipediaImportService.previewImport(input.url);
+      return preview;
+    }),
 
-  importFromWikipedia: adminProcedure.handler(async ({ input }: { input: any }) => {
-    const result = await wikipediaImportService.commitImport(input.url);
-    return result;
-  }),
+  importFromWikipedia: adminProcedure
+    .input(wikipediaUrlSchema)
+    .output(
+      z.object({
+        eventId: z.string(),
+        eventName: z.string(),
+        categoriesCreated: z.number().int().min(0),
+        nominationsCreated: z.number().int().min(0),
+      })
+    )
+    .handler(async ({ input }) => {
+      const result = await wikipediaImportService.commitImport(input.url);
+      return result;
+    }),
 };

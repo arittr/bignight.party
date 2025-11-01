@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { orpc } from "@/lib/api/client";
 import { routes } from "@/lib/routes";
 import { PreviewTable } from "./preview-table";
@@ -26,25 +27,29 @@ export function ImportForm() {
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
 
   // Preview mutation: Parse Wikipedia page without saving
-  const previewMutation = (orpc.admin.previewWikipediaImport as any).useMutation?.({
-    onSuccess: (data: PreviewData) => {
-      setPreviewData(data);
-    },
-    onError: (error: any) => {
-      console.error("Preview failed:", error);
-      setPreviewData(null);
-    },
-  });
+  const previewMutation = useMutation(
+    orpc.admin.previewWikipediaImport.mutationOptions({
+      onSuccess: (data: PreviewData) => {
+        setPreviewData(data);
+      },
+      onError: (error: any) => {
+        console.error("Preview failed:", error);
+        setPreviewData(null);
+      },
+    })
+  );
 
   // Confirm mutation: Save to database and redirect
-  const confirmMutation = (orpc.admin.importFromWikipedia as any).useMutation?.({
-    onSuccess: (result: any) => {
-      router.push(routes.admin.events.detail(result.eventId));
-    },
-    onError: (error: any) => {
-      console.error("Import failed:", error);
-    },
-  });
+  const confirmMutation = useMutation(
+    orpc.admin.importFromWikipedia.mutationOptions({
+      onSuccess: (result: any) => {
+        router.push(routes.admin.events.detail(result.eventId));
+      },
+      onError: (error: any) => {
+        console.error("Import failed:", error);
+      },
+    })
+  );
 
   const handlePreview = () => {
     setPreviewData(null);

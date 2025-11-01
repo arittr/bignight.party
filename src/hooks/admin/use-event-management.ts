@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "@/components/admin/shared/toast";
 import { orpc } from "@/lib/api/client";
@@ -58,9 +59,9 @@ export function useEventManagement({
   const [events, setEvents] = useState<EventListItem[]>(initialEvents);
   const [isLoading, setIsLoading] = useState(false);
 
-  const createEventMutation = (orpc.admin.createEvent as any).useMutation?.();
-  const updateEventMutation = (orpc.admin.updateEvent as any).useMutation?.();
-  const deleteEventMutation = (orpc.admin.deleteEvent as any).useMutation?.();
+  const createEventMutation = useMutation(orpc.admin.createEvent.mutationOptions());
+  const updateEventMutation = useMutation(orpc.admin.updateEvent.mutationOptions());
+  const deleteEventMutation = useMutation(orpc.admin.deleteEvent.mutationOptions());
 
   // Sync with initial events when they change
   useEffect(() => {

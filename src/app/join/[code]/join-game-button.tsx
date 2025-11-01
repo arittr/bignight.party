@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { orpc } from "@/lib/api/client";
@@ -14,14 +15,14 @@ export function JoinGameButton({ gameId, gameName }: JoinGameButtonProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
-  const mutation = (orpc.game.join as any).useMutation?.({
+  const mutation = useMutation(orpc.game.join.mutationOptions({
     onError: (err: any) => {
       setError(err?.message || "Failed to join game. Please try again.");
     },
     onSuccess: () => {
       router.push(routes.game.pick(gameId));
     },
-  });
+  }));
 
   return (
     <div>

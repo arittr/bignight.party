@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { toast } from "@/components/admin/shared/toast";
 import { orpc } from "@/lib/api/client";
@@ -64,8 +65,8 @@ export function useNominationManager({
   const [nominations, setNominations] = useState<NominationItem[]>(initialNominations);
   const [isLoading, setIsLoading] = useState(false);
 
-  const createNominationMutation = (orpc.admin.createNomination as any).useMutation?.();
-  const deleteNominationMutation = (orpc.admin.deleteNomination as any).useMutation?.();
+  const createNominationMutation = useMutation(orpc.admin.createNomination.mutationOptions());
+  const deleteNominationMutation = useMutation(orpc.admin.deleteNomination.mutationOptions());
 
   const canAddMore = nominations.length < maxNominations;
 

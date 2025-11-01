@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { orpc } from "@/lib/api/client";
 
 type DeleteNominationButtonProps = {
@@ -11,7 +12,7 @@ export function DeleteNominationButton({
   nominationId,
   nominationText,
 }: DeleteNominationButtonProps) {
-  const mutation = (orpc.admin.deleteNomination as any).useMutation?.();
+  const mutation = useMutation(orpc.admin.deleteNomination.mutationOptions());
 
   async function handleDelete(_formData: FormData) {
     if (confirm(`Are you sure you want to delete: "${nominationText}"?`)) {
