@@ -27,9 +27,18 @@ import type { AppRouter } from "./root";
  * }
  * ```
  */
+// Construct absolute URL for oRPC endpoint
+// In browser: use window.location.origin
+// In SSR: use NEXTAUTH_URL or localhost default
+const getBaseUrl = () => {
+  if (typeof window !== "undefined") return window.location.origin;
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
+  return "http://localhost:3000";
+};
+
 const fetchClient = new LinkFetchClient({});
 const link = new StandardRPCLink(fetchClient, {
-  url: "/api/rpc",
+  url: `${getBaseUrl()}/api/rpc`,
 });
 
 // Type assertion needed because oRPC infers types at runtime
