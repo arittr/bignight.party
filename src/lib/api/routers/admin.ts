@@ -1,6 +1,34 @@
-import type { Category, Event, Game, Nomination, Person, Work } from "@prisma/client";
-import { z } from "zod";
+import { implement } from "@orpc/server";
 import { adminProcedure } from "@/lib/api/procedures";
+import {
+  clearWinnerContract,
+  createCategoryContract,
+  createEventContract,
+  createGameContract,
+  createNominationContract,
+  createPersonContract,
+  createWorkContract,
+  deleteCategoryContract,
+  deleteEventContract,
+  deleteGameContract,
+  deleteNominationContract,
+  deletePersonContract,
+  deleteWorkContract,
+  importFromWikipediaContract,
+  listEventsContract,
+  listGamesContract,
+  listPeopleContract,
+  listWorksContract,
+  markWinnerContract,
+  previewWikipediaImportContract,
+  updateCategoryContract,
+  updateEventContract,
+  updateGameContract,
+  updateGameStatusContract,
+  updateNominationContract,
+  updatePersonContract,
+  updateWorkContract,
+} from "@/lib/api/contracts/admin";
 import * as categoryModel from "@/lib/models/category";
 import * as eventModel from "@/lib/models/event";
 import * as gameModel from "@/lib/models/game";
@@ -11,206 +39,83 @@ import * as categoryService from "@/lib/services/category-service";
 import * as eventService from "@/lib/services/event-service";
 import * as gameService from "@/lib/services/game-service";
 import * as wikipediaImportService from "@/lib/services/wikipedia-import-service";
-import { wikipediaUrlSchema } from "@/schemas/wikipedia-import-schema";
 
 /**
  * Admin Router - All operations require ADMIN role
+ *
+ * Uses contract-first pattern with individual contracts
+ * All procedures use adminProcedure for role enforcement
  *
  * Layer boundaries:
  * - Router calls Services (preferred for business logic)
  * - Router calls Models (only for simple CRUD)
  * - NO direct Prisma imports
- *
- * All procedures use adminProcedure for role enforcement.
  */
 
 // ============================================================================
-// HELPER FUNCTIONS - Transformation and utilities
+// ADMIN ROUTER IMPLEMENTATION WITH CONTRACT-FIRST PATTERN
 // ============================================================================
 
-/**
- * Transform Event from Prisma to API response format
- * Extracts only the fields needed for the API response
- */
-function transformEventToResponse(
-  event: Event
-): {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  eventDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
-} {
-  return {
-    id: event.id,
-    name: event.name,
-    slug: event.slug,
-    description: event.description,
-    eventDate: event.eventDate,
-    createdAt: event.createdAt,
-    updatedAt: event.updatedAt,
-  };
-}
-
-/**
- * Transform Category from Prisma to API response format
- */
-function transformCategoryToResponse(
-  category: Category
-): {
-  id: string;
-  name: string;
-  order: number;
-  points: number;
-  isRevealed: boolean;
-  winnerNominationId: string | null;
-  eventId: string;
-  createdAt: Date;
-  updatedAt: Date;
-} {
-  return {
-    id: category.id,
-    name: category.name,
-    order: category.order,
-    points: category.points,
-    isRevealed: category.isRevealed,
-    winnerNominationId: category.winnerNominationId,
-    eventId: category.eventId,
-    createdAt: category.createdAt,
-    updatedAt: category.updatedAt,
-  };
-}
-
-/**
- * Transform Nomination from Prisma to API response format
- */
-function transformNominationToResponse(
-  nomination: Nomination
-): {
-  id: string;
-  nominationText: string;
-  categoryId: string;
-  workId: string | null;
-  personId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-} {
-  return {
-    id: nomination.id,
-    nominationText: nomination.nominationText,
-    categoryId: nomination.categoryId,
-    workId: nomination.workId,
-    personId: nomination.personId,
-    createdAt: nomination.createdAt,
-    updatedAt: nomination.updatedAt,
-  };
-}
-
-/**
- * Transform Person from Prisma to API response format
- */
-function transformPersonToResponse(
-  person: Person
-): {
-  id: string;
-  name: string;
-  imageUrl: string | null;
-  externalId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-} {
-  return {
-    id: person.id,
-    name: person.name,
-    imageUrl: person.imageUrl,
-    externalId: person.externalId,
-    createdAt: person.createdAt,
-    updatedAt: person.updatedAt,
-  };
-}
-
-/**
- * Transform Work from Prisma to API response format
- */
-function transformWorkToResponse(
-  work: Work
-): {
-  id: string;
-  title: string;
-  type: "FILM" | "TV_SHOW" | "SONG" | "ALBUM" | "BOOK" | "PLAY" | "OTHER";
-  year: number | null;
-  imageUrl: string | null;
-  externalId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-} {
-  return {
-    id: work.id,
-    title: work.title,
-    type: work.type,
-    year: work.year,
-    imageUrl: work.imageUrl,
-    externalId: work.externalId,
-    createdAt: work.createdAt,
-    updatedAt: work.updatedAt,
-  };
-}
-
-/**
- * Transform Game from Prisma to API response format
- */
-function transformGameToResponse(
-  game: Game
-): {
-  id: string;
-  name: string;
-  status: "SETUP" | "OPEN" | "LIVE" | "COMPLETED";
-  accessCode: string;
-  picksLockAt: Date | null;
-  eventId: string;
-  createdAt: Date;
-  updatedAt: Date;
-} {
-  return {
-    id: game.id,
-    name: game.name,
-    status: game.status,
-    accessCode: game.accessCode,
-    picksLockAt: game.picksLockAt,
-    eventId: game.eventId,
-    createdAt: game.createdAt,
-    updatedAt: game.updatedAt,
-  };
-}
-
 // ============================================================================
-// ADMIN ROUTER IMPLEMENTATION
+// CONTRACT BUILDERS - One per contract for proper type inference
 // ============================================================================
+
+const listEventsBuilder = implement(listEventsContract);
+const createEventBuilder = implement(createEventContract);
+const updateEventBuilder = implement(updateEventContract);
+const deleteEventBuilder = implement(deleteEventContract);
+
+const createCategoryBuilder = implement(createCategoryContract);
+const updateCategoryBuilder = implement(updateCategoryContract);
+const deleteCategoryBuilder = implement(deleteCategoryContract);
+const markWinnerBuilder = implement(markWinnerContract);
+const clearWinnerBuilder = implement(clearWinnerContract);
+
+const createNominationBuilder = implement(createNominationContract);
+const updateNominationBuilder = implement(updateNominationContract);
+const deleteNominationBuilder = implement(deleteNominationContract);
+
+const listPeopleBuilder = implement(listPeopleContract);
+const createPersonBuilder = implement(createPersonContract);
+const updatePersonBuilder = implement(updatePersonContract);
+const deletePersonBuilder = implement(deletePersonContract);
+
+const listWorksBuilder = implement(listWorksContract);
+const createWorkBuilder = implement(createWorkContract);
+const updateWorkBuilder = implement(updateWorkContract);
+const deleteWorkBuilder = implement(deleteWorkContract);
+
+const listGamesBuilder = implement(listGamesContract);
+const createGameBuilder = implement(createGameContract);
+const updateGameBuilder = implement(updateGameContract);
+const updateGameStatusBuilder = implement(updateGameStatusContract);
+const deleteGameBuilder = implement(deleteGameContract);
+
+const previewWikipediaImportBuilder = implement(previewWikipediaImportContract);
+const importFromWikipediaBuilder = implement(importFromWikipediaContract);
 
 export const adminRouter = {
   // ============================================================================
   // EVENT PROCEDURES
   // ============================================================================
 
-  listEvents: adminProcedure.handler(async () => {
+  listEvents: listEventsBuilder.use(adminProcedure).handler(async () => {
     const events = await eventModel.findAllWithCategoryCounts();
     return events;
   }),
 
-  createEvent: adminProcedure.handler(async ({ input }: { input: any }) => {
+  createEvent: createEventBuilder.use(adminProcedure).handler(async ({ input }) => {
     const event = await eventService.createEvent(input);
-    return transformEventToResponse(event);
+    return event;
   }),
 
-  updateEvent: adminProcedure.handler(async ({ input }: { input: any }) => {
+  updateEvent: updateEventBuilder.use(adminProcedure).handler(async ({ input }) => {
     const { id, ...data } = input;
     const event = await eventService.updateEvent(id, data);
-    return transformEventToResponse(event);
+    return event;
   }),
 
-  deleteEvent: adminProcedure.handler(async ({ input }: { input: any }) => {
+  deleteEvent: deleteEventBuilder.use(adminProcedure).handler(async ({ input }) => {
     await eventService.deleteEvent(input.id);
     return { success: true };
   }),
@@ -219,45 +124,45 @@ export const adminRouter = {
   // CATEGORY PROCEDURES
   // ============================================================================
 
-  createCategory: adminProcedure.handler(async ({ input }: { input: any }) => {
+  createCategory: createCategoryBuilder.use(adminProcedure).handler(async ({ input }) => {
     const { eventId, ...data } = input;
     const category = await categoryModel.create({
       ...data,
       event: { connect: { id: eventId } },
     });
-    return transformCategoryToResponse(category);
+    return category;
   }),
 
-  updateCategory: adminProcedure.handler(async ({ input }: { input: any }) => {
+  updateCategory: updateCategoryBuilder.use(adminProcedure).handler(async ({ input }) => {
     const { id, eventId, ...data } = input;
 
     // Build update data with event connection if provided
     const updateData = eventId ? { ...data, event: { connect: { id: eventId } } } : data;
 
     const category = await categoryModel.update(id, updateData);
-    return transformCategoryToResponse(category);
+    return category;
   }),
 
-  deleteCategory: adminProcedure.handler(async ({ input }: { input: any }) => {
+  deleteCategory: deleteCategoryBuilder.use(adminProcedure).handler(async ({ input }) => {
     await categoryModel.deleteById(input.id);
     return { success: true };
   }),
 
-  markWinner: adminProcedure.handler(async ({ input }: { input: any }) => {
+  markWinner: markWinnerBuilder.use(adminProcedure).handler(async ({ input }) => {
     const category = await categoryService.markWinner(input.categoryId, input.nominationId);
-    return transformCategoryToResponse(category);
+    return category;
   }),
 
-  clearWinner: adminProcedure.handler(async ({ input }: { input: any }) => {
+  clearWinner: clearWinnerBuilder.use(adminProcedure).handler(async ({ input }) => {
     const category = await categoryService.clearWinner(input.categoryId);
-    return transformCategoryToResponse(category);
+    return category;
   }),
 
   // ============================================================================
   // NOMINATION PROCEDURES
   // ============================================================================
 
-  createNomination: adminProcedure.handler(async ({ input }: { input: any }) => {
+  createNomination: createNominationBuilder.use(adminProcedure).handler(async ({ input }) => {
     const { categoryId, workId, personId, ...data } = input;
 
     // Build the nomination data with proper Prisma relations
@@ -269,10 +174,10 @@ export const adminRouter = {
     };
 
     const nomination = await nominationModel.create(nominationData);
-    return transformNominationToResponse(nomination);
+    return nomination;
   }),
 
-  updateNomination: adminProcedure.handler(async ({ input }: { input: any }) => {
+  updateNomination: updateNominationBuilder.use(adminProcedure).handler(async ({ input }) => {
     const { id, categoryId, workId, personId, ...data } = input;
 
     // Build update data with proper Prisma relations
@@ -288,10 +193,10 @@ export const adminRouter = {
     };
 
     const nomination = await nominationModel.update(id, updateData);
-    return transformNominationToResponse(nomination);
+    return nomination;
   }),
 
-  deleteNomination: adminProcedure.handler(async ({ input }: { input: any }) => {
+  deleteNomination: deleteNominationBuilder.use(adminProcedure).handler(async ({ input }) => {
     await nominationModel.deleteById(input.id);
     return { success: true };
   }),
@@ -300,23 +205,23 @@ export const adminRouter = {
   // PERSON PROCEDURES
   // ============================================================================
 
-  listPeople: adminProcedure.handler(async () => {
+  listPeople: listPeopleBuilder.use(adminProcedure).handler(async () => {
     const people = await personModel.findAllWithCounts();
     return people;
   }),
 
-  createPerson: adminProcedure.handler(async ({ input }: { input: any }) => {
+  createPerson: createPersonBuilder.use(adminProcedure).handler(async ({ input }) => {
     const person = await personModel.create(input);
-    return transformPersonToResponse(person);
+    return person;
   }),
 
-  updatePerson: adminProcedure.handler(async ({ input }: { input: any }) => {
+  updatePerson: updatePersonBuilder.use(adminProcedure).handler(async ({ input }) => {
     const { id, ...data } = input;
     const person = await personModel.update(id, data);
-    return transformPersonToResponse(person);
+    return person;
   }),
 
-  deletePerson: adminProcedure.handler(async ({ input }: { input: any }) => {
+  deletePerson: deletePersonBuilder.use(adminProcedure).handler(async ({ input }) => {
     await personModel.deleteById(input.id);
     return { success: true };
   }),
@@ -325,23 +230,23 @@ export const adminRouter = {
   // WORK PROCEDURES
   // ============================================================================
 
-  listWorks: adminProcedure.handler(async () => {
+  listWorks: listWorksBuilder.use(adminProcedure).handler(async () => {
     const works = await workModel.findAll();
     return works;
   }),
 
-  createWork: adminProcedure.handler(async ({ input }: { input: any }) => {
+  createWork: createWorkBuilder.use(adminProcedure).handler(async ({ input }) => {
     const work = await workModel.create(input);
-    return transformWorkToResponse(work);
+    return work;
   }),
 
-  updateWork: adminProcedure.handler(async ({ input }: { input: any }) => {
+  updateWork: updateWorkBuilder.use(adminProcedure).handler(async ({ input }) => {
     const { id, ...data } = input;
     const work = await workModel.update(id, data);
-    return transformWorkToResponse(work);
+    return work;
   }),
 
-  deleteWork: adminProcedure.handler(async ({ input }: { input: any }) => {
+  deleteWork: deleteWorkBuilder.use(adminProcedure).handler(async ({ input }) => {
     await workModel.deleteById(input.id);
     return { success: true };
   }),
@@ -350,36 +255,36 @@ export const adminRouter = {
   // GAME PROCEDURES
   // ============================================================================
 
-  listGames: adminProcedure.handler(async () => {
+  listGames: listGamesBuilder.use(adminProcedure).handler(async () => {
     const games = await gameModel.findAll();
     return games;
   }),
 
-  createGame: adminProcedure.handler(async ({ input }: { input: any }) => {
+  createGame: createGameBuilder.use(adminProcedure).handler(async ({ input }) => {
     const { eventId, ...data } = input;
     const game = await gameService.createGame({
       ...data,
       event: { connect: { id: eventId } },
     });
-    return transformGameToResponse(game);
+    return game;
   }),
 
-  updateGame: adminProcedure.handler(async ({ input }: { input: any }) => {
+  updateGame: updateGameBuilder.use(adminProcedure).handler(async ({ input }) => {
     const { id, eventId, ...data } = input;
 
     // Build update data with event connection if provided
     const updateData = eventId ? { ...data, event: { connect: { id: eventId } } } : data;
 
     const game = await gameService.updateGame(id, updateData);
-    return transformGameToResponse(game);
+    return game;
   }),
 
-  updateGameStatus: adminProcedure.handler(async ({ input }: { input: any }) => {
+  updateGameStatus: updateGameStatusBuilder.use(adminProcedure).handler(async ({ input }) => {
     const game = await gameService.updateGameStatus(input.id, input.status);
-    return transformGameToResponse(game);
+    return game;
   }),
 
-  deleteGame: adminProcedure.handler(async ({ input }: { input: any }) => {
+  deleteGame: deleteGameBuilder.use(adminProcedure).handler(async ({ input }) => {
     await gameService.deleteGame(input.id);
     return { success: true };
   }),
@@ -388,45 +293,15 @@ export const adminRouter = {
   // WIKIPEDIA IMPORT PROCEDURES
   // ============================================================================
 
-  previewWikipediaImport: adminProcedure
-    .input(wikipediaUrlSchema)
-    .output(
-      z.object({
-        event: z.object({
-          name: z.string(),
-          slug: z.string(),
-          description: z.string().optional(),
-          date: z.date(),
-        }),
-        categoryCount: z.number().int().min(0),
-        nominationCount: z.number().int().min(0),
-        categories: z
-          .array(
-            z.object({
-              name: z.string(),
-              pointValue: z.number().int(),
-              nominationCount: z.number().int().min(0),
-            })
-          )
-          .optional(),
-        url: z.string().url(),
-      })
-    )
+  previewWikipediaImport: previewWikipediaImportBuilder
+    .use(adminProcedure)
     .handler(async ({ input }) => {
       const preview = await wikipediaImportService.previewImport(input.url);
       return preview;
     }),
 
-  importFromWikipedia: adminProcedure
-    .input(wikipediaUrlSchema)
-    .output(
-      z.object({
-        eventId: z.string(),
-        eventName: z.string(),
-        categoriesCreated: z.number().int().min(0),
-        nominationsCreated: z.number().int().min(0),
-      })
-    )
+  importFromWikipedia: importFromWikipediaBuilder
+    .use(adminProcedure)
     .handler(async ({ input }) => {
       const result = await wikipediaImportService.commitImport(input.url);
       return result;
