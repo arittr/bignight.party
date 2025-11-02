@@ -7,8 +7,8 @@ import { AdminForm } from "@/components/admin/ui/admin-form";
 import { FormFieldGroup } from "@/components/admin/ui/form-field-group";
 import { eventCreateSchema } from "@/schemas/event-schema";
 
-// Use z.input type to handle coerce.date() properly
-type EventFormData = z.input<typeof eventCreateSchema>;
+// Wire format type: dates are ISO 8601 strings
+type EventFormData = z.infer<typeof eventCreateSchema>;
 
 export interface EventFormProps {
   initialData?: Partial<EventFormData>;
@@ -30,7 +30,7 @@ export function EventForm({
   const form = useForm<EventFormData>({
     defaultValues: {
       description: initialData?.description ?? "",
-      eventDate: initialData?.eventDate ?? new Date(),
+      eventDate: initialData?.eventDate ?? new Date().toISOString(),
       name: initialData?.name ?? "",
       slug: initialData?.slug ?? "",
     },

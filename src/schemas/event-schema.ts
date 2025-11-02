@@ -5,8 +5,8 @@ const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const eventCreateSchema = z.object({
   description: z.string().optional(),
-  eventDate: z.coerce.date({
-    message: "Event date is required and must be a valid date",
+  eventDate: z.string().datetime({
+    message: "Event date is required and must be a valid ISO 8601 datetime",
   }),
   name: z.string().min(1, "Event name is required"),
   slug: z
@@ -17,9 +17,10 @@ export const eventCreateSchema = z.object({
 
 export const eventUpdateSchema = z.object({
   description: z.string().optional(),
-  eventDate: z.coerce
-    .date({
-      message: "Event date must be a valid date",
+  eventDate: z
+    .string()
+    .datetime({
+      message: "Event date must be a valid ISO 8601 datetime",
     })
     .optional(),
   id: z.string().cuid("Invalid event ID"),
