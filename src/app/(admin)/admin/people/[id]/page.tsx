@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { EditPersonForm } from "@/components/admin/people/edit-person-form";
 import { serverClient } from "@/lib/api/server-client";
 import { requireValidatedSession } from "@/lib/auth/config";
+import { routes } from "@/lib/routes";
 import * as personModel from "@/lib/models/person";
 
 interface PersonDetailPageProps {
@@ -19,21 +21,11 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
     notFound();
   }
 
-  async function handleUpdate(formData: FormData) {
-    "use server";
-    await serverClient.admin.people.update({
-      externalId: formData.get("externalId") as string | undefined,
-      id: formData.get("id") as string,
-      imageUrl: formData.get("imageUrl") as string | undefined,
-      name: formData.get("name") as string | undefined,
-    });
-  }
-
   async function handleDelete() {
     "use server";
     try {
       await serverClient.admin.people.delete({ id });
-      redirect("/admin/people");
+      redirect(routes.admin.people.index());
     } catch (_error) {
       // Foreign key constraint error - person has nominations
     }
@@ -44,7 +36,7 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
       <div className="mb-8">
         <Link
           className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-          href="/admin/people"
+          href={routes.admin.people.index()}
         >
           ← Back to People
         </Link>
@@ -98,61 +90,7 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6">Edit Person Details</h2>
 
-          <form action={handleUpdate} className="space-y-6">
-            <input name="id" type="hidden" value={person.id} />
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
-                Name <span className="text-red-500">*</span>
-              </label>
-              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-              <input
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                defaultValue={person.name}
-                id="name"
-                name="name"
-                required
-                type="text"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="imageUrl">
-                Image URL
-              </label>
-              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-              <input
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                defaultValue={person.imageUrl ?? ""}
-                id="imageUrl"
-                name="imageUrl"
-                type="url"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="externalId">
-                External ID
-              </label>
-              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-              <input
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                defaultValue={person.externalId ?? ""}
-                id="externalId"
-                name="externalId"
-                type="text"
-              />
-            </div>
-
-            <div className="pt-4">
-              <button
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                type="submit"
-              >
-                Update Person
-              </button>
-            </div>
-          </form>
+          <EditPersonForm person={person} />
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
