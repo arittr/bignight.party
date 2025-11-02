@@ -58,9 +58,11 @@ export const adminRouter = os.router({
   },
   categories: {
     create: os.categories.create.use(adminMiddleware).handler(async ({ input }) => {
-      const { eventId, ...data } = input;
+      const { eventId, isRevealed = false, points = 1, ...data } = input;
       const category = await categoryModel.create({
         ...data,
+        isRevealed,
+        points,
         event: { connect: { id: eventId } },
       });
       return category;

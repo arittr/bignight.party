@@ -1,4 +1,3 @@
-import { WorkType } from "@prisma/client";
 import { z } from "zod";
 
 // Year validation: reasonable range for works (1900-2100)
@@ -10,7 +9,7 @@ export const workCreateSchema = z.object({
   externalId: z.string().optional(),
   imageUrl: z.string().url("Poster URL must be a valid URL").optional(),
   title: z.string().min(1, "Title is required"),
-  type: z.nativeEnum(WorkType, {
+  type: z.enum(["FILM", "TV_SHOW", "ALBUM", "SONG", "PLAY", "BOOK", "OTHER"], {
     message: "Work type is required",
   }),
   year: z
@@ -26,7 +25,7 @@ export const workUpdateSchema = z.object({
   id: z.string().cuid("Invalid work ID"),
   imageUrl: z.string().url("Poster URL must be a valid URL").optional(),
   title: z.string().min(1, "Title is required").optional(),
-  type: z.nativeEnum(WorkType).optional(),
+  type: z.enum(["FILM", "TV_SHOW", "ALBUM", "SONG", "PLAY", "BOOK", "OTHER"]).optional(),
   year: z
     .number()
     .int()
