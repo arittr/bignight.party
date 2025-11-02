@@ -14,7 +14,7 @@ export default async function NewGamePage() {
     const accessCode = formData.get("accessCode") as string;
     const picksLockAt = formData.get("picksLockAt") as string;
 
-    await serverClient.admin.createGame({
+    await serverClient.admin.games.create({
       accessCode,
       eventId,
       name,

@@ -12,7 +12,7 @@ export function DeleteNominationButton({
   nominationId,
   nominationText,
 }: DeleteNominationButtonProps) {
-  const mutation = useMutation(orpc.admin.deleteNomination.mutationOptions());
+  const mutation = useMutation(orpc.admin.nominations.delete.mutationOptions());
 
   async function handleDelete(_formData: FormData) {
     if (confirm(`Are you sure you want to delete: "${nominationText}"?`)) {

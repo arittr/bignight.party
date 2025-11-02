@@ -23,7 +23,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     const description = formData.get("description") as string;
     const eventDate = formData.get("eventDate") as string;
 
-    await serverClient.admin.updateEvent({
+    await serverClient.admin.events.update({
       description: description || undefined,
       eventDate: new Date(eventDate),
       id,
@@ -35,7 +35,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   async function handleDeleteEvent() {
     "use server";
 
-    await serverClient.admin.deleteEvent({ id });
+    await serverClient.admin.events.delete({ id });
     redirect(routes.admin.events.index());
   }
 

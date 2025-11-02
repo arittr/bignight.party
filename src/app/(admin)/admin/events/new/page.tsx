@@ -11,7 +11,7 @@ export default function NewEventPage() {
     const description = formData.get("description") as string;
     const eventDate = formData.get("eventDate") as string;
 
-    const result = await serverClient.admin.createEvent({
+    const result = await serverClient.admin.events.create({
       description: description || undefined,
       eventDate: new Date(eventDate),
       name,
