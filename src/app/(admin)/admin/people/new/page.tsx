@@ -5,7 +5,7 @@ import { serverClient } from "@/lib/api/server-client";
 export default function NewPersonPage() {
   async function handleCreate(formData: FormData) {
     "use server";
-    await serverClient.admin.createPerson({
+    await serverClient.admin.people.create({
       externalId: formData.get("externalId") as string | undefined,
       imageUrl: formData.get("imageUrl") as string | undefined,
       name: formData.get("name") as string,

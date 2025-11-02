@@ -30,7 +30,7 @@ export default async function CategoryDetailPage(props: Props) {
     const points = Number.parseInt(formData.get("points") as string, 10);
     const isRevealed = formData.get("isRevealed") === "on";
 
-    await serverClient.admin.updateCategory({
+    await serverClient.admin.categories.update({
       id: params.categoryId,
       isRevealed,
       name,
@@ -42,14 +42,14 @@ export default async function CategoryDetailPage(props: Props) {
   async function handleDelete() {
     "use server";
 
-    await serverClient.admin.deleteCategory({ id: params.categoryId });
+    await serverClient.admin.categories.delete({ id: params.categoryId });
     redirect(`/admin/events/${params.id}`);
   }
 
   async function handleDeleteNomination(nominationId: string) {
     "use server";
 
-    await serverClient.admin.deleteNomination({ id: nominationId });
+    await serverClient.admin.nominations.delete({ id: nominationId });
   }
 
   return (

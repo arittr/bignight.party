@@ -24,7 +24,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
   // Delete action with error handling
   async function handleDelete() {
     "use server";
-    await serverClient.admin.deleteWork({ id: params.id });
+    await serverClient.admin.works.delete({ id: params.id });
     redirect("/admin/works");
   }
 
@@ -52,7 +52,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
               const imageUrl = formData.get("imageUrl");
               const externalId = formData.get("externalId");
 
-              await serverClient.admin.updateWork({
+              await serverClient.admin.works.update({
                 id: params.id,
                 ...(title && { title: title as string }),
                 ...(type && { type: type as WorkType }),

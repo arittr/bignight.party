@@ -553,13 +553,62 @@ export const importFromWikipediaContract = oc.input(wikipediaUrlSchema).output(
 );
 
 // ============================================================================
-// ADMIN ROUTER CONTRACT
+// ADMIN ROUTER CONTRACT - HIERARCHICAL OBJECT PATTERN
 // ============================================================================
 
 /**
- * Combined admin router contract
+ * Combined admin router contract as hierarchical object
  * All procedures require ADMIN role
  *
- * Note: Export individual contracts for router implementation.
- * The router uses these contracts via input/output schemas.
+ * Organized by domain:
+ * - events: List, create, update, delete events
+ * - categories: Create, update, delete, mark/clear winner
+ * - nominations: Create, update, delete nominations
+ * - people: List, create, update, delete people
+ * - works: List, create, update, delete works
+ * - games: List, create, update, updateStatus, delete games
+ * - wikipedia: Preview and import from Wikipedia
  */
+export const adminContract = {
+  events: {
+    list: listEventsContract,
+    create: createEventContract,
+    update: updateEventContract,
+    delete: deleteEventContract,
+  },
+  categories: {
+    create: createCategoryContract,
+    update: updateCategoryContract,
+    delete: deleteCategoryContract,
+    markWinner: markWinnerContract,
+    clearWinner: clearWinnerContract,
+  },
+  nominations: {
+    create: createNominationContract,
+    update: updateNominationContract,
+    delete: deleteNominationContract,
+  },
+  people: {
+    list: listPeopleContract,
+    create: createPersonContract,
+    update: updatePersonContract,
+    delete: deletePersonContract,
+  },
+  works: {
+    list: listWorksContract,
+    create: createWorkContract,
+    update: updateWorkContract,
+    delete: deleteWorkContract,
+  },
+  games: {
+    list: listGamesContract,
+    create: createGameContract,
+    update: updateGameContract,
+    updateStatus: updateGameStatusContract,
+    delete: deleteGameContract,
+  },
+  wikipedia: {
+    previewImport: previewWikipediaImportContract,
+    import: importFromWikipediaContract,
+  },
+};

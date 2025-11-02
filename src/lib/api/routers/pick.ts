@@ -12,23 +12,25 @@ import * as pickService from "@/lib/services/pick-service";
  */
 
 // Create typed builder from contract
-const pickBuilder = implement(pickContract);
+const os = implement(pickContract);
+
+/**
+ * Submit or update a pick for the current user
+ * Validates user is a game participant and game is accepting picks
+ */
+const submitPick = os.submitPick
+  .use(authenticatedProcedure)
+  .handler(async ({ input, ctx }) => {
+    return pickService.submitPick(ctx.userId, {
+      gameId: input.gameId,
+      categoryId: input.categoryId,
+      nominationId: input.nominationId,
+    });
+  });
 
 /**
  * Pick Router - Implements pickContract with full type safety
  */
-export const pickRouter = pickBuilder.router({
-  /**
-   * Submit or update a pick for the current user
-   * Validates user is a game participant and game is accepting picks
-   */
-  submitPick: pickBuilder.submitPick
-    .use(authenticatedProcedure)
-    .handler(async ({ input, ctx }) => {
-      return pickService.submitPick(ctx.userId, {
-        gameId: input.gameId,
-        categoryId: input.categoryId,
-        nominationId: input.nominationId,
-      });
-    }),
+export const pickRouter = os.router({
+  submitPick,
 });

@@ -6,12 +6,12 @@ export default async function GamesPage() {
   await requireValidatedSession();
 
   // Fetch games via oRPC server client (no HTTP overhead)
-  const games = await serverClient.admin.listGames();
+  const games = await serverClient.admin.games.list();
 
   // Server action wrapper for delete using oRPC
   async function handleDelete(gameId: string) {
     "use server";
-    const result = await serverClient.admin.deleteGame({ id: gameId });
+    const result = await serverClient.admin.games.delete({ id: gameId });
     if (!result?.success) {
       throw new Error("Failed to delete game");
     }
