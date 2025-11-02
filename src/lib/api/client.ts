@@ -1,7 +1,9 @@
 "use client";
 
 import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client";
+import type { ClientContext } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import type { AppRouter } from "./root";
 
@@ -52,11 +54,12 @@ const link = new RPCLink({
   },
 });
 
-// Create base client
-const baseClient = createORPCClient<AppRouter>(link);
+// Create base client with proper type - RouterClient converts router type to client type
+const baseClient = createORPCClient<RouterClient<AppRouter, ClientContext>>(link);
 
 // Create TanStack Query utilities - provides .mutationOptions() and .queryOptions()
-export const orpc = createTanstackQueryUtils<AppRouter>(baseClient);
+// Type is inferred from baseClient, no need for explicit type parameter
+export const orpc = createTanstackQueryUtils(baseClient);
 
 // Alias for clarity - use 'api' to call oRPC procedures
 export const api = orpc;
