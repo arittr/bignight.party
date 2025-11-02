@@ -1,5 +1,12 @@
-import { GameStatus } from "@prisma/client";
 import { z } from "zod";
+
+/**
+ * Game Schemas - Wire Format
+ *
+ * These schemas validate the wire format (JSON/HTTP) that comes from forms and clients.
+ * Dates are ISO 8601 strings, not Date objects.
+ * Routers transform wire format → domain types before passing to services.
+ */
 
 // Access code validation: uppercase letters and numbers only
 const accessCodeRegex = /^[A-Z0-9]+$/;
@@ -11,12 +18,8 @@ export const gameCreateSchema = z.object({
     .regex(accessCodeRegex, "Access code must contain only uppercase letters and numbers"),
   eventId: z.string().cuid("Invalid event ID"),
   name: z.string().min(1, "Game name is required"),
-  picksLockAt: z.coerce
-    .date({
-      message: "Picks lock date must be a valid date",
-    })
-    .optional(),
-  status: z.nativeEnum(GameStatus).default(GameStatus.SETUP),
+  picksLockAt: z.string().datetime().optional(),
+  // Note: status field omitted - backend sets default value
 });
 
 export const gameUpdateSchema = z.object({
@@ -28,12 +31,8 @@ export const gameUpdateSchema = z.object({
   eventId: z.string().cuid("Invalid event ID").optional(),
   id: z.string().cuid("Invalid game ID"),
   name: z.string().min(1, "Game name is required").optional(),
-  picksLockAt: z.coerce
-    .date({
-      message: "Picks lock date must be a valid date",
-    })
-    .optional(),
-  status: z.nativeEnum(GameStatus).optional(),
+  picksLockAt: z.string().datetime().optional(),
+  status: z.enum(["SETUP", "OPEN", "LIVE", "COMPLETED"]).optional(),
 });
 
 export const joinGameSchema = z.object({

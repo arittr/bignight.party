@@ -4,6 +4,7 @@ onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - core-js
   - esbuild
+  - lefthook
   - prisma
   - sharp
   - wtf_wikipedia

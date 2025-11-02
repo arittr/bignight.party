@@ -1,6 +1,7 @@
 import { implement } from "@orpc/server";
 import { adminMiddleware } from "@/lib/api/procedures";
 import { adminContract } from "@/lib/api/contracts/admin";
+import { parseOptionalDate } from "@/lib/api/utils/wire-to-domain";
 import * as categoryModel from "@/lib/models/category";
 import * as eventModel from "@/lib/models/event";
 import * as gameModel from "@/lib/models/game";
@@ -168,16 +169,20 @@ export const adminRouter = os.router({
       return games;
     }),
     create: os.games.create.use(adminMiddleware).handler(async ({ input }) => {
-      const { eventId, ...data } = input;
+      const { eventId, picksLockAt, ...data } = input;
       const game = await gameService.createGame({
         ...data,
+        picksLockAt: parseOptionalDate(picksLockAt),
         event: { connect: { id: eventId } },
       });
       return game;
     }),
     update: os.games.update.use(adminMiddleware).handler(async ({ input }) => {
-      const { id, eventId, ...data } = input;
-      const game = await gameService.updateGame(id, data);
+      const { id, eventId, picksLockAt, ...data } = input;
+      const game = await gameService.updateGame(id, {
+        ...data,
+        picksLockAt: parseOptionalDate(picksLockAt),
+      });
       return game;
     }),
     updateStatus: os.games.updateStatus.use(adminMiddleware).handler(async ({ input }) => {
