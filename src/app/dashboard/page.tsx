@@ -1,11 +1,31 @@
 import { GameListItem } from "@/components/game-list-item";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as gameService from "@/lib/services/game-service";
+import * as categoryModel from "@/lib/models/category";
 
 export default async function DashboardPage() {
   const session = await requireValidatedSession();
 
-  const gamesWithCompletion = await gameService.getUserGames(session.user.id);
+  const games = await gameService.getUserGames(session.user.id);
+
+  // Transform to match component expectations and add totalCategories
+  const gamesWithCompletion = await Promise.all(
+    games.map(async (game) => {
+      const categories = await categoryModel.getCategoriesByEventId(game.eventId);
+      return {
+        game: {
+          id: game.id,
+          name: game.name,
+          status: game.status,
+          event: {
+            name: game.event.name,
+          },
+        },
+        picksCount: game._count.picks,
+        totalCategories: categories.length,
+      };
+    })
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
