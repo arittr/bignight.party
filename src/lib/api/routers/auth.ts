@@ -1,4 +1,5 @@
 import { implement } from "@orpc/server";
+import { publicProcedure } from "@/lib/api/procedures";
 import { authContract } from "@/lib/api/contracts/auth";
 import { signIn } from "@/lib/auth/config";
 
@@ -32,7 +33,7 @@ export const authRouter = authBuilder.router({
    * Works for both existing users and new signups
    * Uses Auth.js email provider (Mailpit in dev, Resend in prod)
    */
-  signIn: authBuilder.signIn.handler(async ({ input }) => {
+  signIn: authBuilder.signIn.use(publicProcedure).handler(async ({ input }) => {
     // Determine provider based on environment
     const providerId = process.env.NODE_ENV === "development" ? "email" : "resend";
 
@@ -58,7 +59,7 @@ export const authRouter = authBuilder.router({
    * In our system, signup and signin are the same flow:
    * Auth.js creates the user on first email verification
    */
-  signUp: authBuilder.signUp.handler(async ({ input }) => {
+  signUp: authBuilder.signUp.use(publicProcedure).handler(async ({ input }) => {
     // Determine provider based on environment
     const providerId = process.env.NODE_ENV === "development" ? "email" : "resend";
 
@@ -84,7 +85,7 @@ export const authRouter = authBuilder.router({
    * This is primarily handled by Auth.js callback flow automatically,
    * but exposed here for potential explicit verification needs
    */
-  verifyEmail: authBuilder.verifyEmail.handler(async ({ input }) => {
+  verifyEmail: authBuilder.verifyEmail.use(publicProcedure).handler(async ({ input }) => {
     // In the current implementation, Auth.js handles email verification
     // through the callback URL (auth/callback/email)
     // This procedure is a placeholder for potential future needs
