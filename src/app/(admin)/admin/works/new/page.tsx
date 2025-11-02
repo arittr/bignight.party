@@ -1,28 +1,9 @@
-import { WorkType } from "@prisma/client";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { serverClient } from "@/lib/api/server-client";
+import { CreateWorkForm } from "@/components/admin/works/create-work-form";
+import { requireValidatedSession } from "@/lib/auth/config";
 
-export default function NewWorkPage() {
-  async function handleCreate(formData: FormData) {
-    "use server";
-
-    const title = formData.get("title") as string;
-    const type = formData.get("type") as WorkType;
-    const year = formData.get("year");
-    const imageUrl = formData.get("imageUrl");
-    const externalId = formData.get("externalId");
-
-    await serverClient.admin.works.create({
-      title,
-      type,
-      ...(year && { year: Number(year) }),
-      ...(imageUrl && { imageUrl: imageUrl as string }),
-      ...(externalId && { externalId: externalId as string }),
-    });
-
-    redirect("/admin/works");
-  }
+export default async function NewWorkPage() {
+  await requireValidatedSession();
 
   return (
     <div>
@@ -34,108 +15,7 @@ export default function NewWorkPage() {
       </div>
 
       <div className="bg-white shadow-md rounded-lg p-6 max-w-2xl">
-        <form action={handleCreate}>
-          {/* Title */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="title">
-              Title <span className="text-red-500">*</span>
-            </label>
-            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-            <input
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              id="title"
-              name="title"
-              placeholder="Enter work title"
-              required
-              type="text"
-            />
-          </div>
-
-          {/* Type */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="type">
-              Type <span className="text-red-500">*</span>
-            </label>
-            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-            <select
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              id="type"
-              name="type"
-              required
-            >
-              <option value="">Select a type</option>
-              <option value={WorkType.FILM}>Film</option>
-              <option value={WorkType.TV_SHOW}>TV Show</option>
-              <option value={WorkType.ALBUM}>Album</option>
-              <option value={WorkType.SONG}>Song</option>
-              <option value={WorkType.PLAY}>Play</option>
-              <option value={WorkType.BOOK}>Book</option>
-            </select>
-          </div>
-
-          {/* Year */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="year">
-              Year
-            </label>
-            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-            <input
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              id="year"
-              max={new Date().getFullYear() + 10}
-              min="1900"
-              name="year"
-              placeholder="Enter year"
-              type="number"
-            />
-          </div>
-
-          {/* Poster URL */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="imageUrl">
-              Poster URL
-            </label>
-            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-            <input
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              id="imageUrl"
-              name="imageUrl"
-              placeholder="https://example.com/poster.jpg"
-              type="url"
-            />
-          </div>
-
-          {/* External ID */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="externalId">
-              External ID
-            </label>
-            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-            <input
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              id="externalId"
-              name="externalId"
-              placeholder="e.g., IMDB ID, ISBN, etc."
-              type="text"
-            />
-          </div>
-
-          {/* Submit buttons */}
-          <div className="flex gap-4">
-            <button
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              type="submit"
-            >
-              Create Work
-            </button>
-            <Link
-              className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors inline-block"
-              href="/admin/works"
-            >
-              Cancel
-            </Link>
-          </div>
-        </form>
+        <CreateWorkForm />
       </div>
     </div>
   );
