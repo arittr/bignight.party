@@ -49,3 +49,12 @@ export const verifyEmailContract = oc
       message: z.string(),
     })
   );
+
+/**
+ * Root auth contract - combines all auth procedures
+ */
+export const authContract = oc.router({
+  signIn: signInContract,
+  signUp: signUpContract,
+  verifyEmail: verifyEmailContract,
+});
