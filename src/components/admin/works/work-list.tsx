@@ -37,6 +37,8 @@ const workTypeLabels: Record<WorkType, string> = {
   SONG: "Song",
   // biome-ignore lint/style/useNamingConvention: Matches WorkType enum
   TV_SHOW: "TV Show",
+  // biome-ignore lint/style/useNamingConvention: Matches WorkType enum
+  OTHER: "Other",
 };
 
 export function WorkList({

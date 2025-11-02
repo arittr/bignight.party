@@ -107,16 +107,30 @@ export async function checkMembership(userId: string, gameId: string): Promise<b
 export async function getUserGames(userId: string) {
   const participants = await gameParticipantModel.findByUserId(userId);
 
-  // Build results with completion counts
+  // Build results matching contract output shape
   const gamesWithCompletion = await Promise.all(
     participants.map(async (participant) => {
       const picksCount = await pickModel.getPicksCountByGameAndUser(participant.gameId, userId);
-      const categories = await categoryModel.getCategoriesByEventId(participant.game.eventId);
+      const participantsCount = await gameParticipantModel.getParticipantsCount(participant.gameId);
 
       return {
-        game: participant.game,
-        picksCount,
-        totalCategories: categories.length,
+        id: participant.game.id,
+        name: participant.game.name,
+        status: participant.game.status,
+        accessCode: participant.game.accessCode,
+        picksLockAt: participant.game.picksLockAt,
+        eventId: participant.game.eventId,
+        createdAt: participant.game.createdAt,
+        updatedAt: participant.game.updatedAt,
+        event: {
+          id: participant.game.event.id,
+          name: participant.game.event.name,
+          eventDate: participant.game.event.eventDate,
+        },
+        _count: {
+          participants: participantsCount,
+          picks: picksCount,
+        },
       };
     })
   );
@@ -125,13 +139,13 @@ export async function getUserGames(userId: string) {
 }
 
 /**
- * Resolve access code to gameId and check membership status
- * Returns { gameId, isMember } object
+ * Resolve access code to game info and check membership status
+ * Returns { gameId, gameName, eventName, isMember, canJoin } object
  */
 export async function resolveAccessCode(
   code: string,
   userId: string
-): Promise<{ gameId: string; isMember: boolean }> {
+): Promise<{ gameId: string; gameName: string; eventName: string; isMember: boolean; canJoin: boolean }> {
   // Find game by access code
   const game = await gameModel.findByAccessCode(code);
 
@@ -142,8 +156,14 @@ export async function resolveAccessCode(
   // Check if user is already a member
   const isMember = await gameParticipantModel.exists(userId, game.id);
 
+  // Determine if user can join based on game status
+  const canJoin = game.status === "SETUP" || game.status === "OPEN";
+
   return {
     gameId: game.id,
+    gameName: game.name,
+    eventName: game.event.name,
     isMember,
+    canJoin,
   };
 }
