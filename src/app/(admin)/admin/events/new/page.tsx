@@ -13,7 +13,7 @@ export default function NewEventPage() {
 
     const result = await serverClient.admin.events.create({
       description: description || undefined,
-      eventDate: new Date(eventDate),
+      eventDate: new Date(eventDate).toISOString(),
       name,
       slug,
     });

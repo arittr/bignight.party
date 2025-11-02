@@ -25,7 +25,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
     await serverClient.admin.events.update({
       description: description || undefined,
-      eventDate: new Date(eventDate),
+      eventDate: new Date(eventDate).toISOString(),
       id,
       name,
       slug,
