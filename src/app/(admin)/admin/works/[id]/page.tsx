@@ -1,6 +1,6 @@
-import { WorkType } from "@prisma/client";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { EditWorkForm } from "@/components/admin/works/edit-work-form";
 import { serverClient } from "@/lib/api/server-client";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as workModel from "@/lib/models/work";
@@ -41,120 +41,7 @@ export default async function WorkDetailPage(props: WorkDetailPageProps) {
         {/* Edit form */}
         <div className="bg-white shadow-md rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Edit Work</h2>
-
-          <form
-            action={async (formData: FormData) => {
-              "use server";
-
-              const title = formData.get("title");
-              const type = formData.get("type");
-              const year = formData.get("year");
-              const imageUrl = formData.get("imageUrl");
-              const externalId = formData.get("externalId");
-
-              await serverClient.admin.works.update({
-                id: params.id,
-                ...(title && { title: title as string }),
-                ...(type && { type: type as WorkType }),
-                ...(year && { year: Number(year) }),
-                ...(imageUrl && { imageUrl: imageUrl as string }),
-                ...(externalId && { externalId: externalId as string }),
-              });
-            }}
-          >
-            <input name="id" type="hidden" value={work.id} />
-
-            {/* Title */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="title">
-                Title
-              </label>
-              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-              <input
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                defaultValue={work.title}
-                id="title"
-                name="title"
-                type="text"
-              />
-            </div>
-
-            {/* Type */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="type">
-                Type
-              </label>
-              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-              <select
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                defaultValue={work.type}
-                id="type"
-                name="type"
-              >
-                <option value={WorkType.FILM}>Film</option>
-                <option value={WorkType.TV_SHOW}>TV Show</option>
-                <option value={WorkType.ALBUM}>Album</option>
-                <option value={WorkType.SONG}>Song</option>
-                <option value={WorkType.PLAY}>Play</option>
-                <option value={WorkType.BOOK}>Book</option>
-              </select>
-            </div>
-
-            {/* Year */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="year">
-                Year
-              </label>
-              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-              <input
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                defaultValue={work.year ?? ""}
-                id="year"
-                max={new Date().getFullYear() + 10}
-                min="1900"
-                name="year"
-                type="number"
-              />
-            </div>
-
-            {/* Poster URL */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="imageUrl">
-                Poster URL
-              </label>
-              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-              <input
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                defaultValue={work.imageUrl ?? ""}
-                id="imageUrl"
-                name="imageUrl"
-                type="url"
-              />
-            </div>
-
-            {/* External ID */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="externalId">
-                External ID
-              </label>
-              {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-              <input
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                defaultValue={work.externalId ?? ""}
-                id="externalId"
-                name="externalId"
-                type="text"
-              />
-            </div>
-
-            {/* Submit button */}
-            <button
-              className="w-full px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              type="submit"
-            >
-              Update Work
-            </button>
-          </form>
+          <EditWorkForm work={work} />
         </div>
 
         {/* Work details and nominations */}
