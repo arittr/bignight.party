@@ -1,152 +1,78 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { EditCategoryWrapper } from "@/components/admin/categories/edit-category-wrapper";
 import { serverClient } from "@/lib/api/server-client";
 import * as categoryModel from "@/lib/models/category";
 import * as nominationModel from "@/lib/models/nomination";
+import { routes } from "@/lib/routes";
 
 type Props = {
-  params: Promise<{ id: string; categoryId: string }>;
+	params: Promise<{ id: string; categoryId: string }>;
 };
 
 export default async function CategoryDetailPage(props: Props) {
-  const params = await props.params;
-  const category = await categoryModel.findById(params.categoryId);
-  const nominations = await nominationModel.findByCategoryId(params.categoryId);
+	const params = await props.params;
+	const category = await categoryModel.findById(params.categoryId);
+	const nominations = await nominationModel.findByCategoryId(params.categoryId);
 
-  if (!category) {
-    redirect(`/admin/events/${params.id}`);
-  }
+	if (!category) {
+		redirect(routes.admin.events.detail(params.id));
+	}
 
-  // Find the winner nomination if set
-  const winner = category.winnerNominationId
-    ? nominations.find((n) => n.id === category.winnerNominationId)
-    : null;
+	// Find the winner nomination if set
+	const winner = category.winnerNominationId
+		? nominations.find((n) => n.id === category.winnerNominationId)
+		: null;
 
-  async function handleUpdate(formData: FormData) {
-    "use server";
+	async function handleDelete() {
+		"use server";
 
-    const name = formData.get("name") as string;
-    const order = Number.parseInt(formData.get("order") as string, 10);
-    const points = Number.parseInt(formData.get("points") as string, 10);
-    const isRevealed = formData.get("isRevealed") === "on";
+		await serverClient.admin.categories.delete({ id: params.categoryId });
+		redirect(routes.admin.events.detail(params.id));
+	}
 
-    await serverClient.admin.categories.update({
-      id: params.categoryId,
-      isRevealed,
-      name,
-      order,
-      points,
-    });
-  }
+	async function handleDeleteNomination(nominationId: string) {
+		"use server";
 
-  async function handleDelete() {
-    "use server";
+		await serverClient.admin.nominations.delete({ id: nominationId });
+	}
 
-    await serverClient.admin.categories.delete({ id: params.categoryId });
-    redirect(`/admin/events/${params.id}`);
-  }
+	return (
+		<div className="max-w-4xl">
+			<div className="mb-6">
+				<Link
+					className="text-blue-600 hover:underline text-sm"
+					href={routes.admin.events.detail(params.id)}
+				>
+					← Back to {category.event.name}
+				</Link>
+			</div>
 
-  async function handleDeleteNomination(nominationId: string) {
-    "use server";
+			<div className="flex justify-between items-start mb-6">
+				<h1 className="text-3xl font-bold">Edit Category</h1>
+				<form action={handleDelete}>
+					<button
+						className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+						type="submit"
+					>
+						Delete Category
+					</button>
+				</form>
+			</div>
 
-    await serverClient.admin.nominations.delete({ id: nominationId });
-  }
-
-  return (
-    <div className="max-w-4xl">
-      <div className="mb-6">
-        <Link className="text-blue-600 hover:underline text-sm" href={`/admin/events/${params.id}`}>
-          ← Back to {category.event.name}
-        </Link>
-      </div>
-
-      <div className="flex justify-between items-start mb-6">
-        <h1 className="text-3xl font-bold">Edit Category</h1>
-        <form action={handleDelete}>
-          <button
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-            type="submit"
-          >
-            Delete Category
-          </button>
-        </form>
-      </div>
-
-      {/* Edit Form */}
-      <form action={handleUpdate} className="space-y-6 bg-white p-6 rounded-lg shadow mb-8">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
-            Category Name
-          </label>
-          {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-          <input
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            defaultValue={category.name}
-            id="name"
-            name="name"
-            required
-            type="text"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="order">
-              Display Order
-            </label>
-            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-            <input
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              defaultValue={category.order}
-              id="order"
-              min="0"
-              name="order"
-              required
-              type="number"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="points">
-              Points
-            </label>
-            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-            <input
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              defaultValue={category.points}
-              id="points"
-              min="1"
-              name="points"
-              required
-              type="number"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="flex items-center space-x-2">
-            {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-            <input
-              className="rounded"
-              defaultChecked={category.isRevealed}
-              id="isRevealed"
-              name="isRevealed"
-              type="checkbox"
-            />
-            <span className="text-sm font-medium text-gray-700">Is Revealed</span>
-          </label>
-          <p className="mt-1 text-sm text-gray-500 ml-6">
-            Check if this category's winner has been revealed
-          </p>
-        </div>
-
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          type="submit"
-        >
-          Update Category
-        </button>
-      </form>
+			{/* Edit Form */}
+			<div className="bg-white p-6 rounded-lg shadow mb-8">
+				<EditCategoryWrapper
+					category={{
+						id: category.id,
+						isRevealed: category.isRevealed,
+						name: category.name,
+						order: category.order,
+						points: category.points,
+					}}
+					eventId={params.id}
+				/>
+			</div>
 
       {/* Winner Display */}
       {winner && (
