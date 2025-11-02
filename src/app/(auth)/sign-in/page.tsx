@@ -1,36 +1,24 @@
 "use client";
 
 import { useId, useState } from "react";
-import { api } from "@/lib/api/client";
+import { useMutation } from "@tanstack/react-query";
+import { orpc } from "@/lib/api/client";
 
 export default function SignInPage() {
   const emailId = useId();
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "executing" | "hasSucceeded" | "hasErrored">("idle");
-  const [errorMessage, setErrorMessage] = useState("");
-  const mutation = (api.auth.signIn as any).useMutation?.() || null;
+
+  const mutation = useMutation(
+    orpc.auth.signIn.mutationOptions({
+      onSuccess: () => {
+        setEmail("");
+      },
+    })
+  );
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setStatus("executing");
-    setErrorMessage("");
-
-    try {
-      const result = await (api.auth.signIn as any)({
-        email,
-      });
-
-      if (result.success) {
-        setEmail("");
-        setStatus("hasSucceeded");
-      } else {
-        setStatus("hasErrored");
-        setErrorMessage(result.message || "Failed to send magic link. Please try again.");
-      }
-    } catch (error) {
-      setStatus("hasErrored");
-      setErrorMessage(error instanceof Error ? error.message : "Failed to send magic link. Please try again.");
-    }
+    mutation.mutate({ email });
   };
 
   return (
@@ -65,7 +53,7 @@ export default function SignInPage() {
             </div>
           </div>
 
-          {status === "hasSucceeded" && (
+          {mutation.isSuccess && (
             <div className="rounded-md bg-green-50 p-4">
               <p className="text-sm font-medium text-green-800">
                 Magic link sent! Check your email.
@@ -73,10 +61,12 @@ export default function SignInPage() {
             </div>
           )}
 
-          {status === "hasErrored" && (
+          {mutation.isError && (
             <div className="rounded-md bg-red-50 p-4">
               <p className="text-sm font-medium text-red-800">
-                {errorMessage}
+                {mutation.error instanceof Error
+                  ? mutation.error.message
+                  : "Failed to send magic link. Please try again."}
               </p>
             </div>
           )}
@@ -84,10 +74,10 @@ export default function SignInPage() {
           <div>
             <button
               className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
-              disabled={status === "executing"}
+              disabled={mutation.isPending}
               type="submit"
             >
-              {status === "executing" ? "Sending..." : "Send Magic Link"}
+              {mutation.isPending ? "Sending..." : "Send Magic Link"}
             </button>
           </div>
         </form>
