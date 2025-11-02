@@ -2102,6 +2102,170 @@ If you can't answer "yes" to #4, don't use `as`.
 
 ---
 
+## Required Pattern: Wire-to-Domain Pattern (MANDATORY for Admin Forms)
+
+**When:** ALL admin forms that handle dates or enums
+
+**Why:**
+- Separate wire format (JSON-serializable) from domain types (Date, enums)
+- Single source of truth for validation (forms, contracts, routers)
+- Type-safe API contracts without coercion confusion
+- Clean separation between serialization and domain logic
+
+### The Pattern
+
+**Schemas use wire format:**
+```typescript
+// src/lib/api/contracts/games.ts
+import { z } from 'zod'
+
+export const createGameWireSchema = z.object({
+  eventId: z.string(),
+  name: z.string().min(1),
+  picksLockAt: z.string().datetime(), // Wire: ISO string
+  status: z.enum(['SETUP', 'OPEN', 'LIVE', 'COMPLETED']), // Wire: string literal
+})
+```
+
+**Routers transform wire → domain at API boundary:**
+```typescript
+// src/lib/api/routers/admin/games.ts
+export const gamesAdminRouter = gamesAdminBuilder.router({
+  create: gamesAdminBuilder.create
+    .use(adminProcedure)
+    .handler(async ({ input }) => {
+      // Transform wire → domain at boundary
+      return gameService.createGame({
+        ...input,
+        picksLockAt: new Date(input.picksLockAt), // Date object
+        status: input.status as GameStatus, // Enum type
+      })
+    }),
+})
+```
+
+**Services receive clean domain types (unchanged):**
+```typescript
+// src/lib/services/game-service.ts
+export async function createGame(data: {
+  eventId: string
+  name: string
+  picksLockAt: Date // Domain type
+  status: GameStatus // Domain type
+}) {
+  return gameModel.create(data)
+}
+```
+
+### Benefits
+
+- ✅ Single schema for form validation and API contracts
+- ✅ No coercion edge cases (z.coerce can fail silently)
+- ✅ Type-safe transformations at explicit boundary
+- ✅ Services don't care about wire format
+- ✅ Easy to test transformations
+
+**See:** `docs/wire-to-domain-pattern.md` for complete details, examples, and common pitfalls.
+
+---
+
+## Required Pattern: Admin Form Pattern (MANDATORY for Admin Forms)
+
+**When:** ALL admin create/edit forms
+
+**Why:**
+- Consistent, type-safe form pattern across admin UI
+- Real-time validation with instant feedback
+- Proper error handling and loading states
+- Single source of truth for validation (schema → form → API → service)
+- Type safety from form to database
+
+### The Pattern
+
+**Forms are Client Components with React Hook Form + zodResolver:**
+```typescript
+// src/app/(admin)/admin/games/_components/game-form.tsx
+'use client'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
+import { orpc } from '@/lib/api/client'
+import { createGameWireSchema } from '@/lib/api/contracts/games'
+
+export function GameForm() {
+  const form = useForm({
+    resolver: zodResolver(createGameWireSchema), // Wire schema for validation
+    defaultValues: {
+      name: '',
+      eventId: '',
+      picksLockAt: new Date().toISOString(),
+      status: 'SETUP',
+    },
+  })
+
+  const mutation = useMutation(
+    orpc.admin.games.create.mutationOptions({
+      onSuccess: () => toast.success('Game created!'),
+      onError: (error) => toast.error(error.message),
+    })
+  )
+
+  const onSubmit = form.handleSubmit((data) => {
+    mutation.mutate(data) // Wire format sent to API
+  })
+
+  return (
+    <form onSubmit={onSubmit}>
+      {/* Form fields */}
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? 'Creating...' : 'Create Game'}
+      </button>
+    </form>
+  )
+}
+```
+
+**Pages are Server Components that render form components:**
+```typescript
+// src/app/(admin)/admin/games/new/page.tsx
+import { requireValidatedSession } from '@/lib/auth/config'
+import { GameForm } from '../_components/game-form'
+
+export default async function NewGamePage() {
+  await requireValidatedSession()
+  return <GameForm />
+}
+```
+
+**No inline Server Actions (use oRPC endpoints):**
+```typescript
+// ❌ BAD - Don't use inline server actions in admin forms
+<form action={async (formData: FormData) => {
+  "use server";
+  const title = formData.get("title");
+  await serverClient.admin.createGame({ title: title as string });
+}}>
+
+// ✅ GOOD - Use oRPC with React Hook Form
+const mutation = useMutation(
+  orpc.admin.games.create.mutationOptions()
+)
+```
+
+### Benefits
+
+- ✅ Real-time validation with instant feedback
+- ✅ Loading states (isPending, isSuccess, isError)
+- ✅ Proper error handling with toast notifications
+- ✅ Type safety from schema → router → service
+- ✅ Consistent pattern across all admin forms
+- ✅ Easy to extend with field-level validation
+- ✅ No manual FormData extraction
+
+**See:** `docs/admin-form-pattern.md` for complete details, including field patterns, error handling, and accessibility.
+
+---
+
 ## Prohibited Patterns
 
 ### ❌ NO: Type assertions without validation
@@ -2395,6 +2559,16 @@ When reviewing PRs, verify:
 - [ ] Uses orpc from `@/lib/api/client`
 - [ ] Uses React Query mutations (`.useMutation()`)
 - [ ] Proper error handling with toast notifications
+
+### Admin Forms (MANDATORY Patterns)
+- [ ] **Wire-to-Domain Pattern**: Contracts use wire format (z.string().datetime(), z.enum([...]))
+- [ ] **Wire-to-Domain Pattern**: Routers transform wire → domain at boundary (new Date(input.date))
+- [ ] **Wire-to-Domain Pattern**: Services receive domain types (Date, enum types)
+- [ ] **Admin Form Pattern**: Forms are Client Components with React Hook Form + zodResolver
+- [ ] **Admin Form Pattern**: Forms use useMutation(orpc.*.mutationOptions())
+- [ ] **Admin Form Pattern**: Pages are Server Components rendering form components
+- [ ] **Admin Form Pattern**: NO inline Server Actions in admin forms
+- [ ] **Admin Form Pattern**: Proper loading states (isPending) and error handling
 
 ### Pattern Matching
 - [ ] All discriminated unions use `ts-pattern`
