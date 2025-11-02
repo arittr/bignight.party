@@ -5,6 +5,7 @@
  * component props, eliminating duplicated transformation code across the admin section.
  */
 
+import type { WorkType } from "@prisma/client";
 import type { ResourceItem } from "@/hooks/admin/use-resource-manager";
 
 /**
@@ -148,7 +149,7 @@ export function transformPeopleToListItems(people: PersonWithNominationCount[]):
 export interface WorkWithNominationCount {
   id: string;
   title: string;
-  type: "FILM" | "TV_SHOW" | "ALBUM" | "SONG" | "PLAY" | "BOOK";
+  type: WorkType;
   year: number | null;
   nominations: { id: string }[];
 }
@@ -156,7 +157,7 @@ export interface WorkWithNominationCount {
 export interface WorkListItem {
   id: string;
   title: string;
-  type: "FILM" | "TV_SHOW" | "ALBUM" | "SONG" | "PLAY" | "BOOK";
+  type: WorkType;
   year: number | null;
   nominationsCount: number;
   [key: string]: unknown;
