@@ -2,52 +2,43 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import { AdminForm } from "@/components/admin/ui/admin-form";
 import { FormFieldGroup } from "@/components/admin/ui/form-field-group";
+import { personCreateSchema } from "@/schemas/person-schema";
 
-const personFormSchema = z.object({
-  bio: z.string().optional(),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  name: z.string().min(1, "Name is required"),
-  role: z.string().optional(),
-});
-
-export type PersonFormData = z.infer<typeof personFormSchema>;
+// Use z.input type to handle nullable fields properly
+type PersonFormData = z.input<typeof personCreateSchema>;
 
 export interface PersonFormProps {
-  defaultValues?: Partial<PersonFormData>;
+  initialData?: Partial<PersonFormData>;
   onSubmit: (data: PersonFormData) => void | Promise<void>;
   onCancel?: () => void;
   isLoading?: boolean;
   error?: string | null;
   submitLabel?: string;
-  className?: string;
 }
 
 export function PersonForm({
-  defaultValues,
+  initialData,
   onSubmit,
   onCancel,
   isLoading = false,
   error,
   submitLabel = "Save Person",
-  className,
 }: PersonFormProps) {
   const form = useForm<PersonFormData>({
     defaultValues: {
-      bio: defaultValues?.bio ?? "",
-      imageUrl: defaultValues?.imageUrl ?? "",
-      name: defaultValues?.name ?? "",
-      role: defaultValues?.role ?? "",
+      externalId: initialData?.externalId ?? "",
+      imageUrl: initialData?.imageUrl ?? "",
+      name: initialData?.name ?? "",
     },
-    resolver: zodResolver(personFormSchema),
+    resolver: zodResolver(personCreateSchema),
   });
 
   return (
     <AdminForm
       ariaLabel="Person form"
-      className={className}
       error={error}
       form={form}
       isLoading={isLoading}
@@ -59,36 +50,26 @@ export function PersonForm({
         ariaLabel="Person name"
         label="Name"
         name="name"
-        placeholder="Enter person's name"
+        placeholder="e.g., Christopher Nolan"
         required
         type="text"
       />
 
-      <FormFieldGroup<PersonFormData, "role">
-        ariaLabel="Person role"
-        description="e.g., Actor, Director, Producer"
-        label="Role"
-        name="role"
-        placeholder="Enter person's role"
-        type="text"
-      />
-
-      <FormFieldGroup<PersonFormData, "bio">
-        ariaLabel="Person bio"
-        description="Brief biography or description"
-        label="Bio"
-        name="bio"
-        placeholder="Enter person's bio"
-        rows={4}
-        type="textarea"
-      />
-
       <FormFieldGroup<PersonFormData, "imageUrl">
         ariaLabel="Person image URL"
-        description="URL to person's image"
+        description="Optional URL to the person's photo or headshot"
         label="Image URL"
         name="imageUrl"
         placeholder="https://example.com/image.jpg"
+        type="text"
+      />
+
+      <FormFieldGroup<PersonFormData, "externalId">
+        ariaLabel="Person external ID"
+        description="Optional external database ID (e.g., from TMDB or IMDB)"
+        label="External ID"
+        name="externalId"
+        placeholder="e.g., tmdb:138"
         type="text"
       />
     </AdminForm>
