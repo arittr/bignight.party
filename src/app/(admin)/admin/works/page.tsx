@@ -17,7 +17,7 @@ export default async function WorksPage(props: WorksPageProps) {
   const typeFilter = searchParams.type as WorkType | undefined;
 
   // Fetch works via oRPC server client (no HTTP overhead)
-  const allWorks = await serverClient.admin.listWorks();
+  const allWorks = await serverClient.admin.works.list();
 
   // Apply type filter client-side (consider adding to contract if needed frequently)
   const works = typeFilter ? allWorks.filter((w) => w.type === typeFilter) : allWorks;
@@ -28,7 +28,7 @@ export default async function WorksPage(props: WorksPageProps) {
   // Server action wrapper for delete using oRPC
   async function handleDelete(workId: string) {
     "use server";
-    const result = await serverClient.admin.deleteWork({ id: workId });
+    const result = await serverClient.admin.works.delete({ id: workId });
     if (!result?.success) {
       throw new Error("Failed to delete work");
     }

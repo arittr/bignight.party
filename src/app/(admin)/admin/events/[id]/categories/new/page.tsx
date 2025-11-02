@@ -23,7 +23,7 @@ export default async function NewCategoryPage(props: Props) {
     const points = Number.parseInt(formData.get("points") as string, 10);
     const isRevealed = formData.get("isRevealed") === "on";
 
-    await serverClient.admin.createCategory({
+    await serverClient.admin.categories.create({
       eventId: params.id,
       isRevealed,
       name,

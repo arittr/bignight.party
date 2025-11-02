@@ -69,11 +69,11 @@ export const getUserGamesContract = oc.input(z.void()).output(
 );
 
 /**
- * Combined game router contract
- * Export for router implementation
+ * Combined game contract
+ * Hierarchical object for router implementation
  */
-export const gameContract = oc.router({
+export const gameContract = {
 	join: joinContract,
 	resolveAccessCode: resolveAccessCodeContract,
 	getUserGames: getUserGamesContract,
-});
+};

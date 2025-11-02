@@ -13,7 +13,7 @@ export default function NewWorkPage() {
     const imageUrl = formData.get("imageUrl");
     const externalId = formData.get("externalId");
 
-    await serverClient.admin.createWork({
+    await serverClient.admin.works.create({
       title,
       type,
       ...(year && { year: Number(year) }),

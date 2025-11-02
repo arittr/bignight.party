@@ -30,8 +30,8 @@ export function CategoryCard({ category, nominations }: CategoryCardProps) {
     category.winnerNominationId ?? ""
   );
 
-  const markWinnerMutation = useMutation(orpc.admin.markWinner.mutationOptions());
-  const clearWinnerMutation = useMutation(orpc.admin.clearWinner.mutationOptions());
+  const markWinnerMutation = useMutation(orpc.admin.categories.markWinner.mutationOptions());
+  const clearWinnerMutation = useMutation(orpc.admin.categories.clearWinner.mutationOptions());
 
   const isLoading = markWinnerMutation.isPending || clearWinnerMutation.isPending;
 

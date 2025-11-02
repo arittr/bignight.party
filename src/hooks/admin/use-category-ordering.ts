@@ -64,7 +64,7 @@ export function useCategoryOrdering({
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const updateCategoryMutation = useMutation(orpc.admin.updateCategory.mutationOptions());
+  const updateCategoryMutation = useMutation(orpc.admin.categories.update.mutationOptions());
 
   const reorder = useCallback((fromIndex: number, toIndex: number) => {
     setCategories((prev) => {

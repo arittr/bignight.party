@@ -33,7 +33,7 @@ export default async function NewNominationPage({ params }: PageProps) {
     const workId = formData.get("workId") as string;
     const personId = formData.get("personId") as string;
 
-    await serverClient.admin.createNomination({
+    await serverClient.admin.nominations.create({
       categoryId,
       nominationText,
       personId: personId || undefined,
