@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { EditEventForm } from "@/components/admin/events/edit-event-form";
 import { serverClient } from "@/lib/api/server-client";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as eventModel from "@/lib/models/event";
@@ -15,23 +16,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     notFound();
   }
 
-  async function handleUpdateEvent(formData: FormData) {
-    "use server";
-
-    const name = formData.get("name") as string;
-    const slug = formData.get("slug") as string;
-    const description = formData.get("description") as string;
-    const eventDate = formData.get("eventDate") as string;
-
-    await serverClient.admin.events.update({
-      description: description || undefined,
-      eventDate: new Date(eventDate).toISOString(),
-      id,
-      name,
-      slug,
-    });
-  }
-
   async function handleDeleteEvent() {
     "use server";
 
@@ -40,94 +24,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div>
+    <div className="p-8">
       <div className="mb-6">
-        <Link className="text-blue-600 hover:text-blue-900" href={routes.admin.events.index()}>
+        <Link className="text-blue-600 hover:text-blue-800" href={routes.admin.events.index()}>
           &larr; Back to Events
         </Link>
       </div>
 
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Event</h1>
+      <h1 className="text-3xl font-bold mb-6">Edit Event</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Event Form */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow p-6">
-            <form action={handleUpdateEvent}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700" htmlFor="name">
-                    Event Name
-                  </label>
-                  {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-                  <input
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue={event.name}
-                    id="name"
-                    name="name"
-                    required
-                    type="text"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700" htmlFor="slug">
-                    Slug
-                  </label>
-                  {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-                  <input
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue={event.slug}
-                    id="slug"
-                    name="slug"
-                    pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
-                    required
-                    type="text"
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    Lowercase letters, numbers, and hyphens only
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700" htmlFor="eventDate">
-                    Event Date
-                  </label>
-                  {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-                  <input
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue={new Date(event.eventDate).toISOString().split("T")[0]}
-                    id="eventDate"
-                    name="eventDate"
-                    required
-                    type="date"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700" htmlFor="description">
-                    Description (Optional)
-                  </label>
-                  {/* biome-ignore lint/correctness/useUniqueElementIds: Single-use admin form, static IDs are safe */}
-                  <textarea
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    defaultValue={event.description || ""}
-                    id="description"
-                    name="description"
-                    rows={4}
-                  />
-                </div>
-
-                <div className="pt-4">
-                  <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                    type="submit"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            </form>
+            <EditEventForm event={event} />
 
             <form action={handleDeleteEvent} className="mt-4">
               <button
