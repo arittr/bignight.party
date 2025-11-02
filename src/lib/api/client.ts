@@ -1,8 +1,7 @@
 "use client";
 
 import { createORPCClient } from "@orpc/client";
-import { LinkFetchClient } from "@orpc/client/fetch";
-import { StandardRPCLink } from "@orpc/client/standard";
+import { RPCLink } from "@orpc/client";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import type { AppRouter } from "./root";
 
@@ -40,15 +39,23 @@ const getBaseUrl = () => {
   return "http://localhost:3000";
 };
 
-const fetchClient = new LinkFetchClient({});
-const link = new StandardRPCLink(fetchClient, {
+// Create RPCLink with Next.js headers integration for SSR
+const link = new RPCLink({
   url: `${getBaseUrl()}/api/rpc`,
+  headers: async () => {
+    // In browser, no headers needed (cookies sent automatically)
+    if (typeof window !== "undefined") return {};
+
+    // In SSR, include Next.js headers for auth context
+    const { headers } = await import("next/headers");
+    return await headers();
+  },
 });
 
 // Create base client
 const baseClient = createORPCClient<AppRouter>(link);
 
-// Create TanStack Query utilities - type is inferred from baseClient
+// Create TanStack Query utilities - provides .mutationOptions() and .queryOptions()
 export const orpc = createTanstackQueryUtils(baseClient);
 
 // Alias for clarity - use 'api' to call oRPC procedures
