@@ -221,7 +221,16 @@ export async function commitImport(url: string) {
         },
       });
 
-      return event;
+      // Return summary matching contract output shape
+      return {
+        eventId: event.id,
+        eventName: event.name,
+        categoriesCreated: event.categories.length,
+        nominationsCreated: event.categories.reduce(
+          (total, cat) => total + cat.nominations.length,
+          0
+        ),
+      };
     });
   } catch (error) {
     // Re-throw parser/API errors as-is

@@ -59,3 +59,9 @@ export async function deleteByUserAndGame(userId: string, gameId: string) {
     },
   });
 }
+
+export async function getParticipantsCount(gameId: string) {
+  return prisma.gameParticipant.count({
+    where: { gameId },
+  });
+}

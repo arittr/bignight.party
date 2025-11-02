@@ -57,10 +57,23 @@ export async function submitPick(
   }
 
   // All validations passed, upsert the pick
-  return pickModel.upsert({
+  const pick = await pickModel.upsert({
     categoryId,
     gameId,
     nominationId,
     userId,
   });
+
+  return {
+    success: true,
+    pick: {
+      id: pick.id,
+      gameId: pick.gameId,
+      userId: pick.userId,
+      categoryId: pick.categoryId,
+      nominationId: pick.nominationId,
+      createdAt: pick.createdAt,
+      updatedAt: pick.updatedAt,
+    },
+  };
 }

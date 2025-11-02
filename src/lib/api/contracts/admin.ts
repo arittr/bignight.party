@@ -435,6 +435,11 @@ export const listGamesContract = oc.input(z.void()).output(
       event: z.object({
         id: z.string(),
         name: z.string(),
+        slug: z.string(),
+        description: z.string().nullable(),
+        eventDate: z.date(),
+        createdAt: z.date(),
+        updatedAt: z.date(),
       }),
     })
   )

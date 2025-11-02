@@ -1,5 +1,4 @@
 import { implement } from "@orpc/server";
-import { publicProcedure } from "@/lib/api/procedures";
 import { authContract } from "@/lib/api/contracts/auth";
 import { signIn } from "@/lib/auth/config";
 
@@ -24,86 +23,53 @@ import { signIn } from "@/lib/auth/config";
 const os = implement(authContract);
 
 // ============================================================================
-// SIGN IN PROCEDURE
-// ============================================================================
-
-/**
- * Sign in with email - sends magic link
- * Works for both existing users and new signups
- * Uses Auth.js email provider (Mailpit in dev, Resend in prod)
- */
-const signInProcedure = os.signIn.use(publicProcedure).handler(async ({ input }) => {
-  // Determine provider based on environment
-  const providerId = process.env.NODE_ENV === "development" ? "email" : "resend";
-
-  // Call Auth.js signIn with redirect disabled
-  // This allows the client to handle redirect/navigation
-  await signIn(providerId, {
-    email: input.email,
-    redirect: false,
-  });
-
-  return {
-    success: true,
-    message: "Magic link sent! Check your email.",
-  };
-});
-
-// ============================================================================
-// SIGN UP PROCEDURE
-// ============================================================================
-
-/**
- * Sign up with email - creates account and sends magic link
- * In our system, signup and signin are the same flow:
- * Auth.js creates the user on first email verification
- */
-const signUpProcedure = os.signUp.use(publicProcedure).handler(async ({ input }) => {
-  // Determine provider based on environment
-  const providerId = process.env.NODE_ENV === "development" ? "email" : "resend";
-
-  // Call Auth.js signIn with redirect disabled
-  // Auth.js will create a new user on first verification
-  await signIn(providerId, {
-    email: input.email,
-    redirect: false,
-  });
-
-  return {
-    success: true,
-    message: "Magic link sent! Check your email to complete signup.",
-  };
-});
-
-// ============================================================================
-// VERIFY EMAIL PROCEDURE
-// ============================================================================
-
-/**
- * Verify email with callback token
- * This is primarily handled by Auth.js callback flow automatically,
- * but exposed here for potential explicit verification needs
- */
-const verifyEmailProcedure = os.verifyEmail.use(publicProcedure).handler(async ({ input }) => {
-  // In the current implementation, Auth.js handles email verification
-  // through the callback URL (auth/callback/email)
-  // This procedure is a placeholder for potential future needs
-  // or explicit verification flows
-
-  // For now, just return success - actual verification is handled
-  // by the Auth.js callback route
-  return {
-    success: true,
-    message: "Email verification handled by Auth.js callback",
-  };
-});
-
-// ============================================================================
 // ROUTER
 // ============================================================================
 
 export const authRouter = os.router({
-  signIn: signInProcedure,
-  signUp: signUpProcedure,
-  verifyEmail: verifyEmailProcedure,
+  signIn: os.signIn.handler(async ({ input }) => {
+    // Determine provider based on environment
+    const providerId = process.env.NODE_ENV === "development" ? "email" : "resend";
+  
+    // Call Auth.js signIn with redirect disabled
+    // This allows the client to handle redirect/navigation
+    await signIn(providerId, {
+      email: input.email,
+      redirect: false,
+    });
+  
+    return {
+      success: true,
+      message: "Magic link sent! Check your email.",
+    };
+  }),
+  signUp: os.signUp.handler(async ({ input }) => {
+    // Determine provider based on environment
+    const providerId = process.env.NODE_ENV === "development" ? "email" : "resend";
+  
+    // Call Auth.js signIn with redirect disabled
+    // Auth.js will create a new user on first verification
+    await signIn(providerId, {
+      email: input.email,
+      redirect: false,
+    });
+  
+    return {
+      success: true,
+      message: "Magic link sent! Check your email to complete signup.",
+    };
+  }),
+  verifyEmail: os.verifyEmail.handler(async ({ input }) => {
+    // In the current implementation, Auth.js handles email verification
+    // through the callback URL (auth/callback/email)
+    // This procedure is a placeholder for potential future needs
+    // or explicit verification flows
+  
+    // For now, just return success - actual verification is handled
+    // by the Auth.js callback route
+    return {
+      success: true,
+      message: "Email verification handled by Auth.js callback",
+    };
+  }),
 });
