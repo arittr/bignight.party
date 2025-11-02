@@ -38,7 +38,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
       eventId,
       id,
       name,
-      picksLockAt: picksLockAt ? new Date(picksLockAt) : undefined,
+      picksLockAt: picksLockAt || undefined,
       status,
     });
   }
@@ -148,12 +148,14 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
               defaultValue={game.accessCode}
               id="accessCode"
+              minLength={4}
               name="accessCode"
               pattern="[A-Z0-9]+"
               required
-              title="Access code must be uppercase letters and numbers only"
+              title="Access code must be at least 4 characters, uppercase letters and numbers only"
               type="text"
             />
+            <p className="mt-1 text-sm text-gray-500">At least 4 characters, uppercase letters and numbers only</p>
           </div>
 
           <div>
