@@ -56,7 +56,7 @@ const link = new RPCLink({
 const baseClient = createORPCClient<AppRouter>(link);
 
 // Create TanStack Query utilities - provides .mutationOptions() and .queryOptions()
-export const orpc = createTanstackQueryUtils(baseClient);
+export const orpc = createTanstackQueryUtils<AppRouter>(baseClient);
 
 // Alias for clarity - use 'api' to call oRPC procedures
 export const api = orpc;
