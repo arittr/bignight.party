@@ -7,7 +7,7 @@ export default async function PeoplePage() {
   await requireValidatedSession();
 
   // Fetch people via oRPC server client (no HTTP overhead)
-  const people = await serverClient.admin.listPeople();
+  const people = await serverClient.admin.people.list();
 
   // Transform people to match PersonListItem interface using centralized utility
   const peopleForManager = transformPeopleToListItems(people);
@@ -15,7 +15,7 @@ export default async function PeoplePage() {
   // Server action wrapper for delete using oRPC
   async function handleDelete(personId: string) {
     "use server";
-    const result = await serverClient.admin.deletePerson({ id: personId });
+    const result = await serverClient.admin.people.delete({ id: personId });
     if (!result?.success) {
       throw new Error("Failed to delete person");
     }
