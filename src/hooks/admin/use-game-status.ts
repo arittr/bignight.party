@@ -58,7 +58,7 @@ export function useGameStatus({
   const [currentStatus, setCurrentStatus] = useState<GameStatus>(initialStatus);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const updateGameMutation = useMutation(orpc.admin.updateGame.mutationOptions());
+  const updateGameMutation = useMutation(orpc.admin.games.update.mutationOptions());
 
   /**
    * Get available transitions from current status using ts-pattern

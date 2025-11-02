@@ -33,7 +33,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     const status = formData.get("status") as GameStatus;
     const picksLockAt = formData.get("picksLockAt") as string;
 
-    await serverClient.admin.updateGame({
+    await serverClient.admin.games.update({
       accessCode,
       eventId,
       id,
@@ -46,7 +46,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
   async function handleDeleteGame() {
     "use server";
 
-    await serverClient.admin.deleteGame({ id });
+    await serverClient.admin.games.delete({ id });
     redirect(routes.admin.games.index());
   }
 

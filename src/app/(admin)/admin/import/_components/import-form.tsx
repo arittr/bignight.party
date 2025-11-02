@@ -28,7 +28,7 @@ export function ImportForm() {
 
   // Preview mutation: Parse Wikipedia page without saving
   const previewMutation = useMutation(
-    orpc.admin.previewWikipediaImport.mutationOptions({
+    orpc.admin.wikipedia.previewImport.mutationOptions({
       onSuccess: (data: PreviewData) => {
         setPreviewData(data);
       },
@@ -41,7 +41,7 @@ export function ImportForm() {
 
   // Confirm mutation: Save to database and redirect
   const confirmMutation = useMutation(
-    orpc.admin.importFromWikipedia.mutationOptions({
+    orpc.admin.wikipedia.import.mutationOptions({
       onSuccess: (result: any) => {
         router.push(routes.admin.events.detail(result.eventId));
       },

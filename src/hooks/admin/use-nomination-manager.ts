@@ -65,8 +65,8 @@ export function useNominationManager({
   const [nominations, setNominations] = useState<NominationItem[]>(initialNominations);
   const [isLoading, setIsLoading] = useState(false);
 
-  const createNominationMutation = useMutation(orpc.admin.createNomination.mutationOptions());
-  const deleteNominationMutation = useMutation(orpc.admin.deleteNomination.mutationOptions());
+  const createNominationMutation = useMutation(orpc.admin.nominations.create.mutationOptions());
+  const deleteNominationMutation = useMutation(orpc.admin.nominations.delete.mutationOptions());
 
   const canAddMore = nominations.length < maxNominations;
 

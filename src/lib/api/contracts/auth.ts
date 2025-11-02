@@ -52,9 +52,10 @@ export const verifyEmailContract = oc
 
 /**
  * Root auth contract - combines all auth procedures
+ * Hierarchical object pattern for oRPC
  */
-export const authContract = oc.router({
+export const authContract = {
   signIn: signInContract,
   signUp: signUpContract,
   verifyEmail: verifyEmailContract,
-});
+};
