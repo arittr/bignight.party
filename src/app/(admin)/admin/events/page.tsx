@@ -7,7 +7,7 @@ export default async function EventsPage() {
   await requireValidatedSession();
 
   // Fetch events via oRPC server client (no HTTP overhead)
-  const events = await serverClient.admin.listEvents();
+  const events = await serverClient.admin.events.list();
 
   // Transform events to match EventListItem interface using centralized utility
   const eventsForManager = transformEventsToListItems(events);
@@ -15,7 +15,7 @@ export default async function EventsPage() {
   // Server action wrapper for delete using oRPC
   async function handleDelete(eventId: string) {
     "use server";
-    const result = await serverClient.admin.deleteEvent({ id: eventId });
+    const result = await serverClient.admin.events.delete({ id: eventId });
     if (!result?.success) {
       throw new Error("Failed to delete event");
     }

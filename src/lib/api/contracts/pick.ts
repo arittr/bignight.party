@@ -39,6 +39,6 @@ export const submitPickContract = oc.input(pickSubmissionSchema).output(
  * Combined pick router contract
  * Export for router implementation
  */
-export const pickContract = oc.router({
+export const pickContract = {
 	submitPick: submitPickContract,
-});
+};

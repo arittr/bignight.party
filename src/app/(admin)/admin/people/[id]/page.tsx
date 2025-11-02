@@ -21,7 +21,7 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
 
   async function handleUpdate(formData: FormData) {
     "use server";
-    await serverClient.admin.updatePerson({
+    await serverClient.admin.people.update({
       externalId: formData.get("externalId") as string | undefined,
       id: formData.get("id") as string,
       imageUrl: formData.get("imageUrl") as string | undefined,
@@ -32,7 +32,7 @@ export default async function PersonDetailPage({ params }: PersonDetailPageProps
   async function handleDelete() {
     "use server";
     try {
-      await serverClient.admin.deletePerson({ id });
+      await serverClient.admin.people.delete({ id });
       redirect("/admin/people");
     } catch (_error) {
       // Foreign key constraint error - person has nominations

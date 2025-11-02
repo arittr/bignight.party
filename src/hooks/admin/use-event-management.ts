@@ -59,9 +59,9 @@ export function useEventManagement({
   const [events, setEvents] = useState<EventListItem[]>(initialEvents);
   const [isLoading, setIsLoading] = useState(false);
 
-  const createEventMutation = useMutation(orpc.admin.createEvent.mutationOptions());
-  const updateEventMutation = useMutation(orpc.admin.updateEvent.mutationOptions());
-  const deleteEventMutation = useMutation(orpc.admin.deleteEvent.mutationOptions());
+  const createEventMutation = useMutation(orpc.admin.events.create.mutationOptions());
+  const updateEventMutation = useMutation(orpc.admin.events.update.mutationOptions());
+  const deleteEventMutation = useMutation(orpc.admin.events.delete.mutationOptions());
 
   // Sync with initial events when they change
   useEffect(() => {
