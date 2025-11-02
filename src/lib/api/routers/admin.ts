@@ -1,5 +1,5 @@
 import { implement } from "@orpc/server";
-import { adminProcedure } from "@/lib/api/procedures";
+import { adminMiddleware } from "@/lib/api/procedures";
 import { adminContract } from "@/lib/api/contracts/admin";
 import * as categoryModel from "@/lib/models/category";
 import * as eventModel from "@/lib/models/event";
@@ -32,259 +32,171 @@ import * as wikipediaImportService from "@/lib/services/wikipedia-import-service
 const os = implement(adminContract);
 
 // ============================================================================
-// EVENT PROCEDURES
-// ============================================================================
-
-const listEvents = os.events.list.use(adminProcedure).handler(async () => {
-  const events = await eventModel.findAllWithCategoryCounts();
-  return events;
-});
-
-const createEvent = os.events.create.use(adminProcedure).handler(async ({ input }) => {
-  const event = await eventService.createEvent(input);
-  return event;
-});
-
-const updateEvent = os.events.update.use(adminProcedure).handler(async ({ input }) => {
-  const { id, ...data } = input;
-  const event = await eventService.updateEvent(id, data);
-  return event;
-});
-
-const deleteEvent = os.events.delete.use(adminProcedure).handler(async ({ input }) => {
-  await eventService.deleteEvent(input.id);
-  return { success: true };
-});
-
-// ============================================================================
-// CATEGORY PROCEDURES
-// ============================================================================
-
-const createCategory = os.categories.create.use(adminProcedure).handler(async ({ input }) => {
-  const { eventId, ...data } = input;
-  const category = await categoryModel.create({
-    ...data,
-    event: { connect: { id: eventId } },
-  });
-  return category;
-});
-
-const updateCategory = os.categories.update.use(adminProcedure).handler(async ({ input }) => {
-  const { id, eventId, ...data } = input;
-
-  // Build update data with event connection if provided
-  const updateData = eventId ? { ...data, event: { connect: { id: eventId } } } : data;
-
-  const category = await categoryModel.update(id, updateData);
-  return category;
-});
-
-const deleteCategory = os.categories.delete.use(adminProcedure).handler(async ({ input }) => {
-  await categoryModel.deleteById(input.id);
-  return { success: true };
-});
-
-const markWinner = os.categories.markWinner.use(adminProcedure).handler(async ({ input }) => {
-  const category = await categoryService.markWinner(input.categoryId, input.nominationId);
-  return category;
-});
-
-const clearWinner = os.categories.clearWinner.use(adminProcedure).handler(async ({ input }) => {
-  const category = await categoryService.clearWinner(input.categoryId);
-  return category;
-});
-
-// ============================================================================
-// NOMINATION PROCEDURES
-// ============================================================================
-
-const createNomination = os.nominations.create.use(adminProcedure).handler(async ({ input }) => {
-  const { categoryId, workId, personId, ...data } = input;
-
-  // Build the nomination data with proper Prisma relations
-  const nominationData = {
-    ...data,
-    category: { connect: { id: categoryId } },
-    ...(workId && { work: { connect: { id: workId } } }),
-    ...(personId && { person: { connect: { id: personId } } }),
-  };
-
-  const nomination = await nominationModel.create(nominationData);
-  return nomination;
-});
-
-const updateNomination = os.nominations.update.use(adminProcedure).handler(async ({ input }) => {
-  const { id, categoryId, workId, personId, ...data } = input;
-
-  // Build update data with proper Prisma relations
-  const updateData = {
-    ...data,
-    ...(categoryId && { category: { connect: { id: categoryId } } }),
-    ...(workId !== undefined && {
-      work: workId ? { connect: { id: workId } } : { disconnect: true },
-    }),
-    ...(personId !== undefined && {
-      person: personId ? { connect: { id: personId } } : { disconnect: true },
-    }),
-  };
-
-  const nomination = await nominationModel.update(id, updateData);
-  return nomination;
-});
-
-const deleteNomination = os.nominations.delete.use(adminProcedure).handler(async ({ input }) => {
-  await nominationModel.deleteById(input.id);
-  return { success: true };
-});
-
-// ============================================================================
-// PERSON PROCEDURES
-// ============================================================================
-
-const listPeople = os.people.list.use(adminProcedure).handler(async () => {
-  const people = await personModel.findAllWithCounts();
-  return people;
-});
-
-const createPerson = os.people.create.use(adminProcedure).handler(async ({ input }) => {
-  const person = await personModel.create(input);
-  return person;
-});
-
-const updatePerson = os.people.update.use(adminProcedure).handler(async ({ input }) => {
-  const { id, ...data } = input;
-  const person = await personModel.update(id, data);
-  return person;
-});
-
-const deletePerson = os.people.delete.use(adminProcedure).handler(async ({ input }) => {
-  await personModel.deleteById(input.id);
-  return { success: true };
-});
-
-// ============================================================================
-// WORK PROCEDURES
-// ============================================================================
-
-const listWorks = os.works.list.use(adminProcedure).handler(async () => {
-  const works = await workModel.findAll();
-  return works;
-});
-
-const createWork = os.works.create.use(adminProcedure).handler(async ({ input }) => {
-  const work = await workModel.create(input);
-  return work;
-});
-
-const updateWork = os.works.update.use(adminProcedure).handler(async ({ input }) => {
-  const { id, ...data } = input;
-  const work = await workModel.update(id, data);
-  return work;
-});
-
-const deleteWork = os.works.delete.use(adminProcedure).handler(async ({ input }) => {
-  await workModel.deleteById(input.id);
-  return { success: true };
-});
-
-// ============================================================================
-// GAME PROCEDURES
-// ============================================================================
-
-const listGames = os.games.list.use(adminProcedure).handler(async () => {
-  const games = await gameModel.findAll();
-  return games;
-});
-
-const createGame = os.games.create.use(adminProcedure).handler(async ({ input }) => {
-  const { eventId, ...data } = input;
-  const game = await gameService.createGame({
-    ...data,
-    event: { connect: { id: eventId } },
-  });
-  return game;
-});
-
-const updateGame = os.games.update.use(adminProcedure).handler(async ({ input }) => {
-  const { id, eventId, ...data } = input;
-
-  // Build update data with event connection if provided
-  const updateData = eventId ? { ...data, event: { connect: { id: eventId } } } : data;
-
-  const game = await gameService.updateGame(id, updateData);
-  return game;
-});
-
-const updateGameStatus = os.games.updateStatus.use(adminProcedure).handler(async ({ input }) => {
-  const game = await gameService.updateGameStatus(input.id, input.status);
-  return game;
-});
-
-const deleteGame = os.games.delete.use(adminProcedure).handler(async ({ input }) => {
-  await gameService.deleteGame(input.id);
-  return { success: true };
-});
-
-// ============================================================================
-// WIKIPEDIA IMPORT PROCEDURES
-// ============================================================================
-
-const previewWikipediaImport = os.wikipedia.previewImport
-  .use(adminProcedure)
-  .handler(async ({ input }) => {
-    const preview = await wikipediaImportService.previewImport(input.url);
-    return preview;
-  });
-
-const importFromWikipedia = os.wikipedia.import.use(adminProcedure).handler(async ({ input }) => {
-  const result = await wikipediaImportService.commitImport(input.url);
-  return result;
-});
-
-// ============================================================================
 // ADMIN ROUTER - NESTED STRUCTURE MATCHING CONTRACT
 // ============================================================================
 
 export const adminRouter = os.router({
   events: {
-    list: listEvents,
-    create: createEvent,
-    update: updateEvent,
-    delete: deleteEvent,
+    list: os.events.list.use(adminMiddleware).handler(async () => {
+      const events = await eventModel.findAllWithCategoryCounts();
+      return events;
+    }),
+    create: os.events.create.use(adminMiddleware).handler(async ({ input }) => {
+      const event = await eventService.createEvent(input);
+      return event;
+    }),
+    update: os.events.update.use(adminMiddleware).handler(async ({ input }) => {
+      const { id, ...data } = input;
+      const event = await eventService.updateEvent(id, data);
+      return event;
+    }),
+    delete: os.events.delete.use(adminMiddleware).handler(async ({ input }) => {
+      await eventService.deleteEvent(input.id);
+      return { success: true };
+    }),
   },
   categories: {
-    create: createCategory,
-    update: updateCategory,
-    delete: deleteCategory,
-    markWinner: markWinner,
-    clearWinner: clearWinner,
+    create: os.categories.create.use(adminMiddleware).handler(async ({ input }) => {
+      const { eventId, ...data } = input;
+      const category = await categoryModel.create({
+        ...data,
+        event: { connect: { id: eventId } },
+      });
+      return category;
+    }),
+    update: os.categories.update.use(adminMiddleware).handler(async ({ input }) => {
+      const { id, eventId, ...data } = input;
+    
+      // Build update data with event connection if provided
+      const updateData = eventId ? { ...data, event: { connect: { id: eventId } } } : data;
+    
+      const category = await categoryModel.update(id, updateData);
+      return category;
+    }),
+    delete: os.categories.delete.use(adminMiddleware).handler(async ({ input }) => {
+      await categoryModel.deleteById(input.id);
+      return { success: true };
+    }),
+    markWinner: os.categories.markWinner.use(adminMiddleware).handler(async ({ input }) => {
+      const category = await categoryService.markWinner(input.categoryId, input.nominationId);
+      return category;
+    }),
+    clearWinner: os.categories.clearWinner.use(adminMiddleware).handler(async ({ input }) => {
+      const category = await categoryService.clearWinner(input.categoryId);
+      return category;
+    }),
   },
   nominations: {
-    create: createNomination,
-    update: updateNomination,
-    delete: deleteNomination,
+    create: os.nominations.create.use(adminMiddleware).handler(async ({ input }) => {
+      const { categoryId, workId, personId, ...data } = input;
+    
+      // Build the nomination data with proper Prisma relations
+      const nominationData = {
+        ...data,
+        category: { connect: { id: categoryId } },
+        ...(workId && { work: { connect: { id: workId } } }),
+        ...(personId && { person: { connect: { id: personId } } }),
+      };
+    
+      const nomination = await nominationModel.create(nominationData);
+      return nomination;
+    }),
+    update: os.nominations.update.use(adminMiddleware).handler(async ({ input }) => {
+      const { id, categoryId, workId, personId, ...data } = input;
+    
+      // Build update data with proper Prisma relations
+      const updateData = {
+        ...data,
+        ...(categoryId && { category: { connect: { id: categoryId } } }),
+        ...(workId !== undefined && {
+          work: workId ? { connect: { id: workId } } : { disconnect: true },
+        }),
+        ...(personId !== undefined && {
+          person: personId ? { connect: { id: personId } } : { disconnect: true },
+        }),
+      };
+    
+      const nomination = await nominationModel.update(id, updateData);
+      return nomination;
+    }),
+    delete: os.nominations.delete.use(adminMiddleware).handler(async ({ input }) => {
+      await nominationModel.deleteById(input.id);
+      return { success: true };
+    }),
   },
   people: {
-    list: listPeople,
-    create: createPerson,
-    update: updatePerson,
-    delete: deletePerson,
+    list: os.people.list.use(adminMiddleware).handler(async () => {
+      const people = await personModel.findAllWithCounts();
+      return people;
+    }),
+    create: os.people.create.use(adminMiddleware).handler(async ({ input }) => {
+      const person = await personModel.create(input);
+      return person;
+    }),
+    update: os.people.update.use(adminMiddleware).handler(async ({ input }) => {
+      const { id, ...data } = input;
+      const person = await personModel.update(id, data);
+      return person;
+    }),
+    delete: os.people.delete.use(adminMiddleware).handler(async ({ input }) => {
+      await personModel.deleteById(input.id);
+      return { success: true };
+    }),
   },
   works: {
-    list: listWorks,
-    create: createWork,
-    update: updateWork,
-    delete: deleteWork,
+    list: os.works.list.use(adminMiddleware).handler(async () => {
+      const works = await workModel.findAll();
+      return works;
+    }),
+    create: os.works.create.use(adminMiddleware).handler(async ({ input }) => {
+      const work = await workModel.create(input);
+      return work;
+    }),
+    update: os.works.update.use(adminMiddleware).handler(async ({ input }) => {
+      const { id, ...data } = input;
+      const work = await workModel.update(id, data);
+      return work;
+    }),
+    delete: os.works.delete.use(adminMiddleware).handler(async ({ input }) => {
+      await workModel.deleteById(input.id);
+      return { success: true };
+    }),
   },
   games: {
-    list: listGames,
-    create: createGame,
-    update: updateGame,
-    updateStatus: updateGameStatus,
-    delete: deleteGame,
+    list: os.games.list.use(adminMiddleware).handler(async () => {
+      const games = await gameModel.findAll();
+      return games;
+    }),
+    create: os.games.create.use(adminMiddleware).handler(async ({ input }) => {
+      const { eventId, ...data } = input;
+      const game = await gameService.createGame({
+        ...data,
+        event: { connect: { id: eventId } },
+      });
+      return game;
+    }),
+    update: os.games.update.use(adminMiddleware).handler(async ({ input }) => {
+      const { id, eventId, ...data } = input;
+      const game = await gameService.updateGame(id, data);
+      return game;
+    }),
+    updateStatus: os.games.updateStatus.use(adminMiddleware).handler(async ({ input }) => {
+      const game = await gameService.updateGameStatus(input.id, input.status);
+      return game;
+    }),
+    delete: os.games.delete.use(adminMiddleware).handler(async ({ input }) => {
+      await gameService.deleteGame(input.id);
+      return { success: true };
+    }),
   },
   wikipedia: {
-    previewImport: previewWikipediaImport,
-    import: importFromWikipedia,
+    previewImport: os.wikipedia.previewImport.use(adminMiddleware).handler(async ({ input }) => {
+      const preview = await wikipediaImportService.previewImport(input.url);
+      return preview;
+    }),
+    import: os.wikipedia.import.use(adminMiddleware).handler(async ({ input }) => {
+      const result = await wikipediaImportService.commitImport(input.url);
+      return result;
+    }),
   },
 });
