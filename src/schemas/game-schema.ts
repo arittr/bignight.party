@@ -18,7 +18,7 @@ export const gameCreateSchema = z.object({
     .regex(accessCodeRegex, "Access code must contain only uppercase letters and numbers"),
   eventId: z.string().cuid("Invalid event ID"),
   name: z.string().min(1, "Game name is required"),
-  picksLockAt: z.string().datetime().optional(),
+  picksLockAt: z.string().datetime({ local: true }).optional(),
   // Note: status field omitted - backend sets default value
 });
 
@@ -31,7 +31,7 @@ export const gameUpdateSchema = z.object({
   eventId: z.string().cuid("Invalid event ID").optional(),
   id: z.string().cuid("Invalid game ID"),
   name: z.string().min(1, "Game name is required").optional(),
-  picksLockAt: z.string().datetime().optional(),
+  picksLockAt: z.string().datetime({ local: true }).optional(),
   status: z.enum(["SETUP", "OPEN", "LIVE", "COMPLETED"]).optional(),
 });
 
