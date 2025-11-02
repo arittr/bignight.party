@@ -1,7 +1,8 @@
 import { implement } from "@orpc/server";
+import type { GameStatus, WorkType } from "@prisma/client";
 import { adminMiddleware } from "@/lib/api/procedures";
 import { adminContract } from "@/lib/api/contracts/admin";
-import { parseOptionalDate } from "@/lib/api/utils/wire-to-domain";
+import { parseDate, parseOptionalDate } from "@/lib/api/utils/wire-to-domain";
 import * as categoryModel from "@/lib/models/category";
 import * as eventModel from "@/lib/models/event";
 import * as gameModel from "@/lib/models/game";
@@ -43,12 +44,21 @@ export const adminRouter = os.router({
       return events;
     }),
     create: os.events.create.use(adminMiddleware).handler(async ({ input }) => {
-      const event = await eventService.createEvent(input);
+      // Transform wire format → domain types
+      const { eventDate, ...rest } = input;
+      const event = await eventService.createEvent({
+        ...rest,
+        eventDate: parseDate(eventDate),
+      });
       return event;
     }),
     update: os.events.update.use(adminMiddleware).handler(async ({ input }) => {
-      const { id, ...data } = input;
-      const event = await eventService.updateEvent(id, data);
+      // Transform wire format → domain types
+      const { id, eventDate, ...rest } = input;
+      const event = await eventService.updateEvent(id, {
+        ...rest,
+        ...(eventDate && { eventDate: parseDate(eventDate) }),
+      });
       return event;
     }),
     delete: os.events.delete.use(adminMiddleware).handler(async ({ input }) => {
@@ -152,12 +162,21 @@ export const adminRouter = os.router({
       return works;
     }),
     create: os.works.create.use(adminMiddleware).handler(async ({ input }) => {
-      const work = await workModel.create(input);
+      // Transform wire format → domain types (cast enum)
+      const { type, ...rest } = input;
+      const work = await workModel.create({
+        ...rest,
+        type: type as WorkType,
+      });
       return work;
     }),
     update: os.works.update.use(adminMiddleware).handler(async ({ input }) => {
-      const { id, ...data } = input;
-      const work = await workModel.update(id, data);
+      // Transform wire format → domain types (cast enum)
+      const { id, type, ...rest } = input;
+      const work = await workModel.update(id, {
+        ...rest,
+        ...(type && { type: type as WorkType }),
+      });
       return work;
     }),
     delete: os.works.delete.use(adminMiddleware).handler(async ({ input }) => {
@@ -188,7 +207,9 @@ export const adminRouter = os.router({
       return game;
     }),
     updateStatus: os.games.updateStatus.use(adminMiddleware).handler(async ({ input }) => {
-      const game = await gameService.updateGameStatus(input.id, input.status);
+      // Transform wire format → domain types (cast enum)
+      const { id, status } = input;
+      const game = await gameService.updateGameStatus(id, status as GameStatus);
       return game;
     }),
     delete: os.games.delete.use(adminMiddleware).handler(async ({ input }) => {
