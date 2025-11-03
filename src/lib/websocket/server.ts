@@ -23,6 +23,7 @@ import type {
   JoinRoomPayload,
   LeaderboardErrorPayload,
   LeaderboardUpdatePayload,
+  ReactionSendPayload,
 } from "@/types/leaderboard";
 import { LEADERBOARD_EVENTS } from "./events";
 
@@ -30,6 +31,11 @@ import { LEADERBOARD_EVENTS } from "./events";
  * Singleton Socket.io server instance
  */
 let io: Server | undefined;
+
+/**
+ * Allowed emoji reactions
+ */
+const ALLOWED_EMOJIS = ["🔥", "😍", "😱", "💀"] as const;
 
 /**
  * Session data passed from client in socket.handshake.auth
@@ -161,6 +167,73 @@ function setupConnectionHandler(server: Server): void {
         emitError(authSocket.id, {
           code: "JOIN_FAILED",
           message: "Failed to join game room",
+        });
+      }
+    });
+
+    // Handle reaction send request
+    authSocket.on(LEADERBOARD_EVENTS.REACTION_SEND, async (payload: ReactionSendPayload) => {
+      try {
+        const { emoji, gameId } = payload;
+
+        // Validate emoji is allowed
+        if (!ALLOWED_EMOJIS.includes(emoji as (typeof ALLOWED_EMOJIS)[number])) {
+          emitError(authSocket.id, {
+            code: "INVALID_EMOJI",
+            message: "Invalid emoji. Allowed emojis: 🔥, 😍, 😱, 💀",
+          });
+          return;
+        }
+
+        // Validate gameId exists
+        if (!gameId) {
+          emitError(authSocket.id, {
+            code: "GAME_ID_REQUIRED",
+            message: "Game ID is required",
+          });
+          return;
+        }
+
+        // Verify user is a participant in this game
+        const isParticipant = await gameParticipantModel.exists(userId, gameId);
+
+        if (!isParticipant) {
+          emitError(authSocket.id, {
+            code: "NOT_PARTICIPANT",
+            message: "You are not a participant in this game",
+          });
+          return;
+        }
+
+        // Fetch user name
+        const user = await userModel.findById(userId);
+
+        if (!user) {
+          emitError(authSocket.id, {
+            code: "USER_NOT_FOUND",
+            message: "User not found",
+          });
+          return;
+        }
+
+        // Broadcast reaction to game room
+        if (io) {
+          io.to(gameId).emit(LEADERBOARD_EVENTS.REACTION_BROADCAST, {
+            emoji,
+            gameId,
+            timestamp: Date.now(),
+            userId,
+            userName: user.name || user.email,
+          });
+          // biome-ignore lint/suspicious/noConsole: Reaction broadcast logging is intentional for debugging
+          console.log(`[WebSocket] User ${userId} sent reaction ${emoji} to game ${gameId}`);
+        }
+      } catch (error) {
+        // biome-ignore lint/suspicious/noConsole: WebSocket error logging is intentional for debugging
+        console.error("[WebSocket] Error handling reaction:", error);
+        emitError(authSocket.id, {
+          code: "REACTION_FAILED",
+          message: "Failed to send reaction",
         });
       }
     });
