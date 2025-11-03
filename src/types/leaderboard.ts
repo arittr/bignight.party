@@ -65,3 +65,37 @@ export interface LeaderboardErrorPayload {
   /** Error code for programmatic handling */
   code: string;
 }
+
+/**
+ * WebSocket event payload for reaction broadcast (server → client)
+ */
+export interface ReactionPayload {
+  /** Emoji that was sent */
+  emoji: string;
+  /** User ID who sent the reaction */
+  userId: string;
+  /** User name who sent the reaction */
+  userName: string;
+  /** Game ID this reaction belongs to */
+  gameId: string;
+  /** Unix timestamp (milliseconds) when reaction was sent */
+  timestamp: number;
+}
+
+/**
+ * Client-side reaction with unique ID for display
+ */
+export interface Reaction extends ReactionPayload {
+  /** Unique ID for this reaction instance (generated client-side) */
+  id: string;
+}
+
+/**
+ * WebSocket event payload for sending a reaction (client → server)
+ */
+export interface ReactionSendPayload {
+  /** Emoji to send */
+  emoji: string;
+  /** Game ID to send reaction to */
+  gameId: string;
+}
