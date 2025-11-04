@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UseLeaderboardSocketReturn } from "@/hooks/game/use-leaderboard-socket";
+import type { UseReactionsReturn } from "@/hooks/game/use-reactions";
 import type { LeaderboardPlayer } from "@/types/leaderboard";
 import { LeaderboardClient } from "../leaderboard-client";
 
@@ -8,15 +9,23 @@ import { LeaderboardClient } from "../leaderboard-client";
 const mockUseLeaderboardSocket =
   vi.fn<(gameId: string, initialData: LeaderboardPlayer[]) => UseLeaderboardSocketReturn>();
 
+// Mock the useReactions hook
+const mockUseReactions = vi.fn<(gameId: string) => UseReactionsReturn>();
+
 vi.mock("@/hooks/game/use-leaderboard-socket", () => ({
   useLeaderboardSocket: (gameId: string, initialData: LeaderboardPlayer[]) =>
     mockUseLeaderboardSocket(gameId, initialData),
+}));
+
+vi.mock("@/hooks/game/use-reactions", () => ({
+  useReactions: (gameId: string) => mockUseReactions(gameId),
 }));
 
 describe("LeaderboardClient", () => {
   const gameId = "game-123";
   const gameName = "My Test Game";
   const eventName = "97th Academy Awards";
+  const currentUserId = "user-2";
 
   const initialPlayers: LeaderboardPlayer[] = [
     {
@@ -44,10 +53,16 @@ describe("LeaderboardClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Default mock return value
+    // Default mock return value for leaderboard socket
     mockUseLeaderboardSocket.mockReturnValue({
       connectionStatus: "connected",
       players: initialPlayers,
+    });
+
+    // Default mock return value for reactions
+    mockUseReactions.mockReturnValue({
+      reactions: [],
+      sendReaction: vi.fn(),
     });
   });
 
@@ -58,6 +73,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        currentUserId={currentUserId}
       />
     );
 
@@ -72,6 +88,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        currentUserId={currentUserId}
       />
     );
 
@@ -85,6 +102,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        currentUserId={currentUserId}
       />
     );
 
@@ -99,6 +117,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        currentUserId={currentUserId}
       />
     );
 
@@ -117,6 +136,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        currentUserId={currentUserId}
       />
     );
 
@@ -135,6 +155,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        currentUserId={currentUserId}
       />
     );
 
@@ -176,6 +197,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        currentUserId={currentUserId}
       />
     );
 
@@ -200,6 +222,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={[]}
+        currentUserId={currentUserId}
       />
     );
 
@@ -213,6 +236,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        currentUserId={currentUserId}
       />
     );
 
