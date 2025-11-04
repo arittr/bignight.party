@@ -1,10 +1,13 @@
 "use client";
 
 import { useLeaderboardSocket } from "@/hooks/game/use-leaderboard-socket";
+import { useReactions } from "@/hooks/game/use-reactions";
 import type { LeaderboardPlayer } from "@/types/leaderboard";
 import { ConnectionStatus } from "./connection-status";
 import { GameHeader } from "./game-header";
 import { LeaderboardList } from "./leaderboard-list";
+import { ReactionBar } from "./reaction-bar";
+import { ReactionDisplay } from "./reaction-display";
 
 /**
  * Props for LeaderboardClient component
@@ -18,6 +21,8 @@ export interface LeaderboardClientProps {
   gameName: string;
   /** Name of the event */
   eventName: string;
+  /** Current user's ID for highlighting reactions */
+  currentUserId: string;
 }
 
 /**
@@ -45,12 +50,16 @@ export function LeaderboardClient({
   initialPlayers,
   gameName,
   eventName,
+  currentUserId,
 }: LeaderboardClientProps) {
   // Connect to WebSocket and get live updates
   const { players, connectionStatus } = useLeaderboardSocket(gameId, initialPlayers);
 
+  // Connect to reactions WebSocket
+  const { reactions, sendReaction } = useReactions(gameId);
+
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
+    <div className="container relative mx-auto max-w-4xl px-4 py-8">
       {/* Game header with connection status */}
       <GameHeader
         connectionStatus={<ConnectionStatus status={connectionStatus} />}
@@ -58,8 +67,17 @@ export function LeaderboardClient({
         gameName={gameName}
       />
 
+      {/* Floating reaction display overlay */}
+      <ReactionDisplay reactions={reactions} currentUserId={currentUserId} />
+
       {/* Player list with live updates */}
       <LeaderboardList players={players} />
+
+      {/* Reaction buttons at bottom */}
+      <ReactionBar
+        onReactionClick={sendReaction}
+        disabled={connectionStatus !== 'connected'}
+      />
     </div>
   );
 }
