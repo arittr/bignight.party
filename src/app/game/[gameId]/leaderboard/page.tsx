@@ -94,6 +94,7 @@ export default async function LeaderboardPage({ params }: LeaderboardPageProps) 
       gameId={gameId}
       gameName={game.name}
       initialPlayers={players}
+      currentUserId={session.user.id}
     />
   );
 }
