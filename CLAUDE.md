@@ -35,6 +35,9 @@ pnpm stack:down
 # Run migrations
 pnpm db:migrate
 
+# Create a new migration
+pnpm db:migrate [--name <migration-name>]
+
 # Push schema changes without migration
 pnpm db:push
 
