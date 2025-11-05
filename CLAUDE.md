@@ -8,6 +8,10 @@ BigNight.Party is a real-time prediction game for awards shows. Users fill out p
 
 ## Essential Commands
 
+### Setup
+- **install**: `pnpm install`
+- **postinstall**: `pnpm prisma generate`
+
 ### Development
 ```bash
 # Start development server (Turbopack)
@@ -33,9 +37,6 @@ pnpm db:migrate
 
 # Push schema changes without migration
 pnpm db:push
-
-# Open Prisma Studio
-pnpm db:studio
 
 # Seed database with sample data
 pnpm db:seed
