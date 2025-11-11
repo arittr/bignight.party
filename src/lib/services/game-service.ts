@@ -78,18 +78,44 @@ export async function updateGameStatus(
 }
 
 /**
- * Join a game as a participant
- * Validates that the game exists before creating membership
+ * Join a game as a participant with compound key validation
+ * Validates both gameId AND accessCode must match (compound key)
+ * Idempotent: returns existing participant if user already a member
  */
-export async function joinGame(userId: string, gameId: string) {
-  // Validate game exists
+export async function joinGame(userId: string, gameId: string, accessCode: string) {
+  // Validate compound key: both gameId AND accessCode must match
   const game = await gameModel.findById(gameId);
 
-  if (!game) {
-    throw new Error(`Game with id ${gameId} not found`);
+  if (!game || game.accessCode !== accessCode) {
+    throw new Error("Game not found or invalid access code");
   }
 
-  // Create participant record
+  // Validate game status using ts-pattern
+  const canJoin = match(game.status)
+    .with("SETUP", () => false)
+    .with("OPEN", () => true)
+    .with("LIVE", () => true)
+    .with("COMPLETED", () => false)
+    .exhaustive();
+
+  if (!canJoin) {
+    throw new Error(`Cannot join game in ${game.status} status`);
+  }
+
+  // Check if user is already a member (idempotent)
+  const isMember = await gameParticipantModel.exists(userId, gameId);
+
+  if (isMember) {
+    // Return existing participant
+    const participants = await gameParticipantModel.findByUserId(userId);
+    const existingParticipant = participants.find(p => p.gameId === gameId);
+    if (!existingParticipant) {
+      throw new Error("Participant exists but could not be found");
+    }
+    return existingParticipant;
+  }
+
+  // Create new participant record
   return gameParticipantModel.create({ gameId, userId });
 }
 

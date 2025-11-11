@@ -24,20 +24,31 @@ describe("gameService.joinGame", () => {
     vi.clearAllMocks();
   });
 
-  it("creates GameParticipant when game exists", async () => {
-    const mockGame = buildGame({ id: "game-1", status: "OPEN" });
+  it("creates GameParticipant when game exists with matching accessCode", async () => {
+    const mockGame = buildGame({
+      accessCode: "TEST123",
+      id: "game-1",
+      status: "OPEN"
+    });
     const mockParticipant = buildGameParticipant({
       gameId: "game-1",
       id: "participant-1",
       userId: "user-1",
     });
 
-    vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
+    vi.mocked(gameParticipantModel.exists).mockResolvedValue(false);
     vi.mocked(gameParticipantModel.create).mockResolvedValue(mockParticipant);
 
-    const result = await gameService.joinGame("user-1", "game-1");
+    // Mock the compound key query that doesn't exist yet in gameModel
+    vi.spyOn(gameModel, 'findById' as any).mockImplementation(async (id: string) => {
+      if (id === "game-1") return mockGame as any;
+      return null;
+    });
 
-    expect(gameModel.findById).toHaveBeenCalledWith("game-1");
+    const result = await gameService.joinGame("user-1", "game-1", "TEST123");
+
+    expect(gameParticipantModel.exists).toHaveBeenCalledWith("user-1", "game-1");
     expect(gameParticipantModel.create).toHaveBeenCalledWith({
       gameId: "game-1",
       userId: "user-1",
@@ -45,14 +56,154 @@ describe("gameService.joinGame", () => {
     expect(result.id).toBe("participant-1");
   });
 
-  it("throws when game does not exist", async () => {
-    vi.mocked(gameModel.findById).mockResolvedValue(null);
+  it("throws when game does not exist (invalid gameId)", async () => {
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
+    vi.spyOn(gameModel, 'findById' as any).mockResolvedValue(null);
 
-    await expect(gameService.joinGame("user-1", "invalid-game")).rejects.toThrow(
-      "Game with id invalid-game not found"
-    );
+    await expect(
+      gameService.joinGame("user-1", "invalid-game", "TEST123")
+    ).rejects.toThrow("Game not found or invalid access code");
 
     expect(gameParticipantModel.create).not.toHaveBeenCalled();
+  });
+
+  it("throws when accessCode does not match (compound key mismatch)", async () => {
+    const mockGame = buildGame({
+      accessCode: "CORRECT",
+      id: "game-1",
+      status: "OPEN"
+    });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
+    vi.spyOn(gameModel, 'findById' as any).mockImplementation(async (id: string) => {
+      if (id === "game-1") return mockGame as any;
+      return null;
+    });
+
+    await expect(
+      gameService.joinGame("user-1", "game-1", "WRONG123")
+    ).rejects.toThrow("Game not found or invalid access code");
+
+    expect(gameParticipantModel.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects join when game status is SETUP", async () => {
+    const mockGame = buildGame({
+      accessCode: "TEST123",
+      id: "game-1",
+      status: "SETUP"
+    });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
+    vi.spyOn(gameModel, 'findById' as any).mockImplementation(async (id: string) => {
+      if (id === "game-1") return mockGame as any;
+      return null;
+    });
+
+    await expect(
+      gameService.joinGame("user-1", "game-1", "TEST123")
+    ).rejects.toThrow("Cannot join game in SETUP status");
+
+    expect(gameParticipantModel.create).not.toHaveBeenCalled();
+  });
+
+  it("allows join when game status is OPEN", async () => {
+    const mockGame = buildGame({
+      accessCode: "TEST123",
+      id: "game-1",
+      status: "OPEN"
+    });
+    const mockParticipant = buildGameParticipant({
+      gameId: "game-1",
+      id: "participant-1",
+      userId: "user-1",
+    });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
+    vi.mocked(gameParticipantModel.exists).mockResolvedValue(false);
+    vi.mocked(gameParticipantModel.create).mockResolvedValue(mockParticipant);
+    vi.spyOn(gameModel, 'findById' as any).mockImplementation(async (id: string) => {
+      if (id === "game-1") return mockGame as any;
+      return null;
+    });
+
+    const result = await gameService.joinGame("user-1", "game-1", "TEST123");
+
+    expect(result.id).toBe("participant-1");
+  });
+
+  it("allows join when game status is LIVE", async () => {
+    const mockGame = buildGame({
+      accessCode: "TEST123",
+      id: "game-1",
+      status: "LIVE"
+    });
+    const mockParticipant = buildGameParticipant({
+      gameId: "game-1",
+      id: "participant-1",
+      userId: "user-1",
+    });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
+    vi.mocked(gameParticipantModel.exists).mockResolvedValue(false);
+    vi.mocked(gameParticipantModel.create).mockResolvedValue(mockParticipant);
+    vi.spyOn(gameModel, 'findById' as any).mockImplementation(async (id: string) => {
+      if (id === "game-1") return mockGame as any;
+      return null;
+    });
+
+    const result = await gameService.joinGame("user-1", "game-1", "TEST123");
+
+    expect(result.id).toBe("participant-1");
+  });
+
+  it("rejects join when game status is COMPLETED", async () => {
+    const mockGame = buildGame({
+      accessCode: "TEST123",
+      id: "game-1",
+      status: "COMPLETED"
+    });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
+    vi.spyOn(gameModel, 'findById' as any).mockImplementation(async (id: string) => {
+      if (id === "game-1") return mockGame as any;
+      return null;
+    });
+
+    await expect(
+      gameService.joinGame("user-1", "game-1", "TEST123")
+    ).rejects.toThrow("Cannot join game in COMPLETED status");
+
+    expect(gameParticipantModel.create).not.toHaveBeenCalled();
+  });
+
+  it("returns existing participant when user is already a member (idempotent)", async () => {
+    const mockGame = buildGame({
+      accessCode: "TEST123",
+      id: "game-1",
+      status: "OPEN"
+    });
+    const existingParticipant = buildGameParticipant({
+      gameId: "game-1",
+      id: "existing-1",
+      userId: "user-1",
+    });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
+    vi.mocked(gameParticipantModel.exists).mockResolvedValue(true);
+    vi.spyOn(gameModel, 'findById' as any).mockImplementation(async (id: string) => {
+      if (id === "game-1") return mockGame as any;
+      return null;
+    });
+
+    // Mock findUnique to return existing participant
+    vi.spyOn(gameParticipantModel, 'findByUserId' as any).mockResolvedValue([existingParticipant]);
+
+    const result = await gameService.joinGame("user-1", "game-1", "TEST123");
+
+    expect(gameParticipantModel.exists).toHaveBeenCalledWith("user-1", "game-1");
+    expect(gameParticipantModel.create).not.toHaveBeenCalled();
+    expect(result.id).toBe("existing-1");
   });
 });
 
