@@ -37,7 +37,10 @@ export const gameUpdateSchema = z.object({
 
 export const joinGameSchema = z.object({
   gameId: z.string().cuid("Invalid game ID"),
-  accessCode: z.string().regex(/^[A-Z0-9]+$/, "Access code must be uppercase alphanumeric"),
+  accessCode: z
+    .string()
+    .min(4, "Access code must be at least 4 characters")
+    .regex(accessCodeRegex, "Access code must contain only uppercase letters and numbers"),
 });
 
 export type GameCreateInput = z.infer<typeof gameCreateSchema>;
