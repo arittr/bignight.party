@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireValidatedSession } from "@/lib/auth/config";
-import { JoinGameHandler } from "./join-game-handler";
+import { routes } from "@/lib/routes";
+import * as gameModel from "@/lib/models/game";
 
 interface CallbackPageProps {
   searchParams: Promise<{
@@ -9,14 +10,22 @@ interface CallbackPageProps {
 }
 
 export default async function CallbackPage({ searchParams }: CallbackPageProps) {
-  const session = await requireValidatedSession();
+  await requireValidatedSession();
   const params = await searchParams;
 
   // If no code provided, redirect to dashboard
   if (!params.code) {
-    redirect("/dashboard");
+    redirect(routes.dashboard());
   }
 
-  // Render client component to handle joining
-  return <JoinGameHandler accessCode={params.code} userId={session.user.id} />;
+  // Look up which game has this access code
+  const game = await gameModel.findByAccessCode(params.code);
+
+  if (!game) {
+    // Code doesn't match any game, redirect to dashboard
+    redirect(routes.dashboard());
+  }
+
+  // Redirect to the canonical join route with gameId and code
+  redirect(routes.join(game.id, params.code));
 }
