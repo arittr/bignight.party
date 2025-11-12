@@ -1,4 +1,5 @@
 import { GameListItem } from "@/components/game-list-item";
+import { JoinGameForm } from "@/components/join-game-form";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as gameService from "@/lib/services/game-service";
 import * as categoryModel from "@/lib/models/category";
@@ -39,16 +40,29 @@ export default async function DashboardPage() {
           </p>
         </div>
 
+        {/* Join Game Section */}
+        <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Join a Game</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Enter the Game ID and Access Code provided by the game host to join.
+          </p>
+          <JoinGameForm />
+        </div>
+
+        {/* Games List */}
         {gamesWithCompletion.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
-            {gamesWithCompletion.map(({ game, picksCount, totalCategories }) => (
-              <GameListItem
-                game={game}
-                key={game.id}
-                picksCount={picksCount}
-                totalCategories={totalCategories}
-              />
-            ))}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Your Games</h2>
+            <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+              {gamesWithCompletion.map(({ game, picksCount, totalCategories }) => (
+                <GameListItem
+                  game={game}
+                  key={game.id}
+                  picksCount={picksCount}
+                  totalCategories={totalCategories}
+                />
+              ))}
+            </div>
           </div>
         ) : (
           <div className="rounded-lg border-2 border-dashed border-gray-300 bg-white p-12 text-center">
@@ -68,7 +82,7 @@ export default async function DashboardPage() {
             </svg>
             <h3 className="mt-2 text-sm font-semibold text-gray-900">No games yet</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Get an invite code from a friend to join your first game
+              Use the form above to join your first game
             </p>
           </div>
         )}
