@@ -79,17 +79,47 @@ export async function updateGameStatus(
 
 /**
  * Join a game as a participant
- * Validates that the game exists before creating membership
+ * Validates compound key (gameId + accessCode) and game status before creating membership
  */
-export async function joinGame(userId: string, gameId: string) {
-  // Validate game exists
-  const game = await gameModel.findById(gameId);
+export async function joinGame(userId: string, gameId: string, accessCode: string) {
+  // Query game with compound validation using accessCode first
+  const game = await gameModel.findByAccessCode(accessCode);
 
-  if (!game) {
-    throw new Error(`Game with id ${gameId} not found`);
+  // Validate game exists and gameId matches (compound key validation)
+  if (!game || game.id !== gameId) {
+    throw new Error("Game not found or invalid access code");
   }
 
-  // Create participant record
+  // Validate game status using ts-pattern
+  const canJoin = match(game.status)
+    .with("SETUP", () => false)
+    .with("OPEN", () => true)
+    .with("LIVE", () => true)
+    .with("COMPLETED", () => false)
+    .exhaustive();
+
+  if (!canJoin) {
+    const errorMessage = match(game.status)
+      .with("SETUP", () => "This game is not yet open for joining")
+      .with("COMPLETED", () => "This game is no longer accepting new players")
+      .otherwise(() => "Cannot join this game");
+
+    throw new Error(errorMessage);
+  }
+
+  // Check if user is already a member (idempotent operation)
+  const isMember = await gameParticipantModel.exists(userId, gameId);
+
+  if (isMember) {
+    // Return existing participant instead of creating duplicate
+    const existingParticipant = await gameParticipantModel.findByUserIdAndGameId(userId, gameId);
+    if (!existingParticipant) {
+      throw new Error("Participant exists but could not be retrieved");
+    }
+    return existingParticipant;
+  }
+
+  // Create new participant record
   return gameParticipantModel.create({ gameId, userId });
 }
 
@@ -138,32 +168,3 @@ export async function getUserGames(userId: string) {
   return gamesWithCompletion;
 }
 
-/**
- * Resolve access code to game info and check membership status
- * Returns { gameId, gameName, eventName, isMember, canJoin } object
- */
-export async function resolveAccessCode(
-  code: string,
-  userId: string
-): Promise<{ gameId: string; gameName: string; eventName: string; isMember: boolean; canJoin: boolean }> {
-  // Find game by access code
-  const game = await gameModel.findByAccessCode(code);
-
-  if (!game) {
-    throw new Error(`Game with access code ${code} not found`);
-  }
-
-  // Check if user is already a member
-  const isMember = await gameParticipantModel.exists(userId, game.id);
-
-  // Determine if user can join based on game status
-  const canJoin = game.status === "SETUP" || game.status === "OPEN";
-
-  return {
-    gameId: game.id,
-    gameName: game.name,
-    eventName: game.event.name,
-    isMember,
-    canJoin,
-  };
-}
