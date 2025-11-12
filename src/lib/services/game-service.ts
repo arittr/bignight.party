@@ -4,6 +4,7 @@ import * as categoryModel from "@/lib/models/category";
 import * as gameModel from "@/lib/models/game";
 import * as gameParticipantModel from "@/lib/models/game-participant";
 import * as pickModel from "@/lib/models/pick";
+import { emitGameCompleted } from "@/lib/websocket/server";
 
 /**
  * Create a new game
@@ -167,8 +168,7 @@ export async function getUserGames(userId: string) {
  * Complete a game by transitioning status to COMPLETED
  *
  * Validates game is in LIVE status before completing.
- * Sets game status to COMPLETED.
- * NOTE: WebSocket emission (emitGameCompleted) will be added in Phase 2.
+ * Sets game status to COMPLETED and broadcasts completion event to all connected clients.
  *
  * @param gameId - The game ID to complete
  * @throws Error if game not found or not in LIVE status
@@ -177,6 +177,7 @@ export async function getUserGames(userId: string) {
  * ```ts
  * await completeGame(gameId);
  * // Game now has: { status: 'COMPLETED' }
+ * // All connected clients receive game:completed WebSocket event
  * ```
  */
 export async function completeGame(gameId: string): Promise<void> {
@@ -202,8 +203,11 @@ export async function completeGame(gameId: string): Promise<void> {
   // Update game status to COMPLETED
   await gameModel.completeGame(gameId);
 
-  // Phase 2: Emit WebSocket event
-  // emitGameCompleted(gameId, { gameId, completedAt: new Date().toISOString() });
+  // Emit WebSocket event to notify all connected clients
+  emitGameCompleted(gameId, {
+    gameId,
+    completedAt: new Date().toISOString(),
+  });
 
   // biome-ignore lint/suspicious/noConsole: Completion logging is intentional for debugging
   console.log(`[Game] Completed game ${gameId}`);

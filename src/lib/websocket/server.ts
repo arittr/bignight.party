@@ -20,6 +20,7 @@ import { Server } from "socket.io";
 import * as gameParticipantModel from "@/lib/models/game-participant";
 import * as userModel from "@/lib/models/user";
 import type {
+  GameCompletedPayload,
   JoinRoomPayload,
   LeaderboardErrorPayload,
   LeaderboardUpdatePayload,
@@ -275,6 +276,36 @@ export function emitLeaderboardUpdate(gameId: string, data: LeaderboardUpdatePay
   io.to(gameId).emit(LEADERBOARD_EVENTS.UPDATE, data);
   // biome-ignore lint/suspicious/noConsole: Broadcast logging is intentional for debugging
   console.log(`[WebSocket] Emitted leaderboard update to game ${gameId}`);
+}
+
+/**
+ * Emit a game completion event to all clients in a game room
+ *
+ * This function is used by services to notify all connected clients when
+ * a game transitions from LIVE to COMPLETED status.
+ *
+ * @param gameId - Game ID (room name)
+ * @param payload - Game completion payload with gameId and timestamp
+ *
+ * @example
+ * ```typescript
+ * // In game service after completing the game
+ * emitGameCompleted(gameId, {
+ *   gameId,
+ *   completedAt: new Date().toISOString(),
+ * });
+ * ```
+ */
+export function emitGameCompleted(gameId: string, payload: GameCompletedPayload): void {
+  if (!io) {
+    // biome-ignore lint/suspicious/noConsole: Warning about uninitialized server is intentional
+    console.warn("[WebSocket] Cannot emit game completed - server not initialized");
+    return;
+  }
+
+  io.to(gameId).emit(LEADERBOARD_EVENTS.GAME_COMPLETED, payload);
+  // biome-ignore lint/suspicious/noConsole: Broadcast logging is intentional for debugging
+  console.log(`[WebSocket] Emitted game completed to game ${gameId}`);
 }
 
 /**
