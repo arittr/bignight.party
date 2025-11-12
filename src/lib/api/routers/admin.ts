@@ -91,11 +91,15 @@ export const adminRouter = os.router({
       return { success: true };
     }),
     markWinner: os.categories.markWinner.use(adminMiddleware).handler(async ({ input }) => {
-      const category = await categoryService.markWinner(input.categoryId, input.nominationId);
+      const category = await categoryService.markWinnerAndUpdate(
+        input.categoryId,
+        input.nominationId,
+        input.gameId
+      );
       return category;
     }),
     clearWinner: os.categories.clearWinner.use(adminMiddleware).handler(async ({ input }) => {
-      const category = await categoryService.clearWinner(input.categoryId);
+      const category = await categoryService.clearWinner(input.categoryId, input.gameId);
       return category;
     }),
   },
