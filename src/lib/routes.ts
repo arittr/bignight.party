@@ -109,7 +109,7 @@ export const routes = {
   home: () => "/",
 
   /** Join game with access code */
-  join: (code: string) => `/join/${code}`,
+  join: (gameId: string, code: string) => `/join/${gameId}?code=${code}`,
 
   /** Sign in page */
   signIn: () => "/sign-in",
