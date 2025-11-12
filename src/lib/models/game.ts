@@ -105,3 +105,28 @@ export async function deleteById(id: string) {
     where: { id },
   });
 }
+
+/**
+ * Complete a game by transitioning status to COMPLETED
+ *
+ * Sets game status to COMPLETED.
+ * This method only performs the database update - business logic validation
+ * (checking if game is LIVE, all categories revealed) should be done in the service layer.
+ *
+ * @param gameId - The game ID to complete
+ * @returns Updated game with COMPLETED status
+ *
+ * @example
+ * ```ts
+ * await completeGame(gameId);
+ * // Game now has: { status: 'COMPLETED' }
+ * ```
+ */
+export async function completeGame(gameId: string) {
+  return prisma.game.update({
+    where: { id: gameId },
+    data: {
+      status: "COMPLETED",
+    },
+  });
+}

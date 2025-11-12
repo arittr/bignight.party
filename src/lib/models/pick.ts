@@ -327,3 +327,80 @@ export async function getLeaderboard(gameId: string) {
 
   return playerScores;
 }
+
+/**
+ * Get pick counts aggregated by category and nomination for a game
+ *
+ * Used for live winner marking to show how many users picked each nomination
+ * across all categories. Returns aggregated counts grouped by categoryId and nominationId.
+ *
+ * @param gameId - The game ID to get pick counts for
+ * @returns Array of objects with categoryId, nominationId, and count
+ *
+ * @example
+ * ```ts
+ * const pickCounts = await getPickCountsForGame(gameId);
+ * // Returns: [
+ * //   { categoryId: "cat1", nominationId: "nom1", count: 5 },
+ * //   { categoryId: "cat1", nominationId: "nom2", count: 3 },
+ * //   { categoryId: "cat2", nominationId: "nom3", count: 8 }
+ * // ]
+ * ```
+ */
+export async function getPickCountsForGame(gameId: string): Promise<Array<{
+  categoryId: string;
+  nominationId: string;
+  count: number;
+}>> {
+  const results = await prisma.pick.groupBy({
+    by: ["categoryId", "nominationId"],
+    _count: {
+      id: true,
+    },
+    where: {
+      gameId,
+    },
+  });
+
+  return results.map((result) => ({
+    categoryId: result.categoryId,
+    nominationId: result.nominationId,
+    count: result._count.id,
+  }));
+}
+
+/**
+ * Check if all categories in a game have been revealed
+ *
+ * Queries the game with its categories and checks if every category has isRevealed = true.
+ * Returns false if game doesn't exist or has no categories.
+ *
+ * @param gameId - The game ID to check
+ * @returns true if ALL categories are revealed, false otherwise
+ *
+ * @example
+ * ```ts
+ * const allRevealed = await areAllCategoriesRevealed(gameId);
+ * if (allRevealed) {
+ *   await gameService.completeGame(gameId);
+ * }
+ * ```
+ */
+export async function areAllCategoriesRevealed(gameId: string): Promise<boolean> {
+  const game = await prisma.game.findUnique({
+    where: { id: gameId },
+    include: {
+      event: {
+        include: {
+          categories: true,
+        },
+      },
+    },
+  });
+
+  if (!game || game.event.categories.length === 0) {
+    return false;
+  }
+
+  return game.event.categories.every((category) => category.isRevealed === true);
+}

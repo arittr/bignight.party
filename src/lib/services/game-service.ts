@@ -163,3 +163,49 @@ export async function getUserGames(userId: string) {
   return gamesWithCompletion;
 }
 
+/**
+ * Complete a game by transitioning status to COMPLETED
+ *
+ * Validates game is in LIVE status before completing.
+ * Sets game status to COMPLETED.
+ * NOTE: WebSocket emission (emitGameCompleted) will be added in Phase 2.
+ *
+ * @param gameId - The game ID to complete
+ * @throws Error if game not found or not in LIVE status
+ *
+ * @example
+ * ```ts
+ * await completeGame(gameId);
+ * // Game now has: { status: 'COMPLETED' }
+ * ```
+ */
+export async function completeGame(gameId: string): Promise<void> {
+  // Fetch game to validate status
+  const game = await gameModel.findById(gameId);
+
+  if (!game) {
+    throw new Error(`Game with id ${gameId} not found`);
+  }
+
+  // Validate game is LIVE using ts-pattern
+  const canComplete = match(game.status)
+    .with("SETUP", () => false)
+    .with("OPEN", () => false)
+    .with("LIVE", () => true)
+    .with("COMPLETED", () => false)
+    .exhaustive();
+
+  if (!canComplete) {
+    throw new Error(`Game must be in LIVE status to complete (current: ${game.status})`);
+  }
+
+  // Update game status to COMPLETED
+  await gameModel.completeGame(gameId);
+
+  // Phase 2: Emit WebSocket event
+  // emitGameCompleted(gameId, { gameId, completedAt: new Date().toISOString() });
+
+  // biome-ignore lint/suspicious/noConsole: Completion logging is intentional for debugging
+  console.log(`[Game] Completed game ${gameId}`);
+}
+
