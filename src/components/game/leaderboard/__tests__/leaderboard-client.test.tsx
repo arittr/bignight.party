@@ -50,14 +50,15 @@ describe("LeaderboardClient", () => {
     },
   ];
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+	beforeEach(() => {
+		vi.clearAllMocks();
 
-    // Default mock return value for leaderboard socket
-    mockUseLeaderboardSocket.mockReturnValue({
-      connectionStatus: "connected",
-      players: initialPlayers,
-    });
+		// Default mock return value for leaderboard socket
+		mockUseLeaderboardSocket.mockReturnValue({
+			connectionStatus: "connected",
+			gameStatus: "LIVE",
+			players: initialPlayers,
+		});
 
     // Default mock return value for reactions
     mockUseReactions.mockReturnValue({
@@ -73,6 +74,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        initialGameStatus="LIVE"
         currentUserId={currentUserId}
       />
     );
@@ -88,6 +90,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        initialGameStatus="LIVE"
         currentUserId={currentUserId}
       />
     );
@@ -102,6 +105,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        initialGameStatus="LIVE"
         currentUserId={currentUserId}
       />
     );
@@ -117,6 +121,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        initialGameStatus="LIVE"
         currentUserId={currentUserId}
       />
     );
@@ -127,6 +132,7 @@ describe("LeaderboardClient", () => {
   it("should show connecting status when socket is connecting", () => {
     mockUseLeaderboardSocket.mockReturnValue({
       connectionStatus: "connecting",
+      gameStatus: "LIVE",
       players: initialPlayers,
     });
 
@@ -136,6 +142,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        initialGameStatus="LIVE"
         currentUserId={currentUserId}
       />
     );
@@ -146,6 +153,7 @@ describe("LeaderboardClient", () => {
   it("should show disconnected status when socket is disconnected", () => {
     mockUseLeaderboardSocket.mockReturnValue({
       connectionStatus: "disconnected",
+      gameStatus: "LIVE",
       players: initialPlayers,
     });
 
@@ -155,6 +163,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        initialGameStatus="LIVE"
         currentUserId={currentUserId}
       />
     );
@@ -186,10 +195,11 @@ describe("LeaderboardClient", () => {
       },
     ];
 
-    mockUseLeaderboardSocket.mockReturnValue({
-      connectionStatus: "connected",
-      players: updatedPlayers,
-    });
+		mockUseLeaderboardSocket.mockReturnValue({
+			connectionStatus: "connected",
+			gameStatus: "LIVE",
+			players: updatedPlayers,
+		});
 
     render(
       <LeaderboardClient
@@ -197,6 +207,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        initialGameStatus="LIVE"
         currentUserId={currentUserId}
       />
     );
@@ -210,21 +221,23 @@ describe("LeaderboardClient", () => {
     expect(screen.getByText("150")).toBeInTheDocument();
   });
 
-  it("should show empty state when no players", () => {
-    mockUseLeaderboardSocket.mockReturnValue({
-      connectionStatus: "connected",
-      players: [],
-    });
+	it("should show empty state when no players", () => {
+		mockUseLeaderboardSocket.mockReturnValue({
+			connectionStatus: "connected",
+			gameStatus: "LIVE",
+			players: [],
+		});
 
-    render(
-      <LeaderboardClient
-        eventName={eventName}
-        gameId={gameId}
-        gameName={gameName}
-        initialPlayers={[]}
-        currentUserId={currentUserId}
-      />
-    );
+		render(
+			<LeaderboardClient
+				currentUserId={currentUserId}
+				eventName={eventName}
+				gameId={gameId}
+				gameName={gameName}
+				initialGameStatus="LIVE"
+				initialPlayers={[]}
+			/>
+		);
 
     expect(screen.getByText("No Leaderboard Yet")).toBeInTheDocument();
   });
@@ -236,6 +249,7 @@ describe("LeaderboardClient", () => {
         gameId={gameId}
         gameName={gameName}
         initialPlayers={initialPlayers}
+        initialGameStatus="LIVE"
         currentUserId={currentUserId}
       />
     );

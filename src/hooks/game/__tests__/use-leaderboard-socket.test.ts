@@ -57,14 +57,14 @@ describe("useLeaderboardSocket", () => {
   });
 
   it("should initialize with initial data and connecting status", () => {
-    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     expect(result.current.players).toEqual(initialPlayers);
     expect(result.current.connectionStatus).toBe("connecting");
   });
 
   it("should set up socket event listeners on mount", () => {
-    renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     expect(mockOn).toHaveBeenCalledWith("connect", expect.any(Function));
     expect(mockOn).toHaveBeenCalledWith("disconnect", expect.any(Function));
@@ -76,7 +76,7 @@ describe("useLeaderboardSocket", () => {
   });
 
   it("should join game room on connect", () => {
-    renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     // Get the connect handler
     const connectHandler = mockOn.mock.calls.find((call) => call[0] === "connect")?.[1];
@@ -90,7 +90,7 @@ describe("useLeaderboardSocket", () => {
   });
 
   it("should update status to connected on connect", () => {
-    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     // Get the connect handler
     const connectHandler = mockOn.mock.calls.find((call) => call[0] === "connect")?.[1];
@@ -104,7 +104,7 @@ describe("useLeaderboardSocket", () => {
   });
 
   it("should update status to disconnected on disconnect", () => {
-    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     // Get the disconnect handler
     const disconnectHandler = mockOn.mock.calls.find((call) => call[0] === "disconnect")?.[1];
@@ -118,7 +118,7 @@ describe("useLeaderboardSocket", () => {
   });
 
   it("should update status to connecting on reconnect attempt", () => {
-    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     // Get the reconnect_attempt handler
     const reconnectHandler = mockIoOn.mock.calls.find(
@@ -134,7 +134,7 @@ describe("useLeaderboardSocket", () => {
   });
 
   it("should rejoin room on reconnect", () => {
-    renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     // Get the reconnect handler
     const reconnectHandler = mockIoOn.mock.calls.find((call) => call[0] === "reconnect")?.[1];
@@ -148,7 +148,7 @@ describe("useLeaderboardSocket", () => {
   });
 
   it("should update players on leaderboard update event", () => {
-    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     // Get the update handler
     const updateHandler = mockOn.mock.calls.find(
@@ -193,7 +193,7 @@ describe("useLeaderboardSocket", () => {
   });
 
   it("should disconnect socket on unmount", () => {
-    const { unmount } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    const { unmount } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     unmount();
 
@@ -202,7 +202,7 @@ describe("useLeaderboardSocket", () => {
 
   it("should handle connection errors", () => {
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    const { result } = renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     // Get the connect_error handler
     const errorHandler = mockOn.mock.calls.find((call) => call[0] === "connect_error")?.[1];
@@ -220,7 +220,7 @@ describe("useLeaderboardSocket", () => {
 
   it("should handle leaderboard errors", () => {
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    renderHook(() => useLeaderboardSocket(gameId, initialPlayers));
+    renderHook(() => useLeaderboardSocket(gameId, initialPlayers, "LIVE"));
 
     // Get the error handler
     const errorHandler = mockOn.mock.calls.find(

@@ -1,12 +1,14 @@
 "use client";
 
+import type { GameStatus } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import { LEADERBOARD_EVENTS } from "@/lib/websocket/events";
 import type {
-  LeaderboardErrorPayload,
-  LeaderboardPlayer,
-  LeaderboardUpdatePayload,
+	GameCompletedPayload,
+	LeaderboardErrorPayload,
+	LeaderboardPlayer,
+	LeaderboardUpdatePayload,
 } from "@/types/leaderboard";
 
 /**
@@ -18,10 +20,12 @@ export type ConnectionStatus = "connected" | "connecting" | "disconnected";
  * Return type for useLeaderboardSocket hook
  */
 export interface UseLeaderboardSocketReturn {
-  /** Current list of players with scores */
-  players: LeaderboardPlayer[];
-  /** Current connection status */
-  connectionStatus: ConnectionStatus;
+	/** Current list of players with scores */
+	players: LeaderboardPlayer[];
+	/** Current connection status */
+	connectionStatus: ConnectionStatus;
+	/** Current game status (SETUP, OPEN, LIVE, or COMPLETED) */
+	gameStatus: GameStatus;
 }
 
 /**
@@ -29,25 +33,30 @@ export interface UseLeaderboardSocketReturn {
  *
  * Connects to Socket.io server, joins game room, and listens for real-time
  * leaderboard updates. Automatically handles reconnection and cleanup.
+ * Tracks game status and updates when game completes via WebSocket.
  *
  * @param gameId - ID of the game to join
  * @param initialData - Initial player data from SSR (used until first WebSocket update)
- * @returns Object with players array and connection status
+ * @param initialGameStatus - Initial game status from SSR (used until first WebSocket update)
+ * @returns Object with players array, connection status, and game status
  *
  * @example
  * ```typescript
- * const { players, connectionStatus } = useLeaderboardSocket(
+ * const { players, connectionStatus, gameStatus } = useLeaderboardSocket(
  *   "game-123",
- *   initialPlayers
+ *   initialPlayers,
+ *   "LIVE"
  * );
  * ```
  */
 export function useLeaderboardSocket(
-  gameId: string,
-  initialData: LeaderboardPlayer[]
+	gameId: string,
+	initialData: LeaderboardPlayer[],
+	initialGameStatus: GameStatus
 ): UseLeaderboardSocketReturn {
-  const [players, setPlayers] = useState<LeaderboardPlayer[]>(initialData);
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
+	const [players, setPlayers] = useState<LeaderboardPlayer[]>(initialData);
+	const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
+	const [gameStatus, setGameStatus] = useState<GameStatus>(initialGameStatus);
 
   useEffect(() => {
     let socket: Socket | null = null;
@@ -86,17 +95,25 @@ export function useLeaderboardSocket(
         socket?.emit(LEADERBOARD_EVENTS.JOIN, { gameId });
       });
 
-      // Handle leaderboard updates
-      socket.on(LEADERBOARD_EVENTS.UPDATE, (payload: LeaderboardUpdatePayload) => {
-        // Update players list with new data
-        setPlayers(payload.players);
-      });
+			// Handle leaderboard updates
+			socket.on(LEADERBOARD_EVENTS.UPDATE, (payload: LeaderboardUpdatePayload) => {
+				// Update players list with new data
+				setPlayers(payload.players);
+			});
 
-      // Handle errors
-      socket.on(LEADERBOARD_EVENTS.ERROR, (error: LeaderboardErrorPayload) => {
-        // biome-ignore lint/suspicious/noConsole: Error logging for debugging WebSocket issues
-        console.error("[useLeaderboardSocket] Error:", error.message, error.code);
-      });
+			// Handle game completion
+			socket.on(LEADERBOARD_EVENTS.GAME_COMPLETED, (payload: GameCompletedPayload) => {
+				// Update game status to COMPLETED
+				setGameStatus("COMPLETED");
+				// biome-ignore lint/suspicious/noConsole: Status change logging for debugging
+				console.log("[useLeaderboardSocket] Game completed:", payload.gameId);
+			});
+
+			// Handle errors
+			socket.on(LEADERBOARD_EVENTS.ERROR, (error: LeaderboardErrorPayload) => {
+				// biome-ignore lint/suspicious/noConsole: Error logging for debugging WebSocket issues
+				console.error("[useLeaderboardSocket] Error:", error.message, error.code);
+			});
 
       // Handle connection errors
       socket.on("connect_error", (error) => {
@@ -109,14 +126,14 @@ export function useLeaderboardSocket(
     // Initialize socket
     initializeSocket();
 
-    // Cleanup on unmount
-    return () => {
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
-    };
-  }, [gameId]);
+		// Cleanup on unmount
+		return () => {
+			if (socket) {
+				socket.disconnect();
+				socket = null;
+			}
+		};
+	}, [gameId]);
 
-  return { connectionStatus, players };
+	return { connectionStatus, gameStatus, players };
 }

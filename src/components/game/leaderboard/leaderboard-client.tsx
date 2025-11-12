@@ -1,10 +1,12 @@
 "use client";
 
+import type { GameStatus } from "@prisma/client";
 import { useLeaderboardSocket } from "@/hooks/game/use-leaderboard-socket";
 import { useReactions } from "@/hooks/game/use-reactions";
 import type { LeaderboardPlayer } from "@/types/leaderboard";
 import { ConnectionStatus } from "./connection-status";
 import { GameHeader } from "./game-header";
+import { InsightRotation } from "./insight-rotation";
 import { LeaderboardList } from "./leaderboard-list";
 import { ReactionBar } from "./reaction-bar";
 import { ReactionDisplay } from "./reaction-display";
@@ -13,16 +15,18 @@ import { ReactionDisplay } from "./reaction-display";
  * Props for LeaderboardClient component
  */
 export interface LeaderboardClientProps {
-  /** ID of the game */
-  gameId: string;
-  /** Initial player data from SSR */
-  initialPlayers: LeaderboardPlayer[];
-  /** Name of the game */
-  gameName: string;
-  /** Name of the event */
-  eventName: string;
-  /** Current user's ID for highlighting reactions */
-  currentUserId: string;
+	/** ID of the game */
+	gameId: string;
+	/** Initial player data from SSR */
+	initialPlayers: LeaderboardPlayer[];
+	/** Initial game status from SSR */
+	initialGameStatus: GameStatus;
+	/** Name of the game */
+	gameName: string;
+	/** Name of the event */
+	eventName: string;
+	/** Current user's ID for highlighting reactions */
+	currentUserId: string;
 }
 
 /**
@@ -46,38 +50,48 @@ export interface LeaderboardClientProps {
  * ```
  */
 export function LeaderboardClient({
-  gameId,
-  initialPlayers,
-  gameName,
-  eventName,
-  currentUserId,
+	gameId,
+	initialPlayers,
+	initialGameStatus,
+	gameName,
+	eventName,
+	currentUserId,
 }: LeaderboardClientProps) {
-  // Connect to WebSocket and get live updates
-  const { players, connectionStatus } = useLeaderboardSocket(gameId, initialPlayers);
+	// Connect to WebSocket and get live updates (including game status)
+	const { players, connectionStatus, gameStatus } = useLeaderboardSocket(
+		gameId,
+		initialPlayers,
+		initialGameStatus
+	);
 
-  // Connect to reactions WebSocket
-  const { reactions, sendReaction } = useReactions(gameId);
+	// Connect to reactions WebSocket
+	const { reactions, sendReaction } = useReactions(gameId);
 
-  return (
-    <div className="container relative mx-auto max-w-4xl px-4 py-8">
-      {/* Game header with connection status */}
-      <GameHeader
-        connectionStatus={<ConnectionStatus status={connectionStatus} />}
-        eventName={eventName}
-        gameName={gameName}
-      />
+	return (
+		<div className="container relative mx-auto max-w-4xl px-4 py-8">
+			{/* Game header with connection status */}
+			<GameHeader
+				connectionStatus={<ConnectionStatus status={connectionStatus} />}
+				eventName={eventName}
+				gameName={gameName}
+			/>
 
-      {/* Floating reaction display overlay */}
-      <ReactionDisplay reactions={reactions} currentUserId={currentUserId} />
+			{/* Floating reaction display overlay */}
+			<ReactionDisplay currentUserId={currentUserId} reactions={reactions} />
 
-      {/* Player list with live updates */}
-      <LeaderboardList players={players} />
+			{/* Player list with live updates */}
+			<LeaderboardList players={players} />
 
-      {/* Reaction buttons at bottom */}
-      <ReactionBar
-        onReactionClick={sendReaction}
-        disabled={connectionStatus !== 'connected'}
-      />
-    </div>
-  );
+			{/* Insight rotation cards (below scoreboard on mobile, beside on desktop) */}
+			<div className="mt-8">
+				<InsightRotation gameId={gameId} gameStatus={gameStatus} />
+			</div>
+
+			{/* Reaction buttons at bottom */}
+			<ReactionBar
+				disabled={connectionStatus !== "connected"}
+				onReactionClick={sendReaction}
+			/>
+		</div>
+	);
 }
