@@ -19,12 +19,7 @@ const os = implement(gameContract);
  */
 export const gameRouter = os.router({
   join: os.join.use(authMiddleware).handler(async ({ input, context }) => {
-    return gameService.joinGame(context.userId, input.gameId);
-  }),
-  resolveAccessCode: os.resolveAccessCode
-  .use(authMiddleware)
-  .handler(async ({ input, context }) => {
-    return gameService.resolveAccessCode(input.accessCode, context.userId);
+    return gameService.joinGame(context.userId, input.gameId, input.accessCode);
   }),
   getUserGames: os.getUserGames
   .use(authMiddleware)
