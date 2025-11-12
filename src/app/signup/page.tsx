@@ -32,7 +32,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
           {params.code ? (
             <div className="mt-4 rounded-md bg-indigo-50 p-4">
               <p className="text-sm text-indigo-800">
-                You've been invited to join a game! Sign in to continue.
+                You'll join the game after signing in
               </p>
               <p className="mt-1 text-xs text-indigo-600">Access code: {params.code}</p>
             </div>
