@@ -86,15 +86,16 @@ export default async function LeaderboardPage({ params }: LeaderboardPageProps) 
   // 6. Mark current user for UI highlighting
   const players = leaderboardService.markCurrentUser(leaderboard.players, session.user.id);
 
-  // 7. Render LeaderboardClient with SSR data
-  // Client component will handle WebSocket connection and live updates
-  return (
-    <LeaderboardClient
-      eventName={game.event.name}
-      gameId={gameId}
-      gameName={game.name}
-      initialPlayers={players}
-      currentUserId={session.user.id}
-    />
-  );
+	// 7. Render LeaderboardClient with SSR data
+	// Client component will handle WebSocket connection and live updates
+	return (
+		<LeaderboardClient
+			currentUserId={session.user.id}
+			eventName={game.event.name}
+			gameId={gameId}
+			gameName={game.name}
+			initialGameStatus={game.status}
+			initialPlayers={players}
+		/>
+	);
 }
