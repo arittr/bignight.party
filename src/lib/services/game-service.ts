@@ -82,11 +82,11 @@ export async function updateGameStatus(
  * Validates compound key (gameId + accessCode) and game status before creating membership
  */
 export async function joinGame(userId: string, gameId: string, accessCode: string) {
-  // Query game with compound validation using accessCode first
-  const game = await gameModel.findByAccessCode(accessCode);
+  // Query game with compound WHERE clause validation
+  const game = await gameModel.findByIdAndAccessCode(gameId, accessCode);
 
-  // Validate game exists and gameId matches (compound key validation)
-  if (!game || game.id !== gameId) {
+  // Validate game exists (compound key validation)
+  if (!game) {
     throw new Error("Game not found or invalid access code");
   }
 
@@ -99,23 +99,18 @@ export async function joinGame(userId: string, gameId: string, accessCode: strin
     .exhaustive();
 
   if (!canJoin) {
-    const errorMessage = match(game.status)
-      .with("SETUP", () => "This game is not yet open for joining")
-      .with("COMPLETED", () => "This game is no longer accepting new players")
-      .otherwise(() => "Cannot join this game");
-
-    throw new Error(errorMessage);
+    throw new Error(
+      game.status === "SETUP"
+        ? "This game is not yet open for joining"
+        : "This game is no longer accepting new players"
+    );
   }
 
   // Check if user is already a member (idempotent operation)
-  const isMember = await gameParticipantModel.exists(userId, gameId);
+  const existingParticipant = await gameParticipantModel.findByUserIdAndGameId(userId, gameId);
 
-  if (isMember) {
+  if (existingParticipant) {
     // Return existing participant instead of creating duplicate
-    const existingParticipant = await gameParticipantModel.findByUserIdAndGameId(userId, gameId);
-    if (!existingParticipant) {
-      throw new Error("Participant exists but could not be retrieved");
-    }
     return existingParticipant;
   }
 
