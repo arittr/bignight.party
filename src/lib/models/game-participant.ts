@@ -49,6 +49,17 @@ export async function exists(userId: string, gameId: string) {
   return participant !== null;
 }
 
+export async function findByUserIdAndGameId(userId: string, gameId: string) {
+  return prisma.gameParticipant.findUnique({
+    where: {
+      userId_gameId: {
+        gameId,
+        userId,
+      },
+    },
+  });
+}
+
 export async function deleteByUserAndGame(userId: string, gameId: string) {
   return prisma.gameParticipant.delete({
     where: {
