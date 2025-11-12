@@ -441,3 +441,55 @@ describe("gameModel GameStatus enum validation", () => {
     expect(game.status).toBe("COMPLETED");
   });
 });
+
+describe("gameModel.completeGame", () => {
+  let testGameId: string;
+
+  beforeEach(async () => {
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-g-12" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-g-12", status: "LIVE" }),
+    });
+    testGameId = game.id;
+  });
+
+  it("sets status to COMPLETED", async () => {
+    const updatedGame = await gameModel.completeGame(testGameId);
+
+    expect(updatedGame.status).toBe("COMPLETED");
+  });
+
+  it("sets completedAt timestamp", async () => {
+    const beforeComplete = new Date();
+    const updatedGame = await gameModel.completeGame(testGameId);
+    const afterComplete = new Date();
+
+    expect(updatedGame.completedAt).toBeDefined();
+    expect(updatedGame.completedAt).not.toBeNull();
+
+    // Verify timestamp is within reasonable range
+    const completedAt = updatedGame.completedAt as Date;
+    expect(completedAt.getTime()).toBeGreaterThanOrEqual(beforeComplete.getTime());
+    expect(completedAt.getTime()).toBeLessThanOrEqual(afterComplete.getTime());
+  });
+
+  it("persists both status and completedAt to database", async () => {
+    await gameModel.completeGame(testGameId);
+
+    // Fetch from DB to verify persistence
+    const game = await testPrisma.game.findUnique({
+      where: { id: testGameId },
+    });
+
+    expect(game?.status).toBe("COMPLETED");
+    expect(game?.completedAt).toBeDefined();
+    expect(game?.completedAt).not.toBeNull();
+  });
+
+  it("throws error for nonexistent game", async () => {
+    await expect(gameModel.completeGame("nonexistent-game")).rejects.toThrow();
+  });
+});

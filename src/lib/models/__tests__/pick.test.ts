@@ -1232,3 +1232,324 @@ describe("pickModel.getLeaderboard", () => {
     expect(leaderboard[0].name).toBe("test@example.com");
   });
 });
+
+describe("pickModel.getPickCountsForGame", () => {
+  let testGameId: string;
+  let testCategory1Id: string;
+  let testCategory2Id: string;
+  let testNomination1Id: string;
+  let testNomination2Id: string;
+  let testNomination3Id: string;
+
+  beforeEach(async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-pc-1" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-pc-1" }),
+    });
+    testGameId = game.id;
+
+    // Create two categories
+    const category1 = await testPrisma.category.create({
+      data: buildCategory({ eventId: event.id, id: "category-pc-1", name: "Category 1", order: 1 }),
+    });
+    testCategory1Id = category1.id;
+
+    const category2 = await testPrisma.category.create({
+      data: buildCategory({ eventId: event.id, id: "category-pc-2", name: "Category 2", order: 2 }),
+    });
+    testCategory2Id = category2.id;
+
+    // Create nominations
+    const nomination1 = await testPrisma.nomination.create({
+      data: buildNomination({
+        categoryId: category1.id,
+        id: "nomination-pc-1",
+        nominationText: "Option 1",
+      }),
+    });
+    testNomination1Id = nomination1.id;
+
+    const nomination2 = await testPrisma.nomination.create({
+      data: buildNomination({
+        categoryId: category1.id,
+        id: "nomination-pc-2",
+        nominationText: "Option 2",
+      }),
+    });
+    testNomination2Id = nomination2.id;
+
+    const nomination3 = await testPrisma.nomination.create({
+      data: buildNomination({
+        categoryId: category2.id,
+        id: "nomination-pc-3",
+        nominationText: "Option 3",
+      }),
+    });
+    testNomination3Id = nomination3.id;
+
+    // Create users and picks
+    const user1 = await testPrisma.user.create({
+      data: buildUser({ email: "user-pc-1@example.com", id: "user-pc-1" }),
+    });
+    const user2 = await testPrisma.user.create({
+      data: buildUser({ email: "user-pc-2@example.com", id: "user-pc-2" }),
+    });
+    const user3 = await testPrisma.user.create({
+      data: buildUser({ email: "user-pc-3@example.com", id: "user-pc-3" }),
+    });
+
+    // User1 picks nomination1 for category1, nomination3 for category2
+    await testPrisma.pick.createMany({
+      data: [
+        {
+          categoryId: category1.id,
+          gameId: game.id,
+          nominationId: nomination1.id,
+          userId: user1.id,
+        },
+        {
+          categoryId: category2.id,
+          gameId: game.id,
+          nominationId: nomination3.id,
+          userId: user1.id,
+        },
+      ],
+    });
+
+    // User2 picks nomination1 for category1, nomination3 for category2
+    await testPrisma.pick.createMany({
+      data: [
+        {
+          categoryId: category1.id,
+          gameId: game.id,
+          nominationId: nomination1.id,
+          userId: user2.id,
+        },
+        {
+          categoryId: category2.id,
+          gameId: game.id,
+          nominationId: nomination3.id,
+          userId: user2.id,
+        },
+      ],
+    });
+
+    // User3 picks nomination2 for category1, nomination3 for category2
+    await testPrisma.pick.createMany({
+      data: [
+        {
+          categoryId: category1.id,
+          gameId: game.id,
+          nominationId: nomination2.id,
+          userId: user3.id,
+        },
+        {
+          categoryId: category2.id,
+          gameId: game.id,
+          nominationId: nomination3.id,
+          userId: user3.id,
+        },
+      ],
+    });
+  });
+
+  it("returns correct pick counts aggregated by category and nomination", async () => {
+    const pickCounts = await pickModel.getPickCountsForGame(testGameId);
+
+    expect(pickCounts).toHaveLength(3);
+
+    // Find counts for each nomination
+    const nom1Count = pickCounts.find((pc) => pc.nominationId === testNomination1Id);
+    const nom2Count = pickCounts.find((pc) => pc.nominationId === testNomination2Id);
+    const nom3Count = pickCounts.find((pc) => pc.nominationId === testNomination3Id);
+
+    // Verify counts
+    expect(nom1Count).toBeDefined();
+    expect(nom1Count?.count).toBe(2); // User1 and User2 picked nomination1
+    expect(nom1Count?.categoryId).toBe(testCategory1Id);
+
+    expect(nom2Count).toBeDefined();
+    expect(nom2Count?.count).toBe(1); // Only User3 picked nomination2
+    expect(nom2Count?.categoryId).toBe(testCategory1Id);
+
+    expect(nom3Count).toBeDefined();
+    expect(nom3Count?.count).toBe(3); // All three users picked nomination3
+    expect(nom3Count?.categoryId).toBe(testCategory2Id);
+  });
+
+  it("returns empty array for game with no picks", async () => {
+    const pickCounts = await pickModel.getPickCountsForGame("nonexistent-game");
+
+    expect(pickCounts).toEqual([]);
+  });
+
+  it("includes categoryId, nominationId, and count in results", async () => {
+    const pickCounts = await pickModel.getPickCountsForGame(testGameId);
+
+    expect(pickCounts.length).toBeGreaterThan(0);
+
+    for (const pickCount of pickCounts) {
+      expect(pickCount).toHaveProperty("categoryId");
+      expect(pickCount).toHaveProperty("nominationId");
+      expect(pickCount).toHaveProperty("count");
+      expect(typeof pickCount.categoryId).toBe("string");
+      expect(typeof pickCount.nominationId).toBe("string");
+      expect(typeof pickCount.count).toBe("number");
+    }
+  });
+});
+
+describe("pickModel.areAllCategoriesRevealed", () => {
+  it("returns true when all categories are revealed", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-acr-1" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-acr-1" }),
+    });
+
+    // Create three categories, all revealed
+    await testPrisma.category.createMany({
+      data: [
+        buildCategory({
+          eventId: event.id,
+          id: "category-acr-1-1",
+          isRevealed: true,
+          name: "Category 1",
+          order: 1,
+        }),
+        buildCategory({
+          eventId: event.id,
+          id: "category-acr-1-2",
+          isRevealed: true,
+          name: "Category 2",
+          order: 2,
+        }),
+        buildCategory({
+          eventId: event.id,
+          id: "category-acr-1-3",
+          isRevealed: true,
+          name: "Category 3",
+          order: 3,
+        }),
+      ],
+    });
+
+    const allRevealed = await pickModel.areAllCategoriesRevealed(game.id);
+
+    expect(allRevealed).toBe(true);
+  });
+
+  it("returns false when any category is unrevealed", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-acr-2" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-acr-2" }),
+    });
+
+    // Create three categories, one unrevealed
+    await testPrisma.category.createMany({
+      data: [
+        buildCategory({
+          eventId: event.id,
+          id: "category-acr-2-1",
+          isRevealed: true,
+          name: "Category 1",
+          order: 1,
+        }),
+        buildCategory({
+          eventId: event.id,
+          id: "category-acr-2-2",
+          isRevealed: false, // This one is NOT revealed
+          name: "Category 2",
+          order: 2,
+        }),
+        buildCategory({
+          eventId: event.id,
+          id: "category-acr-2-3",
+          isRevealed: true,
+          name: "Category 3",
+          order: 3,
+        }),
+      ],
+    });
+
+    const allRevealed = await pickModel.areAllCategoriesRevealed(game.id);
+
+    expect(allRevealed).toBe(false);
+  });
+
+  it("returns false when no categories exist", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-acr-3" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-acr-3" }),
+    });
+
+    // No categories created
+
+    const allRevealed = await pickModel.areAllCategoriesRevealed(game.id);
+
+    expect(allRevealed).toBe(false);
+  });
+
+  it("returns false for nonexistent game", async () => {
+    const allRevealed = await pickModel.areAllCategoriesRevealed("nonexistent-game");
+
+    expect(allRevealed).toBe(false);
+  });
+
+  it("returns false when all categories are unrevealed", async () => {
+    // Create test data
+    const event = await testPrisma.event.create({
+      data: buildEvent({ id: "event-acr-4" }),
+    });
+
+    const game = await testPrisma.game.create({
+      data: buildGame({ eventId: event.id, id: "game-acr-4" }),
+    });
+
+    // Create three categories, all unrevealed
+    await testPrisma.category.createMany({
+      data: [
+        buildCategory({
+          eventId: event.id,
+          id: "category-acr-4-1",
+          isRevealed: false,
+          name: "Category 1",
+          order: 1,
+        }),
+        buildCategory({
+          eventId: event.id,
+          id: "category-acr-4-2",
+          isRevealed: false,
+          name: "Category 2",
+          order: 2,
+        }),
+        buildCategory({
+          eventId: event.id,
+          id: "category-acr-4-3",
+          isRevealed: false,
+          name: "Category 3",
+          order: 3,
+        }),
+      ],
+    });
+
+    const allRevealed = await pickModel.areAllCategoriesRevealed(game.id);
+
+    expect(allRevealed).toBe(false);
+  });
+});

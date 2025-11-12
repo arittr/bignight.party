@@ -12,6 +12,7 @@ import { GRAMMYS_2025_EVENT, OSCARS_2024_EVENT, OSCARS_2025_EVENT } from "./even
  */
 export const SETUP_GAME_FIXTURE: Game = {
   accessCode: "GRAMMYS25",
+  completedAt: null,
   createdAt: new Date("2024-11-01T10:00:00.000Z"),
   eventId: GRAMMYS_2025_EVENT.id,
   id: "game-setup-001",
@@ -28,6 +29,7 @@ export const SETUP_GAME_FIXTURE: Game = {
  */
 export const OPEN_GAME_FIXTURE: Game = {
   accessCode: "OSCARS2025",
+  completedAt: null,
   createdAt: new Date("2024-12-15T00:00:00.000Z"),
   eventId: OSCARS_2025_EVENT.id,
   id: "game-open-001",
@@ -44,6 +46,7 @@ export const OPEN_GAME_FIXTURE: Game = {
  */
 export const LIVE_GAME_FIXTURE: Game = {
   accessCode: "LIVE2024",
+  completedAt: null,
   createdAt: new Date("2024-01-10T00:00:00.000Z"),
   eventId: OSCARS_2024_EVENT.id,
   id: "game-live-001",
@@ -59,6 +62,7 @@ export const LIVE_GAME_FIXTURE: Game = {
  */
 export const COMPLETED_GAME_FIXTURE: Game = {
   accessCode: "FINAL2024",
+  completedAt: new Date("2024-03-11T04:30:00.000Z"),
   createdAt: new Date("2024-01-05T00:00:00.000Z"),
   eventId: OSCARS_2024_EVENT.id,
   id: "game-completed-001",
@@ -74,6 +78,7 @@ export const COMPLETED_GAME_FIXTURE: Game = {
  */
 export const PUBLIC_OPEN_GAME_FIXTURE: Game = {
   accessCode: "PUBLIC25",
+  completedAt: null,
   createdAt: new Date("2024-11-01T00:00:00.000Z"),
   eventId: OSCARS_2025_EVENT.id,
   id: "game-public-001",
@@ -89,6 +94,7 @@ export const PUBLIC_OPEN_GAME_FIXTURE: Game = {
  */
 export const PRIVATE_OPEN_GAME_FIXTURE: Game = {
   accessCode: "SMITHS25",
+  completedAt: null,
   createdAt: new Date("2024-12-20T00:00:00.000Z"),
   eventId: OSCARS_2025_EVENT.id,
   id: "game-private-001",
