@@ -1,18 +1,18 @@
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import type { Game, GameParticipant } from "@prisma/client";
-import { joinGameSchema, resolveAccessCodeSchema } from "@/schemas/game-schema";
+import { joinGameSchema } from "@/schemas/game-schema";
 
 /**
  * Game Contracts - User-facing game operations
  *
- * Covers: Joining games, resolving access codes, fetching user's games
- * All procedures require authentication (except resolveAccessCode)
+ * Covers: Joining games with compound key validation, fetching user's games
+ * All procedures require authentication
  */
 
 /**
- * Join a game by game ID
- * Creates GameParticipant record if user not already a member
+ * Join a game by game ID and access code
+ * Validates compound key (gameId + accessCode) and creates GameParticipant record if user not already a member
  */
 export const joinContract = oc.input(joinGameSchema).output(
 	z.object({
@@ -22,21 +22,6 @@ export const joinContract = oc.input(joinGameSchema).output(
 		joinedAt: z.date(),
 		createdAt: z.date(),
 		updatedAt: z.date(),
-	})
-);
-
-/**
- * Resolve an access code to a game ID
- * Returns game information and membership status
- * Used for join flow: user enters code → resolves to game → joins
- */
-export const resolveAccessCodeContract = oc.input(resolveAccessCodeSchema).output(
-	z.object({
-		gameId: z.string(),
-		gameName: z.string(),
-		eventName: z.string(),
-		isMember: z.boolean(),
-		canJoin: z.boolean(), // Based on game status
 	})
 );
 
@@ -74,6 +59,5 @@ export const getUserGamesContract = oc.input(z.void()).output(
  */
 export const gameContract = {
 	join: joinContract,
-	resolveAccessCode: resolveAccessCodeContract,
 	getUserGames: getUserGamesContract,
 };
