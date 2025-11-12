@@ -67,6 +67,16 @@ export interface LeaderboardErrorPayload {
 }
 
 /**
+ * WebSocket event payload for game completion
+ */
+export interface GameCompletedPayload {
+  /** Game ID that completed */
+  gameId: string;
+  /** ISO 8601 timestamp when the game was completed */
+  completedAt: string;
+}
+
+/**
  * WebSocket event payload for reaction broadcast (server → client)
  */
 export interface ReactionPayload {
