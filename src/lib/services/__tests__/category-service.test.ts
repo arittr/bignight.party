@@ -46,16 +46,13 @@ describe("categoryService.markWinner", () => {
     };
 
     vi.mocked(categoryModel.findById).mockResolvedValue(mockCategory as any);
-    vi.mocked(categoryModel.update).mockResolvedValue(mockUpdatedCategory as any);
+    vi.mocked(categoryModel.markWinner).mockResolvedValue(mockUpdatedCategory as any);
     vi.mocked(gameModel.findByEventId).mockResolvedValue(mockGames as any);
     vi.mocked(leaderboardService.broadcastLeaderboardUpdate).mockResolvedValue(undefined);
 
     const result = await categoryService.markWinner("category-1", "nomination-1");
 
-    expect(categoryModel.update).toHaveBeenCalledWith("category-1", {
-      isRevealed: true,
-      winnerNominationId: "nomination-1",
-    });
+    expect(categoryModel.markWinner).toHaveBeenCalledWith("category-1", "nomination-1");
     expect(gameModel.findByEventId).toHaveBeenCalledWith("event-1");
     expect(leaderboardService.broadcastLeaderboardUpdate).toHaveBeenCalledTimes(2);
     expect(leaderboardService.broadcastLeaderboardUpdate).toHaveBeenCalledWith("game-1");
@@ -70,7 +67,7 @@ describe("categoryService.markWinner", () => {
       "Category with id invalid-category not found"
     );
 
-    expect(categoryModel.update).not.toHaveBeenCalled();
+    expect(categoryModel.markWinner).not.toHaveBeenCalled();
     expect(gameModel.findByEventId).not.toHaveBeenCalled();
   });
 
@@ -93,7 +90,7 @@ describe("categoryService.markWinner", () => {
       "Nomination nomination-999 does not belong to category category-1"
     );
 
-    expect(categoryModel.update).not.toHaveBeenCalled();
+    expect(categoryModel.markWinner).not.toHaveBeenCalled();
     expect(gameModel.findByEventId).not.toHaveBeenCalled();
   });
 
@@ -116,7 +113,7 @@ describe("categoryService.markWinner", () => {
     const mockGames = [{ eventId: "event-1", id: "game-1", name: "Game" }];
 
     vi.mocked(categoryModel.findById).mockResolvedValue(mockCategory as any);
-    vi.mocked(categoryModel.update).mockResolvedValue(mockUpdatedCategory as any);
+    vi.mocked(categoryModel.markWinner).mockResolvedValue(mockUpdatedCategory as any);
     vi.mocked(gameModel.findByEventId).mockResolvedValue(mockGames as any);
     vi.mocked(leaderboardService.broadcastLeaderboardUpdate).mockRejectedValue(
       new Error("WebSocket error")
@@ -126,7 +123,7 @@ describe("categoryService.markWinner", () => {
     const result = await categoryService.markWinner("category-1", "nomination-1");
 
     expect(result).toEqual(mockUpdatedCategory);
-    expect(categoryModel.update).toHaveBeenCalled();
+    expect(categoryModel.markWinner).toHaveBeenCalled();
   });
 
   it("broadcasts to multiple games when event has multiple games", async () => {
@@ -146,7 +143,7 @@ describe("categoryService.markWinner", () => {
     ];
 
     vi.mocked(categoryModel.findById).mockResolvedValue(mockCategory as any);
-    vi.mocked(categoryModel.update).mockResolvedValue(mockCategory as any);
+    vi.mocked(categoryModel.markWinner).mockResolvedValue(mockCategory as any);
     vi.mocked(gameModel.findByEventId).mockResolvedValue(mockGames as any);
     vi.mocked(leaderboardService.broadcastLeaderboardUpdate).mockResolvedValue(undefined);
 
@@ -166,7 +163,7 @@ describe("categoryService.markWinner", () => {
     };
 
     vi.mocked(categoryModel.findById).mockResolvedValue(mockCategory as any);
-    vi.mocked(categoryModel.update).mockResolvedValue(mockCategory as any);
+    vi.mocked(categoryModel.markWinner).mockResolvedValue(mockCategory as any);
     vi.mocked(gameModel.findByEventId).mockResolvedValue([]);
     vi.mocked(leaderboardService.broadcastLeaderboardUpdate).mockResolvedValue(undefined);
 
@@ -185,14 +182,11 @@ describe("categoryService.clearWinner", () => {
       winnerNominationId: null,
     };
 
-    vi.mocked(categoryModel.update).mockResolvedValue(mockCategory as any);
+    vi.mocked(categoryModel.clearWinner).mockResolvedValue(mockCategory as any);
 
     const result = await categoryService.clearWinner("category-1");
 
-    expect(categoryModel.update).toHaveBeenCalledWith("category-1", {
-      isRevealed: false,
-      winnerNominationId: null,
-    });
+    expect(categoryModel.clearWinner).toHaveBeenCalledWith("category-1");
     expect(result).toEqual(mockCategory);
   });
 });
