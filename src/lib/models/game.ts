@@ -74,7 +74,7 @@ export async function findByEventId(eventId: string) {
 }
 
 export async function findByAccessCode(accessCode: string) {
-  return prisma.game.findUnique({
+  return prisma.game.findFirst({
     include: {
       event: true,
       picks: true,
