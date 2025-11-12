@@ -429,6 +429,7 @@ export const listGamesContract = oc.input(z.void()).output(
       status: z.enum(["SETUP", "OPEN", "LIVE", "COMPLETED"]),
       accessCode: z.string(),
       picksLockAt: z.date().nullable(),
+      completedAt: z.date().nullable(),
       eventId: z.string(),
       createdAt: z.date(),
       updatedAt: z.date(),
