@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import type { NominationWithPickCount } from "@/components/admin/games/category-card";
-import { CategoryCard } from "@/components/admin/games/category-card";
+import type { NominationWithPickCount } from "@/components/admin/games/live-category-card";
+import { LiveCategoryCard } from "@/components/admin/games/live-category-card";
 import { requireValidatedSession } from "@/lib/auth/config";
 import * as categoryModel from "@/lib/models/category";
 import * as gameModel from "@/lib/models/game";
-import * as nominationModel from "@/lib/models/nomination";
 import * as pickModel from "@/lib/models/pick";
 import { routes } from "@/lib/routes";
 
@@ -31,40 +30,39 @@ export default async function LivePage({ params }: LivePageProps) {
     notFound();
   }
 
-  // Fetch categories for this game's event (ordered by order field)
+  // Fetch categories with nominations included (single query)
   const categories = await categoryModel.findByEventId(game.eventId);
 
-  // For each category, fetch nominations and pick counts
-  const categoriesWithData = await Promise.all(
-    categories.map(async (category) => {
-      // Fetch nominations for this category
-      const nominations = await nominationModel.findByCategoryId(category.id);
+  // Fetch all pick counts for the game in ONE query
+  const pickCounts = await pickModel.getPickCountsForGame(id);
 
-      // Fetch pick counts for this category in this game
-      const pickCounts = await pickModel.getPickCountsByCategory(id, category.id);
+  // Build pick count map for O(1) lookup
+  const pickCountMap = new Map(
+    pickCounts.map((pc) => [`${pc.categoryId}:${pc.nominationId}`, pc.count])
+  );
 
-      // Create a map of nominationId -> pickCount
-      const pickCountMap = new Map(pickCounts.map((pc) => [pc.nominationId, pc.count]));
-
-      // Merge nominations with pick counts
-      const nominationsWithPickCounts: NominationWithPickCount[] = nominations.map((nom) => ({
+  // Transform data without additional queries
+  const categoriesWithData = categories.map((category) => {
+    // Use nominations already included in category
+    const nominationsWithPickCounts: NominationWithPickCount[] = category.nominations.map(
+      (nom) => ({
         id: nom.id,
         nominationText: nom.nominationText,
-        pickCount: pickCountMap.get(nom.id) ?? 0,
-      }));
+        pickCount: pickCountMap.get(`${category.id}:${nom.id}`) ?? 0,
+      })
+    );
 
-      return {
-        category: {
-          id: category.id,
-          isRevealed: category.isRevealed,
-          name: category.name,
-          points: category.points,
-          winnerNominationId: category.winnerNominationId,
-        },
-        nominations: nominationsWithPickCounts,
-      };
-    })
-  );
+    return {
+      category: {
+        id: category.id,
+        isRevealed: category.isRevealed,
+        name: category.name,
+        points: category.points,
+        winnerNominationId: category.winnerNominationId,
+      },
+      nominations: nominationsWithPickCounts,
+    };
+  });
 
   return (
     <div className="p-8">
@@ -93,7 +91,12 @@ export default async function LivePage({ params }: LivePageProps) {
       ) : (
         <div className="space-y-6">
           {categoriesWithData.map(({ category, nominations }) => (
-            <CategoryCard category={category} key={category.id} nominations={nominations} />
+            <LiveCategoryCard
+              category={category}
+              gameId={id}
+              key={category.id}
+              nominations={nominations}
+            />
           ))}
         </div>
       )}
