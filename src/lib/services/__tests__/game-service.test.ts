@@ -272,3 +272,87 @@ describe("gameService.updateGameStatus", () => {
     );
   });
 });
+
+describe("gameService.completeGame", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("completes game when status is LIVE", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "LIVE" });
+
+    vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
+    vi.mocked(gameModel.completeGame).mockResolvedValue({
+      ...mockGame,
+      completedAt: new Date(),
+      status: "COMPLETED",
+    } as any);
+
+    await gameService.completeGame("game-1");
+
+    expect(gameModel.findById).toHaveBeenCalledWith("game-1");
+    expect(gameModel.completeGame).toHaveBeenCalledWith("game-1");
+  });
+
+  it("throws error when game not found", async () => {
+    vi.mocked(gameModel.findById).mockResolvedValue(null);
+
+    await expect(gameService.completeGame("invalid-game")).rejects.toThrow(
+      "Game with id invalid-game not found"
+    );
+
+    expect(gameModel.completeGame).not.toHaveBeenCalled();
+  });
+
+  it("throws error when game status is SETUP", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "SETUP" });
+
+    vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
+
+    await expect(gameService.completeGame("game-1")).rejects.toThrow(
+      "Game must be in LIVE status to complete (current: SETUP)"
+    );
+
+    expect(gameModel.completeGame).not.toHaveBeenCalled();
+  });
+
+  it("throws error when game status is OPEN", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "OPEN" });
+
+    vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
+
+    await expect(gameService.completeGame("game-1")).rejects.toThrow(
+      "Game must be in LIVE status to complete (current: OPEN)"
+    );
+
+    expect(gameModel.completeGame).not.toHaveBeenCalled();
+  });
+
+  it("throws error when game status is already COMPLETED", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "COMPLETED" });
+
+    vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
+
+    await expect(gameService.completeGame("game-1")).rejects.toThrow(
+      "Game must be in LIVE status to complete (current: COMPLETED)"
+    );
+
+    expect(gameModel.completeGame).not.toHaveBeenCalled();
+  });
+
+  it("calls completeGame model method once when LIVE", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "LIVE" });
+
+    vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
+    vi.mocked(gameModel.completeGame).mockResolvedValue({
+      ...mockGame,
+      completedAt: new Date(),
+      status: "COMPLETED",
+    } as any);
+
+    await gameService.completeGame("game-1");
+
+    expect(gameModel.completeGame).toHaveBeenCalledTimes(1);
+    expect(gameModel.completeGame).toHaveBeenCalledWith("game-1");
+  });
+});

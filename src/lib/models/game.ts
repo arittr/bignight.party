@@ -109,17 +109,17 @@ export async function deleteById(id: string) {
 /**
  * Complete a game by transitioning status to COMPLETED
  *
- * Sets game status to COMPLETED.
+ * Sets game status to COMPLETED and records the completion timestamp.
  * This method only performs the database update - business logic validation
  * (checking if game is LIVE, all categories revealed) should be done in the service layer.
  *
  * @param gameId - The game ID to complete
- * @returns Updated game with COMPLETED status
+ * @returns Updated game with COMPLETED status and completedAt timestamp
  *
  * @example
  * ```ts
  * await completeGame(gameId);
- * // Game now has: { status: 'COMPLETED' }
+ * // Game now has: { status: 'COMPLETED', completedAt: '2025-01-15T...' }
  * ```
  */
 export async function completeGame(gameId: string) {
@@ -127,6 +127,7 @@ export async function completeGame(gameId: string) {
     where: { id: gameId },
     data: {
       status: "COMPLETED",
+      completedAt: new Date(),
     },
   });
 }

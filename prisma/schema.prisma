@@ -94,6 +94,7 @@ model Game {
   accessCode  String
   status      GameStatus @default(SETUP)
   picksLockAt DateTime?
+  completedAt DateTime?
 
   event        Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
   picks        Pick[]

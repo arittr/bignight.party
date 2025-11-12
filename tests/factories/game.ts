@@ -8,6 +8,7 @@ import type { Game, GameStatus } from "@prisma/client";
 export function buildGame(overrides: Partial<Game> = {}): Game {
   return {
     accessCode: "TEST123",
+    completedAt: null,
     createdAt: new Date("2025-01-01T00:00:00Z"),
     eventId: "event-test-1",
     id: "game-test-1",
