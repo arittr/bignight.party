@@ -83,6 +83,16 @@ export async function findByAccessCode(accessCode: string) {
   });
 }
 
+export async function findByIdAndAccessCode(id: string, accessCode: string) {
+  return prisma.game.findFirst({
+    where: { id, accessCode },
+    include: {
+      event: true,
+      picks: true,
+    },
+  });
+}
+
 export async function update(id: string, data: Prisma.GameUpdateInput) {
   return prisma.game.update({
     data,
