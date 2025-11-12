@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { orpc } from "@/lib/api/client";
 
@@ -10,7 +11,8 @@ export interface NominationWithPickCount {
   pickCount: number;
 }
 
-export interface CategoryCardProps {
+export interface LiveCategoryCardProps {
+  gameId: string;
   category: {
     id: string;
     name: string;
@@ -22,16 +24,33 @@ export interface CategoryCardProps {
 }
 
 /**
- * Client component for displaying a category with winner marking controls.
+ * Client component for displaying a category with winner marking controls during live ceremony.
  * Shows nominations sorted by pick count with dropdown to mark winner and clear button.
+ * Includes gameId for leaderboard updates via WebSocket.
  */
-export function CategoryCard({ category, nominations }: CategoryCardProps) {
+export function LiveCategoryCard({ gameId, category, nominations }: LiveCategoryCardProps) {
+  const router = useRouter();
   const [selectedNominationId, setSelectedNominationId] = useState<string>(
     category.winnerNominationId ?? ""
   );
 
-  const markWinnerMutation = useMutation(orpc.admin.categories.markWinner.mutationOptions());
-  const clearWinnerMutation = useMutation(orpc.admin.categories.clearWinner.mutationOptions());
+  const markWinnerMutation = useMutation(
+    orpc.admin.categories.markWinner.mutationOptions({
+      onSuccess: () => {
+        // Refresh Server Component data without full page reload
+        router.refresh();
+      },
+    })
+  );
+
+  const clearWinnerMutation = useMutation(
+    orpc.admin.categories.clearWinner.mutationOptions({
+      onSuccess: () => {
+        // Refresh Server Component data without full page reload
+        router.refresh();
+      },
+    })
+  );
 
   const isLoading = markWinnerMutation.isPending || clearWinnerMutation.isPending;
 
@@ -45,13 +64,20 @@ export function CategoryCard({ category, nominations }: CategoryCardProps) {
     const nominationId = e.target.value;
     if (nominationId && nominationId !== category.winnerNominationId) {
       setSelectedNominationId(nominationId);
-      markWinnerMutation.mutate({ categoryId: category.id, nominationId });
+      markWinnerMutation.mutate({
+        categoryId: category.id,
+        nominationId,
+        gameId,
+      });
     }
   };
 
   const handleClearWinner = () => {
     setSelectedNominationId("");
-    clearWinnerMutation.mutate({ categoryId: category.id });
+    clearWinnerMutation.mutate({
+      categoryId: category.id,
+      gameId,
+    });
   };
 
   return (
@@ -62,21 +88,14 @@ export function CategoryCard({ category, nominations }: CategoryCardProps) {
           <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
           <span className="text-sm font-medium text-gray-500">{category.points} pts</span>
         </div>
-        {category.isRevealed && (
-          <span className="inline-block mt-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-            Revealed
-          </span>
+        {category.isRevealed && currentWinner && (
+          <div className="mt-2 px-3 py-2 bg-green-50 border border-green-200 rounded">
+            <p className="text-sm font-medium text-green-800">
+              ✓ Revealed: {currentWinner.nominationText}
+            </p>
+          </div>
         )}
       </div>
-
-      {/* Current Winner Display */}
-      {currentWinner && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
-          <p className="text-sm font-medium text-green-800">
-            Current: {currentWinner.nominationText} ✓
-          </p>
-        </div>
-      )}
 
       {/* Nominations List (sorted by pick count) */}
       <div className="mb-4">
