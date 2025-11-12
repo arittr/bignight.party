@@ -24,20 +24,21 @@ describe("gameService.joinGame", () => {
     vi.clearAllMocks();
   });
 
-  it("creates GameParticipant when game exists", async () => {
-    const mockGame = buildGame({ id: "game-1", status: "OPEN" });
+  it("creates GameParticipant when game exists with matching accessCode", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "OPEN", accessCode: "TEST123" });
     const mockParticipant = buildGameParticipant({
       gameId: "game-1",
       id: "participant-1",
       userId: "user-1",
     });
 
-    vi.mocked(gameModel.findById).mockResolvedValue(mockGame as any);
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
+    vi.mocked(gameParticipantModel.exists).mockResolvedValue(false);
     vi.mocked(gameParticipantModel.create).mockResolvedValue(mockParticipant);
 
-    const result = await gameService.joinGame("user-1", "game-1");
+    const result = await gameService.joinGame("user-1", "game-1", "TEST123");
 
-    expect(gameModel.findById).toHaveBeenCalledWith("game-1");
+    expect(gameModel.findByAccessCode).toHaveBeenCalledWith("TEST123");
     expect(gameParticipantModel.create).toHaveBeenCalledWith({
       gameId: "game-1",
       userId: "user-1",
@@ -46,13 +47,102 @@ describe("gameService.joinGame", () => {
   });
 
   it("throws when game does not exist", async () => {
-    vi.mocked(gameModel.findById).mockResolvedValue(null);
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
 
-    await expect(gameService.joinGame("user-1", "invalid-game")).rejects.toThrow(
-      "Game with id invalid-game not found"
+    await expect(gameService.joinGame("user-1", "invalid-game", "TEST123")).rejects.toThrow(
+      "Game not found or invalid access code"
     );
 
     expect(gameParticipantModel.create).not.toHaveBeenCalled();
+  });
+
+  it("throws when accessCode does not match gameId", async () => {
+    const mockGame = buildGame({ id: "game-2", status: "OPEN", accessCode: "TEST123" });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
+
+    await expect(gameService.joinGame("user-1", "game-1", "TEST123")).rejects.toThrow(
+      "Game not found or invalid access code"
+    );
+
+    expect(gameParticipantModel.create).not.toHaveBeenCalled();
+  });
+
+  it("throws when game status is SETUP", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "SETUP", accessCode: "TEST123" });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
+
+    await expect(gameService.joinGame("user-1", "game-1", "TEST123")).rejects.toThrow(
+      "This game is not yet open for joining"
+    );
+
+    expect(gameParticipantModel.create).not.toHaveBeenCalled();
+  });
+
+  it("throws when game status is COMPLETED", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "COMPLETED", accessCode: "TEST123" });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
+
+    await expect(gameService.joinGame("user-1", "game-1", "TEST123")).rejects.toThrow(
+      "This game is no longer accepting new players"
+    );
+
+    expect(gameParticipantModel.create).not.toHaveBeenCalled();
+  });
+
+  it("allows joining when game status is OPEN", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "OPEN", accessCode: "TEST123" });
+    const mockParticipant = buildGameParticipant({
+      gameId: "game-1",
+      id: "participant-1",
+      userId: "user-1",
+    });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
+    vi.mocked(gameParticipantModel.exists).mockResolvedValue(false);
+    vi.mocked(gameParticipantModel.create).mockResolvedValue(mockParticipant);
+
+    const result = await gameService.joinGame("user-1", "game-1", "TEST123");
+
+    expect(result.id).toBe("participant-1");
+  });
+
+  it("allows joining when game status is LIVE", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "LIVE", accessCode: "TEST123" });
+    const mockParticipant = buildGameParticipant({
+      gameId: "game-1",
+      id: "participant-1",
+      userId: "user-1",
+    });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
+    vi.mocked(gameParticipantModel.exists).mockResolvedValue(false);
+    vi.mocked(gameParticipantModel.create).mockResolvedValue(mockParticipant);
+
+    const result = await gameService.joinGame("user-1", "game-1", "TEST123");
+
+    expect(result.id).toBe("participant-1");
+  });
+
+  it("returns existing participant if user already a member (idempotent)", async () => {
+    const mockGame = buildGame({ id: "game-1", status: "OPEN", accessCode: "TEST123" });
+    const mockParticipant = buildGameParticipant({
+      gameId: "game-1",
+      id: "participant-1",
+      userId: "user-1",
+    });
+
+    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
+    vi.mocked(gameParticipantModel.exists).mockResolvedValue(true);
+    vi.mocked(gameParticipantModel.findByUserIdAndGameId).mockResolvedValue(mockParticipant);
+
+    const result = await gameService.joinGame("user-1", "game-1", "TEST123");
+
+    expect(gameParticipantModel.create).not.toHaveBeenCalled();
+    expect(gameParticipantModel.findByUserIdAndGameId).toHaveBeenCalledWith("user-1", "game-1");
+    expect(result.id).toBe("participant-1");
   });
 });
 
@@ -134,43 +224,6 @@ describe("gameService.getUserGames", () => {
   });
 });
 
-describe("gameService.resolveAccessCode", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("returns { gameId, isMember: true } when user is member", async () => {
-    const mockGame = buildGame({ accessCode: "TEST123", id: "game-1" });
-
-    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
-    vi.mocked(gameParticipantModel.exists).mockResolvedValue(true);
-
-    const result = await gameService.resolveAccessCode("TEST123", "user-1");
-
-    expect(gameModel.findByAccessCode).toHaveBeenCalledWith("TEST123");
-    expect(gameParticipantModel.exists).toHaveBeenCalledWith("user-1", "game-1");
-    expect(result).toEqual({ gameId: "game-1", isMember: true });
-  });
-
-  it("returns { gameId, isMember: false } when user is not member", async () => {
-    const mockGame = buildGame({ accessCode: "TEST123", id: "game-1" });
-
-    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(mockGame as any);
-    vi.mocked(gameParticipantModel.exists).mockResolvedValue(false);
-
-    const result = await gameService.resolveAccessCode("TEST123", "user-1");
-
-    expect(result).toEqual({ gameId: "game-1", isMember: false });
-  });
-
-  it("throws when access code is invalid", async () => {
-    vi.mocked(gameModel.findByAccessCode).mockResolvedValue(null);
-
-    await expect(gameService.resolveAccessCode("INVALID", "user-1")).rejects.toThrow(
-      "Game with access code INVALID not found"
-    );
-  });
-});
 
 describe("gameService.updateGameStatus", () => {
   beforeEach(() => {
