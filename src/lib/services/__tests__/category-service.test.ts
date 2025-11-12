@@ -188,7 +188,7 @@ describe("categoryService.clearWinner", () => {
 
     vi.mocked(categoryModel.clearWinner).mockResolvedValue(mockCategory as any);
 
-    const result = await categoryService.clearWinner("category-1");
+    const result = await categoryService.clearWinner("category-1", "game-1");
 
     expect(categoryModel.clearWinner).toHaveBeenCalledWith("category-1");
     expect(result).toEqual(mockCategory);

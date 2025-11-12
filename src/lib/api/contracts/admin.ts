@@ -183,6 +183,7 @@ export const markWinnerContract = oc
     z.object({
       categoryId: z.string().cuid("Invalid category ID"),
       nominationId: z.string().cuid("Invalid nomination ID"),
+      gameId: z.string().cuid("Invalid game ID"),
     })
   )
   .output(
@@ -206,6 +207,7 @@ export const clearWinnerContract = oc
   .input(
     z.object({
       categoryId: z.string().cuid("Invalid category ID"),
+      gameId: z.string().cuid("Invalid game ID"),
     })
   )
   .output(

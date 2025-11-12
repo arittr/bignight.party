@@ -83,15 +83,18 @@ export async function markWinnerAndUpdate(
  * Removes the winnerNominationId and unreveals the category atomically
  *
  * @param categoryId - The category ID to clear winner for
+ * @param gameId - The game ID (reserved for future game state updates)
  * @returns Updated category with winner cleared
  *
  * @example
  * ```ts
- * await clearWinner(categoryId);
+ * await clearWinner(categoryId, gameId);
  * // Category now has: { isRevealed: false, winnerNominationId: null }
  * ```
  */
-export async function clearWinner(categoryId: string) {
+export async function clearWinner(categoryId: string, gameId: string) {
+  // Note: gameId parameter reserved for future game state updates
+  // Currently only clears winner without affecting game state
   return categoryModel.clearWinner(categoryId);
 }
 
