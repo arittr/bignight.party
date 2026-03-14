@@ -13,7 +13,8 @@ export function MyPicksPage() {
     queryKey: ["categories"],
     queryFn: async () => {
       const res = await fetch("/api/categories", { headers: { Authorization: `Bearer ${token}` } });
-      return res.json();
+      const data = await res.json();
+      return data.categories;
     },
     enabled: !!token,
   });
@@ -22,7 +23,8 @@ export function MyPicksPage() {
     queryKey: ["my-picks"],
     queryFn: async () => {
       const res = await fetch("/api/picks", { headers: { Authorization: `Bearer ${token}` } });
-      return res.json();
+      const data = await res.json();
+      return data.picks;
     },
     enabled: !!token,
   });

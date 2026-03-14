@@ -102,7 +102,8 @@ function AdminDashboard({
       const res = await fetch("/api/categories", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return res.json();
+      const data = await res.json();
+      return data.categories;
     },
   });
 

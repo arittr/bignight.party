@@ -16,7 +16,8 @@ export function usePicks() {
       const res = await fetch("/api/picks", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return res.json();
+      const data = await res.json();
+      return data.picks;
     },
     enabled: !!token,
   });
