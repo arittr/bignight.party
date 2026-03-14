@@ -9,15 +9,20 @@ import { configureSocketServer } from "./websocket/server";
 const db = createDb();
 const app = createApp(db);
 
-// Static file serving (production only — runs under Bun, not in vitest)
+// Static file serving — only when the build directory exists (production).
+// In dev mode, Vite serves the frontend on :5173 and proxies /api to :3000.
 const webDistPath = join(import.meta.dir, "../../web/dist");
-app.use("/*", serveStatic({ root: webDistPath }));
-app.get("*", async () => {
-	const indexFile = Bun.file(join(webDistPath, "index.html"));
-	return new Response(indexFile, {
-		headers: { "Content-Type": "text/html; charset=utf-8" },
+const indexPath = join(webDistPath, "index.html");
+const distExists = await Bun.file(indexPath).exists();
+
+if (distExists) {
+	app.use("/*", serveStatic({ root: webDistPath }));
+	app.get("*", async () => {
+		return new Response(Bun.file(indexPath), {
+			headers: { "Content-Type": "text/html; charset=utf-8" },
+		});
 	});
-});
+}
 
 // Bun-native engine: Socket.io binds to the bun-engine instead of a Node http.Server
 const engine = new Engine({ path: "/socket.io/" });
@@ -25,7 +30,15 @@ const io = new Server();
 io.bind(engine);
 configureSocketServer(io);
 
-// Production entrypoint: Bun's native server with WebSocket support
+// Clean shutdown on SIGINT/SIGTERM — prevents orphan processes with bun --watch
+function shutdown() {
+	io.close();
+	process.exit(0);
+}
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+
+// Bun server entrypoint with WebSocket support
 export default {
   port: Number(process.env.PORT ?? 3000),
   fetch(req: Request, server: unknown) {
