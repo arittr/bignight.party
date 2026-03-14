@@ -16,16 +16,16 @@ export function ReactionBar({ onReact, reactions }: ReactionBarProps) {
   return (
     <>
       {/* Floating reactions */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">
         <AnimatePresence>
           {reactions.map((r) => (
             <motion.div
               key={r.id}
-              initial={{ opacity: 0, y: 100, x: Math.random() * 300 }}
-              animate={{ opacity: 1, y: -100 }}
+              initial={{ opacity: 1, y: 0, x: Math.random() * (typeof window !== "undefined" ? window.innerWidth * 0.7 : 300) }}
+              animate={{ opacity: 0, y: -(typeof window !== "undefined" ? window.innerHeight + 50 : 800) }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              className="absolute bottom-20 text-3xl"
+              transition={{ duration: 3, ease: "easeOut" }}
+              className="absolute bottom-16 text-4xl"
             >
               {r.emoji}
               <span className="text-xs text-white/50 ml-1">{r.name}</span>
