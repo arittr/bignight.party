@@ -66,11 +66,11 @@ export function LeaderboardPage() {
 
       {/* Remaining players */}
       {rest.length > 0 && (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {rest.map((player) => (
             <div
               key={player.playerId}
-              className={`flex items-center justify-between p-3 rounded-lg ${
+              className={`flex items-center justify-between p-3 md:p-4 rounded-lg ${
                 player.playerId === playerId ? "bg-[#e2b04a]/10 border border-[#e2b04a]/30" : "bg-white/[0.04]"
               }`}
             >
