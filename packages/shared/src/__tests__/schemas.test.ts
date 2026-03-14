@@ -199,13 +199,14 @@ describe("LeaderboardResponseSchema", () => {
 });
 
 describe("ALLOWED_REACTIONS", () => {
-  it("contains exactly four emojis", () => {
-    expect(ALLOWED_REACTIONS).toHaveLength(4);
+  it("contains exactly five emojis", () => {
+    expect(ALLOWED_REACTIONS).toHaveLength(5);
   });
   it("includes expected emojis", () => {
     expect(ALLOWED_REACTIONS).toContain("🔥");
-    expect(ALLOWED_REACTIONS).toContain("😍");
-    expect(ALLOWED_REACTIONS).toContain("😱");
+    expect(ALLOWED_REACTIONS).toContain("💕");
+    expect(ALLOWED_REACTIONS).toContain("💩");
     expect(ALLOWED_REACTIONS).toContain("💀");
+    expect(ALLOWED_REACTIONS).toContain("👏");
   });
 });
