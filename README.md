@@ -55,7 +55,7 @@ cd packages/server && bun db:migrate
 cd packages/server && bun db:studio
 ```
 
-The dev database is created at `packages/server/bignight.db` by default. Set `DB_PATH` in `.env` to change the location.
+Migrations run automatically on server startup (via `createDb()`). The dev database is created at `packages/server/bignight.db` by default. Set `DB_PATH` in `.env` to change the location.
 
 ## Tests
 
