@@ -13,7 +13,9 @@ export function createDb(path: string = DB_PATH) {
   const sqlite = new Database(path);
   sqlite.exec("PRAGMA journal_mode = WAL;");
   sqlite.exec("PRAGMA foreign_keys = ON;");
-  return drizzle(sqlite, { schema });
+  const db = drizzle(sqlite, { schema });
+  migrate(db, { migrationsFolder: MIGRATIONS_DIR });
+  return db;
 }
 
 export function createTestDb() {
