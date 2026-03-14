@@ -61,7 +61,7 @@ function makeWrapper() {
 function setupFetchMock(categories = mockCategories) {
   global.fetch = vi.fn((url: string) => {
     if (url === "/api/categories") {
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(categories) } as Response);
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ categories }) } as Response);
     }
     if (url === "/api/admin/mark-winner") {
       return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as Response);

@@ -177,10 +177,11 @@ function shouldSkipSection(title: string): boolean {
 function parseCategoriesFromTable(
 	sectionTitle: string,
 	table: { json(): unknown },
+	categoryNames: string[],
 ): ParsedCategory[] {
 	try {
 		// Try compact two-per-row format first (returns multiple categories)
-		const compactCategories = parseCompactAwardsTable(table);
+		const compactCategories = parseCompactAwardsTable(table, categoryNames);
 		if (compactCategories && compactCategories.length > 0) {
 			return compactCategories;
 		}
@@ -205,9 +206,13 @@ function getSectionTables(section: { tables(): unknown }): Array<{ json(): unkno
 
 /**
  * Walks every section of the document and extracts categories from tables.
+ * Category names are extracted from {{Award category}} wikitext templates
+ * rather than hardcoded, so new categories (like Best Casting) are handled
+ * automatically.
  */
 function extractCategories(doc: Document): ParsedCategory[] {
 	const categories: ParsedCategory[] = [];
+	const categoryNames = extractCategoryNamesFromWikitext(doc);
 
 	const sectionsResult = doc.sections();
 	const sections = Array.isArray(sectionsResult) ? sectionsResult : [sectionsResult];
@@ -217,7 +222,7 @@ function extractCategories(doc: Document): ParsedCategory[] {
 		if (!sectionTitle || shouldSkipSection(sectionTitle)) continue;
 
 		for (const table of getSectionTables(section)) {
-			categories.push(...parseCategoriesFromTable(sectionTitle, table));
+			categories.push(...parseCategoriesFromTable(sectionTitle, table, categoryNames));
 		}
 	}
 
@@ -287,25 +292,68 @@ function parseNominationFromRow(row: Record<string, unknown>): ParsedNomination 
  * This layout is used in recent ceremonies (97th, etc.).
  */
 /**
- * Maps compact table row index → [col1 category, col2 category].
- * This pairing is consistent across recent ceremonies (97th, 98th).
- * The 98th added "Best Casting" at row 8 col2, shifting some rows.
- * We map generously — extra rows beyond the map are silently skipped.
+ * Extracts category names from {{Award category}} wikitext templates.
+ * These templates appear in order: col1 of row 0, col2 of row 0, col1 of row 1, etc.
+ * This replaces the old hardcoded COMPACT_CATEGORY_MAP.
  */
-const COMPACT_CATEGORY_MAP: Record<number, [string, string]> = {
-	0: ["Best Picture", "Best Director"],
-	1: ["Best Actor", "Best Actress"],
-	2: ["Best Supporting Actor", "Best Supporting Actress"],
-	3: ["Best Original Screenplay", "Best Adapted Screenplay"],
-	4: ["Best Animated Feature", "Best International Feature Film"],
-	5: ["Best Documentary Feature", "Best Documentary Short"],
-	6: ["Best Live Action Short", "Best Animated Short"],
-	7: ["Best Original Score", "Best Original Song"],
-	8: ["Best Sound", "Best Casting"],
-	9: ["Best Production Design", "Best Cinematography"],
-	10: ["Best Makeup and Hairstyling", "Best Costume Design"],
-	11: ["Best Film Editing", "Best Visual Effects"],
-};
+function extractCategoryNamesFromWikitext(doc: Document): string[] {
+	let wikitext = doc.wikitext();
+	const names: string[] = [];
+
+	// Strip <ref>...</ref> blocks and <ref .../> self-closing tags BEFORE matching.
+	// Some Award category templates have <ref> tags inside them (e.g., 97th's
+	// Adapted Screenplay) which break the template-closing regex.
+	wikitext = wikitext.replace(/<ref[^>]*>[\s\S]*?<\/ref>/g, "");
+	wikitext = wikitext.replace(/<ref[^/]*\/>/g, "");
+
+	// Match {{Award category|COLOR|[[Academy Award for X|Display Name]]}}
+	// or    {{Award category|COLOR|[[Category Name]]}}
+	// or    {{Award category|COLOR|Plain Text}}
+	const regex = /\{\{Award category\|[^|]*\|(.*?)\}\}/g;
+	let match: RegExpExecArray | null;
+
+	while ((match = regex.exec(wikitext)) !== null) {
+		const raw = match[1];
+		if (!raw) continue;
+
+		// Extract display name from wikilink: [[Academy Award for X|Display Name]] → Display Name
+		// or [[Category Name]] → Category Name
+		const linkMatch = raw.match(/\[\[(?:Academy Award for )?([^\]|]+?)(?:\|([^\]]+))?\]\]/);
+		let name: string;
+		if (linkMatch) {
+			name = (linkMatch[2] || linkMatch[1] || "").trim();
+		} else {
+			// Plain text (no wikilink)
+			name = raw.replace(/\[\[.*?\]\]/g, "").trim();
+		}
+
+		if (name) {
+			names.push(shortenCategoryName(name));
+		}
+	}
+
+	return names;
+}
+
+/**
+ * Shorten official Academy category names to common display names.
+ * "Best Actor in a Leading Role" → "Best Actor"
+ * "Best Actor in a Supporting Role" → "Best Supporting Actor"
+ * "Best Writing (Original Screenplay)" → "Best Original Screenplay"
+ */
+function shortenCategoryName(name: string): string {
+	return name
+		.replace(/Best (Actor|Actress) in a Leading Role/i, "Best $1")
+		.replace(/Best (Actor|Actress) in a Supporting Role/i, "Best Supporting $1")
+		.replace(/Best Writing \((.+)\)/i, "Best $1")
+		.replace(/Best Music \((.+)\)/i, "Best $1")
+		.replace(/Best Short Film \((.+)\)/i, "Best $1 Short")
+		.replace(/Feature Film/i, "Feature")
+		.replace(/Short Film/i, "Short")
+		.replace(/Best Directing/i, "Best Director")
+		.trim()
+		.replace(/\s+/g, " ");
+}
 
 function isCompactFormat(rows: unknown[]): boolean {
 	const firstRow = rows[0];
@@ -369,23 +417,30 @@ function parseCompactRow(
 	return results;
 }
 
-function parseCompactAwardsTable(table: { json(): unknown }): ParsedCategory[] | null {
+function parseCompactAwardsTable(
+	table: { json(): unknown },
+	categoryNames: string[],
+): ParsedCategory[] | null {
 	const jsonResult = table.json();
 	if (!jsonResult || typeof jsonResult !== "object") return null;
 
 	const rows = Array.isArray(jsonResult) ? jsonResult : [];
 	if (rows.length === 0 || !isCompactFormat(rows)) return null;
 
+	// Category names are ordered: col1-row0, col2-row0, col1-row1, col2-row1, ...
+	// So row N uses names at indices N*2 and N*2+1
 	const categories: ParsedCategory[] = [];
 
 	for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
 		const row = rows[rowIndex];
 		if (!row || typeof row !== "object") continue;
 
-		const categoryNames = COMPACT_CATEGORY_MAP[rowIndex];
-		if (!categoryNames) continue;
+		const col1Name = categoryNames[rowIndex * 2] ?? `Category ${rowIndex * 2 + 1}`;
+		const col2Name = categoryNames[rowIndex * 2 + 1] ?? `Category ${rowIndex * 2 + 2}`;
 
-		categories.push(...parseCompactRow(row as Record<string, unknown>, categoryNames));
+		categories.push(
+			...parseCompactRow(row as Record<string, unknown>, [col1Name, col2Name]),
+		);
 	}
 
 	return categories.length > 0 ? categories : null;
