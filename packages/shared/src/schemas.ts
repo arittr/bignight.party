@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 
 // Player
 export const PlayerSchema = z.object({
