@@ -1,0 +1,115 @@
+<h2>User Flow & Pages</h2>
+<p class="subtitle">Every page in the app. v1 had 24 pages — here's v2.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Complete Page Map</div>
+  <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.7; padding: 24px;">
+<pre style="margin:0; white-space: pre;">
+PLAYER PAGES (4)
+─────────────────────────────────────────────
+/                   → Join / Sign In
+                      Enter name + PIN to join (new player)
+                      Enter name + PIN to resume (returning player)
+
+/picks              → Pick Wizard
+                      Category-by-category predictions
+                      Same sidebar nav as v1 (collapsible on mobile)
+                      Auto-saves on selection
+                      Locked banner if picks are locked
+
+/leaderboard        → Live Leaderboard
+                      Real-time scores via WebSocket
+                      Emoji reactions (🔥😍😱💀)
+                      Connection status indicator
+
+/my-picks           → Review Picks (read-only)
+                      See your picks vs actual winners
+                      Available during live + after completion
+
+
+ADMIN PAGES (2)
+─────────────────────────────────────────────
+/admin              → Import & Setup
+                      Wikipedia URL input → preview → import
+                      View imported categories/nominations
+                      Lock/unlock picks button
+                      Reset game button
+
+/admin/live         → Mark Winners
+                      Mobile-friendly category cards
+                      Tap nomination to mark as winner
+                      Pick counts shown per nomination
+                      Clear winner button for corrections
+</pre>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Flow Diagram</h3>
+  <div class="mockup">
+    <div class="mockup-body" style="font-family: monospace; font-size: 13px; line-height: 1.7; padding: 24px;">
+<pre style="margin:0; white-space: pre;">
+Player Journey:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /  (join)  ──▶  /picks  ──▶  /leaderboard
+                    │               │
+                    │          /my-picks
+                    │
+              [picks lock]
+                    │
+                    └──▶  /leaderboard (auto-redirect)
+
+
+Admin Journey:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  /admin (import + setup)  ──▶  /admin/live (mark winners)
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>What Changed From v1</h3>
+  <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+    <thead>
+      <tr style="border-bottom: 2px solid #333;">
+        <th style="text-align:left; padding: 8px;">v1 (24 pages)</th>
+        <th style="text-align:left; padding: 8px;">v2 (6 pages)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">Sign-in, Sign-up, Signup Callback (3 pages)</td>
+        <td style="padding: 8px;">/ — just name + PIN (1 page)</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">Dashboard, Join Game flow (2 pages)</td>
+        <td style="padding: 8px;"><em>Gone</em> — single game, no dashboard needed</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">Pick Wizard (1 page)</td>
+        <td style="padding: 8px;">/picks — same concept, simplified (1 page)</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">Leaderboard (1 page)</td>
+        <td style="padding: 8px;">/leaderboard — same concept (1 page)</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">18 admin pages (events, games, works, people, categories, nominations, import)</td>
+        <td style="padding: 8px;">2 admin pages (import+setup, live ceremony)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Key Details</h3>
+  <ul style="font-size: 14px; line-height: 1.8;">
+    <li><strong>Admin access:</strong> simple — could be env var with admin PIN, or a hardcoded admin name</li>
+    <li><strong>/my-picks:</strong> lets players review their picks during/after the ceremony without cluttering the leaderboard</li>
+    <li><strong>Auto-redirect:</strong> if picks are locked and player hits /picks, redirect to /leaderboard</li>
+    <li><strong>No signup callback, no join flow</strong> — name + PIN and you're in</li>
+  </ul>
+</div>

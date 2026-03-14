@@ -1,0 +1,64 @@
+<h2>Architecture Approach</h2>
+<p class="subtitle">How should the frontend and backend relate?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Monorepo — Separate Packages (Recommended)</h3>
+      <p><strong>Structure:</strong> Single repo, two packages: <code>packages/server</code> (Hono + Socket.io + Prisma) and <code>packages/web</code> (Vite + React Router). Shared types in <code>packages/shared</code>.</p>
+      <p><strong>Dev:</strong> <code>bun dev</code> starts both. Vite proxies API calls to Hono in dev. In prod, Hono serves the Vite build as static files.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Clean separation of concerns</li>
+          <li>Shared types between frontend/backend via oRPC contracts</li>
+          <li>Single deploy artifact (server serves static files)</li>
+          <li>Easy to reason about</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Slightly more setup than a single package</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Single Package — Flat Structure</h3>
+      <p><strong>Structure:</strong> One package. <code>src/server/</code> and <code>src/client/</code> directories. Vite builds the client, Bun runs the server.</p>
+      <p><strong>Dev:</strong> Same proxy approach. Simpler config, fewer package.json files.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Simplest possible setup</li>
+          <li>No workspace config needed</li>
+          <li>Imports just work — no package boundaries</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Easier to accidentally couple frontend/backend code</li>
+          <li>Build config gets more complex in one package.json</li>
+          <li>Harder to add a second client (e.g., mobile) later</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Two Repos</h3>
+      <p><strong>Structure:</strong> Separate repos for server and web. Deploy independently.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul>
+          <li>Maximum isolation</li>
+          <li>Independent deploy cycles</li>
+        </ul></div>
+        <div class="cons"><h4>Cons</h4><ul>
+          <li>Overkill for a party game</li>
+          <li>Shared types require publishing a package or copy-paste</li>
+          <li>More repos to manage</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</div>

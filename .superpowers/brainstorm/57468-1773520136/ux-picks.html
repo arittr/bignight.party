@@ -1,0 +1,159 @@
+<h2>Pick Wizard — /picks</h2>
+<p class="subtitle">Where players spend most of their time. Category-by-category predictions.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 0;">
+      <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); border-radius: 8px; padding: 20px; font-family: system-ui, sans-serif; min-height: 480px;">
+        <!-- Top bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div style="color: #e2b04a; font-size: 14px; font-weight: 600;">✦ BIG NIGHT</div>
+          <div style="color: #8899aa; font-size: 12px;">Drew</div>
+        </div>
+
+        <!-- Category nav pills -->
+        <div style="display: flex; gap: 6px; overflow-x: auto; margin-bottom: 24px; padding-bottom: 4px;">
+          <div style="background: rgba(226,176,74,0.15); border: 1px solid #e2b04a; color: #e2b04a; padding: 6px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap; font-weight: 600;">Best Picture</div>
+          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8899aa; padding: 6px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Director ✓</div>
+          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8899aa; padding: 6px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Actor</div>
+          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #8899aa; padding: 6px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Actress ✓</div>
+          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #556677; padding: 6px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap;">+19</div>
+        </div>
+
+        <!-- Category header -->
+        <div style="margin-bottom: 20px;">
+          <div style="font-size: 22px; font-weight: 700; color: #f5f5f5;">Best Picture</div>
+          <div style="font-size: 12px; color: #e2b04a; margin-top: 4px;">1 point · 10 nominees</div>
+        </div>
+
+        <!-- Nomination cards -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(226,176,74,0.12); border: 2px solid #e2b04a; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; background: #2a2a4e; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #556677;">IMG</div>
+            <div>
+              <div style="color: #f5f5f5; font-weight: 600; font-size: 15px;">Anora</div>
+              <div style="color: #8899aa; font-size: 12px;">Sean Baker</div>
+            </div>
+            <div style="margin-left: auto; color: #e2b04a; font-size: 18px;">✓</div>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; background: #2a2a4e; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #556677;">IMG</div>
+            <div>
+              <div style="color: #ccc; font-weight: 500; font-size: 15px;">The Brutalist</div>
+              <div style="color: #667788; font-size: 12px;">Brady Corbet</div>
+            </div>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; background: #2a2a4e; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #556677;">IMG</div>
+            <div>
+              <div style="color: #ccc; font-weight: 500; font-size: 15px;">Conclave</div>
+              <div style="color: #667788; font-size: 12px;">Edward Berger</div>
+            </div>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; background: #2a2a4e; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #556677;">IMG</div>
+            <div>
+              <div style="color: #ccc; font-weight: 500; font-size: 15px;">Emilia Pérez</div>
+              <div style="color: #667788; font-size: 12px;">Jacques Audiard</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+          <div style="color: #556677; font-size: 13px;">← Prev</div>
+          <div style="color: #8899aa; font-size: 12px;">5 of 23 picked</div>
+          <div style="color: #e2b04a; font-size: 13px; font-weight: 600;">Next →</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Horizontal Pills</h3>
+      <p>Category navigation as scrollable pills at top. Compact, mobile-first. Checkmarks on completed categories. List-style nomination cards.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 0;">
+      <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); border-radius: 8px; font-family: system-ui, sans-serif; min-height: 480px; display: flex;">
+        <!-- Sidebar -->
+        <div style="width: 180px; background: rgba(0,0,0,0.3); padding: 16px; border-right: 1px solid rgba(255,255,255,0.06); flex-shrink: 0;">
+          <div style="color: #e2b04a; font-size: 13px; font-weight: 600; margin-bottom: 16px;">✦ BIG NIGHT</div>
+          <div style="font-size: 11px; color: #556677; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Categories</div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="background: rgba(226,176,74,0.15); border-left: 3px solid #e2b04a; padding: 8px 10px; border-radius: 0 6px 6px 0; color: #e2b04a; font-size: 12px; font-weight: 600;">Best Picture</div>
+            <div style="padding: 8px 10px; color: #88aa88; font-size: 12px;">✓ Director</div>
+            <div style="padding: 8px 10px; color: #8899aa; font-size: 12px;">Actor</div>
+            <div style="padding: 8px 10px; color: #88aa88; font-size: 12px;">✓ Actress</div>
+            <div style="padding: 8px 10px; color: #8899aa; font-size: 12px;">Sup. Actor</div>
+            <div style="padding: 8px 10px; color: #8899aa; font-size: 12px;">Sup. Actress</div>
+            <div style="padding: 8px 10px; color: #8899aa; font-size: 12px;">Screenplay</div>
+            <div style="padding: 8px 10px; color: #8899aa; font-size: 12px;">Adapted</div>
+            <div style="padding: 8px 10px; color: #556677; font-size: 11px;">+15 more...</div>
+          </div>
+
+          <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #8899aa;">5 / 23 picked</div>
+        </div>
+
+        <!-- Main content -->
+        <div style="flex: 1; padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <div style="font-size: 22px; font-weight: 700; color: #f5f5f5;">Best Picture</div>
+              <div style="font-size: 12px; color: #e2b04a; margin-top: 4px;">1 point · 10 nominees</div>
+            </div>
+            <div style="color: #8899aa; font-size: 12px;">Drew</div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="background: rgba(226,176,74,0.12); border: 2px solid #e2b04a; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+              <div style="width: 44px; height: 44px; background: #2a2a4e; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #556677;">IMG</div>
+              <div>
+                <div style="color: #f5f5f5; font-weight: 600; font-size: 15px;">Anora</div>
+                <div style="color: #8899aa; font-size: 12px;">Sean Baker</div>
+              </div>
+              <div style="margin-left: auto; color: #e2b04a; font-size: 18px;">✓</div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+              <div style="width: 44px; height: 44px; background: #2a2a4e; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #556677;">IMG</div>
+              <div>
+                <div style="color: #ccc; font-weight: 500; font-size: 15px;">The Brutalist</div>
+                <div style="color: #667788; font-size: 12px;">Brady Corbet</div>
+              </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+              <div style="width: 44px; height: 44px; background: #2a2a4e; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #556677;">IMG</div>
+              <div>
+                <div style="color: #ccc; font-weight: 500; font-size: 15px;">Conclave</div>
+                <div style="color: #667788; font-size: 12px;">Edward Berger</div>
+              </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 14px;">
+              <div style="width: 44px; height: 44px; background: #2a2a4e; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #556677;">IMG</div>
+              <div>
+                <div style="color: #ccc; font-weight: 500; font-size: 15px;">Emilia Pérez</div>
+                <div style="color: #667788; font-size: 12px;">Jacques Audiard</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08);">
+            <div style="color: #556677; font-size: 13px;">← Prev</div>
+            <div style="color: #e2b04a; font-size: 13px; font-weight: 600;">Next →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Sidebar (like v1)</h3>
+      <p>Persistent sidebar on desktop, collapsible on mobile. Same pattern as v1 but with the new visual style. Category list always visible on larger screens.</p>
+    </div>
+  </div>
+</div>

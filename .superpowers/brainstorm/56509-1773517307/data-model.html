@@ -1,0 +1,92 @@
+<h2>Data Model</h2>
+<p class="subtitle">v1 had 11 tables. Here's the simplified v2 model for a single-game app.</p>
+
+<div class="mockup">
+  <div class="mockup-header">Entity Relationship Diagram</div>
+  <div class="mockup-body" style="font-family: monospace; font-size: 14px; line-height: 1.6; padding: 24px;">
+<pre style="margin:0; white-space: pre;">
+┌─────────────┐
+│   Player     │
+├─────────────┤
+│ id           │
+│ name         │
+│ pin (hashed) │
+│ createdAt    │
+└──────┬──────┘
+       │ 1:N
+       ▼
+┌─────────────┐       ┌──────────────┐
+│    Pick      │       │   Category   │
+├─────────────┤       ├──────────────┤
+│ id           │  N:1  │ id           │
+│ playerId  ───┼──────▶│ name         │
+│ categoryId───┼──────▶│ order        │
+│ nominationId─┼──┐    │ points (=1)  │
+│ createdAt    │  │    │ winnerId     │
+│ updatedAt    │  │    │ isRevealed   │
+└─────────────┘  │    └──────┬───────┘
+  unique:         │           │ 1:N
+  (playerId,      │           ▼
+   categoryId)    │    ┌──────────────┐
+                  │    │  Nomination  │
+                  └───▶├──────────────┤
+                       │ id           │
+                       │ categoryId   │
+                       │ title        │
+                       │ subtitle     │
+                       │ imageUrl     │
+                       └──────────────┘
+</pre>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>What Changed From v1</h3>
+  <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+    <thead>
+      <tr style="border-bottom: 2px solid #333;">
+        <th style="text-align:left; padding: 8px;">v1</th>
+        <th style="text-align:left; padding: 8px;">v2</th>
+        <th style="text-align:left; padding: 8px;">Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">User + Account + VerificationToken</td>
+        <td style="padding: 8px;">Player (name + pin)</td>
+        <td style="padding: 8px;">No auth system needed</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">Event → Game → GameParticipant</td>
+        <td style="padding: 8px;"><em>Gone</em></td>
+        <td style="padding: 8px;">Single game, no multi-tenancy</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">Work (title, type, year, imageUrl, externalId, wikipediaSlug)</td>
+        <td style="padding: 8px;" rowspan="2">Nomination (title, subtitle, imageUrl)</td>
+        <td style="padding: 8px;" rowspan="2">Flattened. "Oppenheimer" is just a nomination title, not a separate entity.</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">Person (name, imageUrl, externalId, wikipediaSlug)</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding: 8px;">Pick had gameId + userId + categoryId</td>
+        <td style="padding: 8px;">Pick has playerId + categoryId</td>
+        <td style="padding: 8px;">No game abstraction needed</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Key Details</h3>
+  <ul style="font-size: 14px; line-height: 1.8;">
+    <li><strong>4 tables</strong> instead of 11</li>
+    <li><strong>Nomination.title</strong> — the work name ("Oppenheimer") or person name ("Cillian Murphy")</li>
+    <li><strong>Nomination.subtitle</strong> — secondary info (e.g., "Cillian Murphy" under Best Picture, or "Oppenheimer" under Best Actor)</li>
+    <li><strong>Player.pin</strong> — hashed short PIN, just enough to prevent casual snooping</li>
+    <li><strong>Category.winnerId</strong> → points to the winning Nomination</li>
+    <li><strong>Category.isRevealed</strong> — controls leaderboard scoring visibility (same as v1)</li>
+    <li><strong>No game status state machine</strong> — app state is implicit: no winnerId set = picking phase, any winnerId set = live phase</li>
+  </ul>
+</div>

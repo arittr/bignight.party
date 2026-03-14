@@ -16,7 +16,7 @@ v2 is a ground-up rebuild focused on the game itself: simpler data model, simple
 | HTTP | Hono | Lightweight, first-class Bun support |
 | WebSocket | Socket.io + @socket.io/bun-engine | Proven real-time library with native Bun adapter |
 | Database | SQLite via Drizzle ORM | No external DB dependency, file-based |
-| API | oRPC (@orpc/server with Hono adapter) | Type-safe RPC, end-to-end TypeScript |
+| API | Hono routes + @hono/zod-validator | Zod-validated routes, types shared via @bignight/shared |
 | Frontend | Vite + React 19 + React Router v7 (library mode) | SPA, no SSR needed |
 | Styling | Tailwind CSS v4 | Utility-first, mobile-first |
 | Validation | Zod | Runtime type validation, shared between client/server |
