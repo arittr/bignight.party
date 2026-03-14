@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useLeaderboard } from "../hooks/use-leaderboard";
 import { useReactions } from "../hooks/use-reactions";
 import { useAuth } from "../auth";
@@ -36,13 +37,22 @@ export function LeaderboardPage() {
       <p className="text-sm text-gray-400">{revealedCount} of {totalCount} categories revealed</p>
 
       {/* Just Announced banner */}
-      {justAnnounced && (
-        <div className="bg-[#e2b04a]/20 border border-[#e2b04a]/50 px-4 py-3 rounded-lg">
-          <p className="text-xs text-[#e2b04a] uppercase tracking-wide">Just Announced</p>
-          <p className="text-white font-medium">{justAnnounced.categoryName}</p>
-          <p className="text-[#e2b04a]">{justAnnounced.winnerTitle}</p>
-        </div>
-      )}
+      <AnimatePresence>
+        {justAnnounced && (
+          <motion.div
+            key={`${justAnnounced.categoryName}-${justAnnounced.winnerTitle}`}
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="bg-[#e2b04a]/20 border border-[#e2b04a]/50 px-4 py-3 rounded-lg"
+          >
+            <p className="text-xs text-[#e2b04a] uppercase tracking-wide font-semibold">🏆 Just Announced</p>
+            <p className="text-white font-medium text-lg">{justAnnounced.categoryName}</p>
+            <p className="text-[#e2b04a]">{justAnnounced.winnerTitle}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Game complete banner */}
       {isGameComplete && (
