@@ -67,23 +67,49 @@ export function LeaderboardPage() {
       {/* Remaining players */}
       {rest.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {rest.map((player) => (
-            <div
-              key={player.playerId}
-              className={`flex items-center justify-between p-3 md:p-4 rounded-lg ${
-                player.playerId === playerId ? "bg-[#e2b04a]/10 border border-[#e2b04a]/30" : "bg-white/[0.04]"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-gray-500 text-sm w-6">#{player.rank}</span>
-                <span className="text-white">{player.name}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-[#e2b04a] font-medium">{player.totalScore}</span>
-                <span className="text-gray-500 text-xs ml-1">({player.correctCount} correct)</span>
-              </div>
-            </div>
-          ))}
+          <AnimatePresence mode="popLayout">
+            {rest.map((player) => (
+              <motion.div
+                key={player.playerId}
+                layout
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{
+                  layout: { type: "spring", stiffness: 200, damping: 25 },
+                  opacity: { duration: 0.2 },
+                }}
+                className={`flex items-center justify-between p-3 md:p-4 rounded-lg ${
+                  player.playerId === playerId ? "bg-[#e2b04a]/10 border border-[#e2b04a]/30" : "bg-white/[0.04]"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <motion.span
+                    key={`rank-${player.playerId}-${player.rank}`}
+                    initial={{ scale: 1.3 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                    className="text-gray-500 text-sm w-6"
+                  >
+                    #{player.rank}
+                  </motion.span>
+                  <span className="text-white">{player.name}</span>
+                </div>
+                <div className="text-right">
+                  <motion.span
+                    key={`score-${player.playerId}-${player.totalScore}`}
+                    initial={{ scale: 1.5, color: "#ffffff" }}
+                    animate={{ scale: 1, color: "#e2b04a" }}
+                    transition={{ duration: 0.4 }}
+                    className="font-medium"
+                  >
+                    {player.totalScore}
+                  </motion.span>
+                  <span className="text-gray-500 text-xs ml-1">({player.correctCount} correct)</span>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 
