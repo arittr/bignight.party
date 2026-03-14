@@ -62,7 +62,7 @@ export default {
 
 ## Data Model
 
-4 tables. Down from 11 in v1.
+5 tables (4 domain + 1 config). Down from 11 in v1.
 
 ### Tables
 
@@ -101,7 +101,7 @@ export default {
 | id | text (cuid) | Primary key |
 | playerId | text | FK → Player, cascade delete |
 | categoryId | text | FK → Category, cascade delete |
-| nominationId | text | FK → Nomination |
+| nominationId | text | FK → Nomination, cascade delete |
 | createdAt | integer | Unix timestamp |
 | updatedAt | integer | Unix timestamp |
 
@@ -129,7 +129,7 @@ State is derived, not stored as an enum:
 
 ### SQLite Notes
 
-- No Prisma enums — use string fields validated by Zod
+- No database-level enums — use string fields validated by Zod
 - Timestamps stored as Unix integers (not ISO strings)
 - `PRAGMA foreign_keys = ON` must be set at connection time
 - Drizzle handles SQLite constraints natively
@@ -168,13 +168,14 @@ State is derived, not stored as an enum:
 - Reaction bar at bottom: 🔥 😍 😱 💀
 - Connection status indicator (green "LIVE" badge)
 - Progress: "12 of 23 categories revealed"
-- Only shows players who submitted picks for ALL categories
+- Only shows players who submitted picks for ALL categories (players with incomplete picks see a message explaining they need to complete all picks to appear on the board)
 - Tie handling: same score + correct count = same rank, gap-aware numbering
 
 **`/my-picks` — Review Picks**
 - Read-only view of your picks
 - Shows which picks were correct (after reveal)
-- Available during locked + completed phases
+- Available in all phases (lets players review picks anytime, including while picking)
+- During open phase: shows current picks without edit capability (editing happens on /picks)
 
 ### Admin Pages (2)
 
@@ -228,6 +229,9 @@ State is derived, not stored as an enum:
 - On reconnect: auto-rejoin room
 - Connection status exposed to UI (connecting/connected/disconnected)
 
+**Additional server events:**
+- `picks:locked` — broadcast when `picksLockAt` passes, so clients on /picks can redirect immediately
+
 **Allowed reactions:** 🔥, 😍, 😱, 💀 — server rejects anything else.
 
 ## Game Logic
@@ -277,6 +281,8 @@ No auth framework. Lightweight player identity:
 
 No email, no OAuth, no session store. Just signed tokens.
 
+Token expiry: tokens last 24 hours. For a one-evening party game this is more than enough. No refresh mechanism needed.
+
 ## Wikipedia Import
 
 ### Parser (port from v1)
@@ -287,7 +293,7 @@ The v1 Wikipedia parser (`wikipedia-parser.ts`, ~600 lines) uses `wtf_wikipedia`
 3. Extract person names, work titles, and images
 4. Return structured data: `{ eventName, categories: [{ name, nominations: [{ title, subtitle, imageUrl }] }] }`
 
-Port this directly — it has no database dependencies.
+The v1 parser is split across `wikipedia-parser.ts`, `wikipedia-adapter.ts`, and `types.ts`. Port and consolidate into a single module for v2.
 
 ### Import Service (new for v2)
 
