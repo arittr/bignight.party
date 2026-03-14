@@ -5,7 +5,7 @@ import { useAuth } from "../auth";
 import type { SaveStatus } from "../components/save-indicator";
 
 export function usePicks() {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const queryClient = useQueryClient();
   const [selectedNominationId, setSelectedNominationId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -17,6 +17,10 @@ export function usePicks() {
       const res = await fetch("/api/picks", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        logout();
+        return [];
+      }
       const data = PicksResponseSchema.parse(await res.json());
       return data.picks;
     },
@@ -37,6 +41,10 @@ export function usePicks() {
         },
         body: JSON.stringify({ categoryId, nominationId }),
       });
+      if (res.status === 401) {
+        logout();
+        throw new Error("Session expired — please sign in again");
+      }
       if (!res.ok) throw new Error("Failed to save pick");
       return SubmitPickResponseSchema.parse(await res.json());
     },
