@@ -28,7 +28,7 @@ if (distExists) {
 const engine = new Engine({ path: "/socket.io/" });
 const io = new Server();
 io.bind(engine);
-configureSocketServer(io);
+configureSocketServer(io, db);
 
 // Clean shutdown on SIGINT/SIGTERM — prevents orphan processes with bun --watch
 function shutdown() {
