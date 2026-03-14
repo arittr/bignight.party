@@ -7,7 +7,14 @@ import { createApp } from "./app";
 import { configureSocketServer } from "./websocket/server";
 
 const db = createDb();
-const app = createApp(db);
+
+// Socket.io setup — must happen before createApp so io can be passed to admin routes
+const engine = new Engine({ path: "/socket.io/" });
+const io = new Server();
+io.bind(engine);
+configureSocketServer(io, db);
+
+const app = createApp(db, io);
 
 // Static file serving — only when the build directory exists (production).
 // In dev mode, Vite serves the frontend on :5173 and proxies /api to :3000.
@@ -23,12 +30,6 @@ if (distExists) {
 		});
 	});
 }
-
-// Bun-native engine: Socket.io binds to the bun-engine instead of a Node http.Server
-const engine = new Engine({ path: "/socket.io/" });
-const io = new Server();
-io.bind(engine);
-configureSocketServer(io, db);
 
 // Clean shutdown on SIGINT/SIGTERM — prevents orphan processes with bun --watch
 function shutdown() {

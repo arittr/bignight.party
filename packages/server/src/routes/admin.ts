@@ -9,6 +9,8 @@ import {
   ClearWinnerSchema,
   SetPicksLockSchema,
 } from "@bignight/shared";
+import type { Server as SocketIOServer } from "socket.io";
+import { WEBSOCKET_EVENTS } from "@bignight/shared";
 import { signToken } from "../auth/token";
 import { authMiddleware, adminMiddleware } from "../auth/middleware";
 import { categories, nominations, picks, gameConfig } from "../db/schema";
@@ -20,7 +22,7 @@ import type { AppEnv } from "../env";
 
 const ResetSchema = z.object({ confirm: z.literal(true) });
 
-export function adminRoutes(db: Db) {
+export function adminRoutes(db: Db, io?: SocketIOServer) {
   const router = new Hono<AppEnv>();
 
   // Login does not require auth
@@ -64,6 +66,26 @@ export function adminRoutes(db: Db) {
     try {
       await markWinner(db, categoryId, nominationId);
       const leaderboard = await getLeaderboard(db);
+
+      // Look up category + winner names for the "Just Announced" banner
+      const [cat] = await db.select().from(categories).where(eq(categories.id, categoryId)).limit(1);
+      const [nom] = await db.select().from(nominations).where(eq(nominations.id, nominationId)).limit(1);
+      const allCats = await db.select().from(categories);
+      const revealedCount = allCats.filter((c) => c.isRevealed).length;
+
+      if (io) {
+        io.to("game").emit(WEBSOCKET_EVENTS.LEADERBOARD_UPDATE, {
+          players: leaderboard,
+          revealedCategory: cat && nom ? { name: cat.name, winnerTitle: nom.title } : undefined,
+          revealedCount,
+          totalCount: allCats.length,
+        });
+
+        if (allCats.every((c) => c.isRevealed)) {
+          io.to("game").emit(WEBSOCKET_EVENTS.GAME_COMPLETED, { completedAt: Date.now() });
+        }
+      }
+
       return c.json({ leaderboard });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to mark winner";
@@ -75,6 +97,18 @@ export function adminRoutes(db: Db) {
     const { categoryId } = c.req.valid("json");
     await clearWinner(db, categoryId);
     const leaderboard = await getLeaderboard(db);
+
+    const allCats = await db.select().from(categories);
+    const revealedCount = allCats.filter((c) => c.isRevealed).length;
+
+    if (io) {
+      io.to("game").emit(WEBSOCKET_EVENTS.LEADERBOARD_UPDATE, {
+        players: leaderboard,
+        revealedCount,
+        totalCount: allCats.length,
+      });
+    }
+
     return c.json({ leaderboard });
   });
 
