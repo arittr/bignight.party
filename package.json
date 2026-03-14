@@ -11,7 +11,7 @@
 		"format": "biome format --write .",
 		"test": "bun run --filter '*' test",
 		"build": "bun run --filter web build",
-		"start": "cd packages/server && bun src/index.ts"
+		"start": "cd packages/server && bun --env-file=../../.env src/index.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.7",
