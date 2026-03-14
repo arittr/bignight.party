@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { eq, and } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { SubmitPickSchema } from "@bignight/shared";
-import { picks, nominations, gameConfig } from "../db/schema";
+import { picks, nominations, players, gameConfig } from "../db/schema";
 import { authMiddleware } from "../auth/middleware";
 import type { Db } from "../db/connection";
 import type { AppEnv } from "../env";
@@ -16,6 +16,12 @@ export function picksRoutes(db: Db) {
   router.post("/", zValidator("json", SubmitPickSchema), async (c) => {
     const playerId = c.get("playerId");
     const { categoryId, nominationId } = c.req.valid("json");
+
+    // Verify player still exists (JWT may outlive a DB reset)
+    const [player] = await db.select().from(players).where(eq(players.id, playerId)).limit(1);
+    if (!player) {
+      return c.json({ error: "Player not found — please sign in again" }, 401);
+    }
 
     const [config] = await db.select().from(gameConfig).limit(1);
 
