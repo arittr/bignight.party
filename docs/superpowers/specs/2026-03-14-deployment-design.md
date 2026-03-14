@@ -15,11 +15,13 @@ Internet ─── HTTPS (:443) ──→ Caddy ──→ Bun/Hono (:3000)
                                             └── /*            → Static files (Vite build)
 ```
 
-Single VPS, single Bun process, SQLite on local filesystem. Caddy handles TLS termination, certificate management (Let's Encrypt), HTTP→HTTPS redirect, and WebSocket proxying.
+Single VPS, single Bun process, SQLite on local filesystem. Caddy handles TLS termination, certificate management (Let's Encrypt), HTTP→HTTPS redirect, and WebSocket proxying. Port 3000 is firewalled from external access — all traffic goes through Caddy.
 
 **App prerequisites (handled by the app plan, not this spec):**
 - Server runs Drizzle migrations on startup (idempotent, safe for SQLite)
 - Server serves Vite build output via Hono `serveStatic` middleware with SPA fallback
+- Socket.io client configured with reconnection enabled (default) so WebSocket connections recover after a deploy restart
+- SPA handles 502/connection errors gracefully during the ~5-10 second restart window (retry submissions, don't show jarring error states)
 
 ---
 
@@ -77,6 +79,7 @@ WorkingDirectory=/opt/bignight/packages/server
 ExecStart=/usr/local/bin/bun src/index.ts
 Restart=always
 RestartSec=5
+MemoryMax=512M
 EnvironmentFile=/opt/bignight/.env
 
 [Install]
@@ -102,17 +105,30 @@ INVITE_CODE=<party-invite-code>
 
 ---
 
+## Restart Behavior
+
+`systemctl restart bignight` sends SIGTERM to the Bun process. During the restart window (~5-10 seconds):
+
+- All active WebSocket connections are severed
+- HTTP requests to port 3000 fail; Caddy returns 502
+- Socket.io clients auto-reconnect once the new process is listening
+- On reconnect, clients re-join the game room via the `connection` handler
+
+This is acceptable for a party game with 20 players. The SPA must handle this gracefully (see app prerequisites above).
+
+SQLite handles SIGTERM safely in WAL mode — committed transactions are preserved, the WAL file is recovered on next startup. An in-flight write at the exact moment of SIGTERM could be lost, but the HTTP response will also fail, so the client knows to retry.
+
+---
+
 ## deploy.sh
 
-Lives in repo root. Run from local machine. Handles: pull latest code, install deps, build frontend, backup DB, restart service.
+Lives in repo root. Run from local machine. Handles: fetch latest code, install deps, build frontend, backup DB, restart service.
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
 VPS="root@137.184.40.238"
-APP_DIR="/opt/bignight"
-DB_PATH="$APP_DIR/packages/server/bignight.db"
 
 echo "==> Deploying BigNight..."
 
@@ -122,8 +138,9 @@ export PATH="/usr/local/bin:$HOME/.bun/bin:$PATH"
 
 cd /opt/bignight
 
-echo "--- Pulling latest code..."
-git pull
+echo "--- Fetching latest code..."
+git fetch origin
+git reset --hard origin/main
 
 echo "--- Installing dependencies..."
 bun install
@@ -147,7 +164,13 @@ systemctl restart bignight
 
 echo "--- Verifying..."
 sleep 2
-systemctl is-active --quiet bignight && echo "Service is running." || echo "WARNING: Service failed to start!"
+if systemctl is-active --quiet bignight; then
+    echo "Service is running."
+else
+    echo "WARNING: Service failed to start!"
+    journalctl -u bignight --no-pager -n 20
+    exit 1
+fi
 
 echo "==> Deploy complete."
 DEPLOY
@@ -165,7 +188,6 @@ This is a human/agent-guided runbook, not an automated script. Follow steps over
 
 - VPS accessible at `root@137.184.40.238`
 - DNS A record for `bignight.party` → `137.184.40.238` (already done)
-- Ports 80 and 443 open in firewall
 
 ### Step 1: System Updates
 
@@ -190,7 +212,7 @@ The symlink ensures `bun` is available to systemd and non-interactive SSH sessio
 useradd --system --home-dir /opt/bignight --shell /usr/sbin/nologin bignight
 ```
 
-(Ownership of `/opt/bignight` is set after cloning in Step 4.)
+(Ownership of `/opt/bignight` is set after cloning in Step 5.)
 
 ### Step 4: Install Caddy
 
@@ -232,6 +254,7 @@ chmod 600 /opt/bignight/.env
 cd /opt/bignight
 bun install
 bun run --filter web build
+chown -R bignight:bignight /opt/bignight
 ```
 
 ### Step 8: Write Caddyfile
@@ -264,6 +287,7 @@ WorkingDirectory=/opt/bignight/packages/server
 ExecStart=/usr/local/bin/bun src/index.ts
 Restart=always
 RestartSec=5
+MemoryMax=512M
 EnvironmentFile=/opt/bignight/.env
 
 [Install]
@@ -277,7 +301,19 @@ EOF
 apt install -y sqlite3
 ```
 
-### Step 11: Enable and Start Services
+### Step 11: Configure Firewall
+
+```bash
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw deny 3000
+ufw --force enable
+```
+
+Port 3000 is blocked externally — all traffic must go through Caddy.
+
+### Step 12: Enable and Start Services
 
 ```bash
 systemctl daemon-reload
@@ -285,7 +321,7 @@ systemctl enable --now caddy
 systemctl enable --now bignight
 ```
 
-### Step 12: Verify
+### Step 13: Verify
 
 ```bash
 # Check services are running
@@ -300,6 +336,27 @@ Expected: `200 OK` with `{"ok":true}`.
 
 ---
 
+## Logs and Debugging
+
+```bash
+# Follow app logs live
+journalctl -u bignight -f
+
+# Last 50 lines of app logs
+journalctl -u bignight -n 50 --no-pager
+
+# App logs since a specific time
+journalctl -u bignight --since "5 minutes ago"
+
+# Caddy logs (access + errors)
+journalctl -u caddy -f
+
+# Check if service is running
+systemctl status bignight
+```
+
+---
+
 ## DB Backup Retention
 
 The deploy script creates timestamped backups on each deploy. To prevent unbounded growth, periodically clean old backups:
@@ -309,7 +366,7 @@ The deploy script creates timestamped backups on each deploy. To prevent unbound
 ls -t /opt/bignight/packages/server/bignight.db.bak-* | tail -n +6 | xargs rm -f
 ```
 
-This can be added to the deploy script or run manually. Given deploys happen a few times a year around Oscar season, this is unlikely to matter in practice.
+Given deploys happen a few times a year around Oscar season, this is unlikely to matter in practice.
 
 ---
 
@@ -321,17 +378,23 @@ If a deploy breaks the app:
 ssh root@137.184.40.238
 cd /opt/bignight
 git log --oneline -5              # find the last good commit
-git reset --hard <good-commit>    # roll back on-branch (not detached HEAD)
+git reset --hard <good-commit>
 bun install
 bun run --filter web build
+chown -R bignight:bignight /opt/bignight
 systemctl restart bignight
 ```
 
-Note: `git reset --hard` is intentionally destructive here — we're reverting to a known-good state. Next `git pull` will fast-forward back to HEAD when the issue is fixed.
+Note: `git reset --hard` is intentionally destructive here — we're reverting to a known-good state. Next deploy will `git reset --hard origin/main` which fast-forwards back to HEAD.
 
 To restore the DB from backup:
 
 ```bash
+systemctl stop bignight
+rm -f packages/server/bignight.db-wal packages/server/bignight.db-shm
 cp packages/server/bignight.db.bak-<timestamp> packages/server/bignight.db
-systemctl restart bignight
+chown bignight:bignight packages/server/bignight.db
+systemctl start bignight
 ```
+
+The WAL and SHM files must be removed before restoring — a stale WAL could replay uncommitted changes on top of the restored backup.
