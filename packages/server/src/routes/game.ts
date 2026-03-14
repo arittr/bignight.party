@@ -1,6 +1,7 @@
 import { Hono } from "hono";
-import { count } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { categories, gameConfig } from "../db/schema";
+import { getLeaderboard } from "../services/leaderboard";
 import type { Db } from "../db/connection";
 import type { AppEnv } from "../env";
 import type { GamePhase } from "@bignight/shared";
@@ -17,6 +18,15 @@ export function gameRoutes(db: Db) {
     const phase = derivePhase(config, categoryCount);
 
     return c.json({ phase, config, categoryCount });
+  });
+
+  router.get("/leaderboard", async (c) => {
+    const allCategories = await db.select().from(categories);
+    const revealedCount = allCategories.filter((cat) => cat.isRevealed).length;
+    const totalCount = allCategories.length;
+    const players = await getLeaderboard(db);
+
+    return c.json({ players, revealedCount, totalCount });
   });
 
   return router;
