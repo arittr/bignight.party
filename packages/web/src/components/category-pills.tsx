@@ -14,6 +14,7 @@ export function CategoryPills({
   revealedIds,
 }: CategoryPillsProps) {
   return (
+    <div className="relative">
     <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
       {categories.map((cat) => {
         const isSelected = cat.id === selectedId;
@@ -38,6 +39,8 @@ export function CategoryPills({
           </button>
         );
       })}
+    </div>
+    <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-[#1a1a2e] to-transparent pointer-events-none" />
     </div>
   );
 }
