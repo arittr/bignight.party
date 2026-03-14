@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router";
 import { useAuth } from "../auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -167,7 +168,12 @@ function AdminDashboard({
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-[#e2b04a]">Admin Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-[#e2b04a]">Admin Dashboard</h1>
+        <Link to="/admin/live" className="px-4 py-2 bg-[#e2b04a] text-[#1a1a2e] font-bold rounded-lg text-sm hover:bg-[#c99a3a]">
+          Go Live
+        </Link>
+      </div>
       <p className="text-sm text-gray-400">
         Phase: {gameState?.phase ?? "loading..."}
       </p>
