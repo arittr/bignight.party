@@ -1,3 +1,5 @@
+import { JoinResponseSchema } from "@bignight/shared";
+
 const API_BASE = "/api";
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -25,8 +27,10 @@ export class ApiError extends Error {
 }
 
 export const api = {
-  join: (data: { name: string; pin: string }) =>
-    apiFetch<{ token: string; playerId: string; name: string }>("/player/join", {
+  join: async (data: { name: string; pin: string }) => {
+    const raw = await apiFetch("/player/join", {
       method: "POST", body: JSON.stringify(data),
-    }),
+    });
+    return JoinResponseSchema.parse(raw);
+  },
 };

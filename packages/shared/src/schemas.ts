@@ -75,6 +75,45 @@ export const LeaderboardPlayerSchema = z.object({
   rank: z.number().int().positive(),
 });
 
+// --- API Response Schemas ---
+// These validate server responses on the client to catch shape mismatches at the boundary.
+
+const GamePhaseSchema = z.enum(["setup", "open", "locked", "completed"]);
+
+const CategoryWithNominationsSchema = CategorySchema.extend({
+  nominations: z.array(NominationSchema),
+});
+
+export const JoinResponseSchema = z.object({
+  token: z.string(),
+  playerId: z.string(),
+  name: z.string(),
+});
+
+export const GameStateResponseSchema = z.object({
+  phase: GamePhaseSchema,
+  config: GameConfigSchema.nullable(),
+  categoryCount: z.number().int().nonnegative(),
+});
+
+export const CategoriesResponseSchema = z.object({
+  categories: z.array(CategoryWithNominationsSchema),
+});
+
+export const PicksResponseSchema = z.object({
+  picks: z.array(PickSchema),
+});
+
+export const SubmitPickResponseSchema = z.object({
+  pick: PickSchema,
+});
+
+export const LeaderboardResponseSchema = z.object({
+  players: z.array(LeaderboardPlayerSchema),
+  revealedCount: z.number().int().nonnegative(),
+  totalCount: z.number().int().nonnegative(),
+});
+
 // Reactions
 export const ReactionSendSchema = z.object({ emoji: z.string() });
 export const ReactionBroadcastSchema = z.object({

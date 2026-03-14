@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useCallback } from "react";
+import { PicksResponseSchema, SubmitPickResponseSchema } from "@bignight/shared";
 import { useAuth } from "../auth";
 import type { SaveStatus } from "../components/save-indicator";
 
@@ -16,7 +17,7 @@ export function usePicks() {
       const res = await fetch("/api/picks", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
+      const data = PicksResponseSchema.parse(await res.json());
       return data.picks;
     },
     enabled: !!token,
@@ -37,7 +38,7 @@ export function usePicks() {
         body: JSON.stringify({ categoryId, nominationId }),
       });
       if (!res.ok) throw new Error("Failed to save pick");
-      return res.json();
+      return SubmitPickResponseSchema.parse(await res.json());
     },
     onSuccess: () => {
       setSaveStatus("saved");
@@ -59,7 +60,7 @@ export function usePicks() {
 
   // Set of completed category IDs
   const completedCategoryIds = new Set(
-    picks.map((p: { categoryId: string }) => p.categoryId),
+    picks.map((p) => p.categoryId),
   );
 
   return {

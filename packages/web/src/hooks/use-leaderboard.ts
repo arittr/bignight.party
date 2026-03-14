@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { LeaderboardPlayer } from "@bignight/shared";
-import { WEBSOCKET_EVENTS } from "@bignight/shared";
+import { WEBSOCKET_EVENTS, LeaderboardResponseSchema } from "@bignight/shared";
 import { useAuth } from "../auth";
 import { getSocket } from "../socket";
 
@@ -29,11 +29,11 @@ export function useLeaderboard() {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((r) => r.json())
-      .then((data) => {
-        if (data.players) setPlayers(data.players);
-        if (data.revealedCount !== undefined)
-          setRevealedCount(data.revealedCount);
-        if (data.totalCount !== undefined) setTotalCount(data.totalCount);
+      .then((raw) => {
+        const data = LeaderboardResponseSchema.parse(raw);
+        setPlayers(data.players);
+        setRevealedCount(data.revealedCount);
+        setTotalCount(data.totalCount);
       })
       .catch(() => {});
   }, [token]);

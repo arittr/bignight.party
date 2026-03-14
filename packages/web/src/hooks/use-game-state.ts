@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { GamePhase, GameConfig } from "@bignight/shared";
-import { WEBSOCKET_EVENTS } from "@bignight/shared";
+import { WEBSOCKET_EVENTS, GameStateResponseSchema } from "@bignight/shared";
 import { useAuth } from "../auth";
 import { getSocket } from "../socket";
 
@@ -24,7 +24,7 @@ export function useGameState(): GameState {
       const res = await fetch("/api/game", {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      return res.json();
+      return GameStateResponseSchema.parse(await res.json());
     },
     refetchInterval: 30000, // Poll every 30s
   });
