@@ -286,6 +286,12 @@ function parseNominationFromRow(row: Record<string, unknown>): ParsedNomination 
  * Maps row index to [col1 category name, col2 category name].
  * This layout is used in recent ceremonies (97th, etc.).
  */
+/**
+ * Maps compact table row index → [col1 category, col2 category].
+ * This pairing is consistent across recent ceremonies (97th, 98th).
+ * The 98th added "Best Casting" at row 8 col2, shifting some rows.
+ * We map generously — extra rows beyond the map are silently skipped.
+ */
 const COMPACT_CATEGORY_MAP: Record<number, [string, string]> = {
 	0: ["Best Picture", "Best Director"],
 	1: ["Best Actor", "Best Actress"],
@@ -295,10 +301,10 @@ const COMPACT_CATEGORY_MAP: Record<number, [string, string]> = {
 	5: ["Best Documentary Feature", "Best Documentary Short"],
 	6: ["Best Live Action Short", "Best Animated Short"],
 	7: ["Best Original Score", "Best Original Song"],
-	8: ["Best Sound", "Best Production Design"],
-	9: ["Best Cinematography", "Best Makeup and Hairstyling"],
-	10: ["Best Costume Design", "Best Film Editing"],
-	11: ["Best Visual Effects", ""],
+	8: ["Best Sound", "Best Casting"],
+	9: ["Best Production Design", "Best Cinematography"],
+	10: ["Best Makeup and Hairstyling", "Best Costume Design"],
+	11: ["Best Film Editing", "Best Visual Effects"],
 };
 
 function isCompactFormat(rows: unknown[]): boolean {
@@ -392,13 +398,17 @@ function parseCompactAwardsTable(table: { json(): unknown }): ParsedCategory[] |
 /**
  * Parses bullet-point formatted nomination text.
  *
- * Format: "* Winner – details ‡ ** Nominee – details ** Nominee – details"
- * All nominations live on ONE line, separated by " ** " markers.
+ * Handles two formats:
+ *   1. " ** " separators (some ceremonies): "* Winner ‡ ** Nominee ** Nominee"
+ *   2. " * " separators (98th and others):  "* Nominee * Nominee * Nominee"
+ * Splits on whichever separator is present, preferring " ** " if found.
  */
 function parseBulletPointNominations(text: string): ParsedNomination[] {
 	const nominations: ParsedNomination[] = [];
 
-	const parts = text.split(" ** ");
+	// Determine separator: prefer " ** " if present, else split on " * "
+	const separator = text.includes(" ** ") ? " ** " : " * ";
+	const parts = text.split(separator);
 
 	for (let i = 0; i < parts.length; i++) {
 		let part = parts[i]?.trim();
