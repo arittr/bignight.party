@@ -36,33 +36,41 @@ export function LeaderboardPage() {
       {/* Progress */}
       <p className="text-sm text-gray-400">{revealedCount} of {totalCount} categories revealed</p>
 
-      {/* Just Announced banner */}
+      {/* Podium */}
+      <div className="relative">
+        {/* Just Announced — overlays the podium, no layout shift */}
+        <AnimatePresence>
+          {justAnnounced && (
+            <motion.div
+              key={`${justAnnounced.categoryName}-${justAnnounced.winnerTitle}`}
+              initial={{ opacity: 0, y: -30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="absolute inset-x-0 top-0 z-10 mx-auto max-w-sm bg-[#1a1a2e]/95 backdrop-blur-sm border border-[#e2b04a]/50 px-5 py-4 rounded-xl shadow-lg shadow-[#e2b04a]/10 text-center"
+            >
+              <p className="text-xs text-[#e2b04a] uppercase tracking-widest font-semibold mb-1">🏆 Just Announced</p>
+              <p className="text-white font-semibold text-lg">{justAnnounced.categoryName}</p>
+              <p className="text-[#e2b04a] text-base">{justAnnounced.winnerTitle}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <Podium players={top3} />
+      </div>
+
+      {/* Game complete banner */}
       <AnimatePresence>
-        {justAnnounced && (
+        {isGameComplete && (
           <motion.div
-            key={`${justAnnounced.categoryName}-${justAnnounced.winnerTitle}`}
-            initial={{ opacity: 0, scale: 0.8, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -10 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="bg-[#e2b04a]/20 border border-[#e2b04a]/50 px-4 py-3 rounded-lg"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#e2b04a]/20 border border-[#e2b04a]/50 px-4 py-3 rounded-lg text-center"
           >
-            <p className="text-xs text-[#e2b04a] uppercase tracking-wide font-semibold">🏆 Just Announced</p>
-            <p className="text-white font-medium text-lg">{justAnnounced.categoryName}</p>
-            <p className="text-[#e2b04a]">{justAnnounced.winnerTitle}</p>
+            <p className="text-[#e2b04a] font-bold text-lg">🏆 Game Over!</p>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Game complete banner */}
-      {isGameComplete && (
-        <div className="bg-[#e2b04a]/20 border border-[#e2b04a]/50 px-4 py-3 rounded-lg text-center">
-          <p className="text-[#e2b04a] font-bold text-lg">🏆 Game Over!</p>
-        </div>
-      )}
-
-      {/* Podium */}
-      <Podium players={top3} />
 
       {/* Remaining players */}
       {rest.length > 0 && (
