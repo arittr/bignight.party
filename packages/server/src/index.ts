@@ -1,11 +1,23 @@
 import { Server as Engine } from "@socket.io/bun-engine";
 import { Server } from "socket.io";
+import { serveStatic } from "hono/bun";
+import { join } from "node:path";
 import { createDb } from "./db/connection";
 import { createApp } from "./app";
 import { configureSocketServer } from "./websocket/server";
 
 const db = createDb();
 const app = createApp(db);
+
+// Static file serving (production only — runs under Bun, not in vitest)
+const webDistPath = join(import.meta.dir, "../../web/dist");
+app.use("/*", serveStatic({ root: webDistPath }));
+app.get("*", async () => {
+	const indexFile = Bun.file(join(webDistPath, "index.html"));
+	return new Response(indexFile, {
+		headers: { "Content-Type": "text/html; charset=utf-8" },
+	});
+});
 
 // Bun-native engine: Socket.io binds to the bun-engine instead of a Node http.Server
 const engine = new Engine({ path: "/socket.io/" });
