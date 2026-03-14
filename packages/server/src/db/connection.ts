@@ -19,9 +19,7 @@ export function createDb(path: string = DB_PATH) {
 }
 
 export function createTestDb() {
-  const db = createDb(":memory:");
-  migrate(db, { migrationsFolder: MIGRATIONS_DIR });
-  return db;
+  return createDb(":memory:");
 }
 
 export type Db = ReturnType<typeof createDb>;
