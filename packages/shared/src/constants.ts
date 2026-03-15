@@ -21,6 +21,7 @@ export const CATEGORY_POINTS: Record<string, number> = {
   "Best Adapted Screenplay": 2,
   "Best Animated Feature": 2,
   "Best International Feature": 2,
+  "Best Casting": 2,
 };
 
 /**
