@@ -37,7 +37,7 @@ export function LeaderboardPage() {
       <p className="text-sm text-gray-400">{revealedCount} of {totalCount} categories revealed</p>
 
       {/* Podium */}
-      <div className="relative">
+      <div className="relative pt-16">
         {/* Just Announced — overlays the podium, no layout shift */}
         <AnimatePresence>
           {justAnnounced && (
