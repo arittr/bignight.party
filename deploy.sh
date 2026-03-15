@@ -19,7 +19,7 @@ echo "--- Installing dependencies..."
 bun install
 
 echo "--- Building web frontend..."
-bun run --filter web build
+cd packages/web && bun run build && cd ../..
 
 echo "--- Fixing ownership..."
 chown -R bignight:bignight /opt/bignight
