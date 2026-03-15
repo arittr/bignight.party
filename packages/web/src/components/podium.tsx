@@ -6,9 +6,9 @@ interface PodiumProps {
 }
 
 const PODIUM_CONFIG = [
-  { position: 1, medal: "🥈", barHeight: "h-20 md:h-28", order: 0 },
-  { position: 0, medal: "🪿", barHeight: "h-28 md:h-40", order: 1 },
-  { position: 2, medal: "🥉", barHeight: "h-16 md:h-24", order: 2 },
+  { position: 1, medal: "🥈", barHeight: "h-20 md:h-28", barStyle: "from-gray-400/20 to-gray-400/5", order: 0 },
+  { position: 0, medal: "🪿", barHeight: "h-28 md:h-40", barStyle: "from-[#e2b04a]/30 to-[#e2b04a]/10 shadow-lg shadow-[#e2b04a]/10", order: 1 },
+  { position: 2, medal: "🥉", barHeight: "h-16 md:h-24", barStyle: "from-amber-700/20 to-amber-700/5", order: 2 },
 ] as const;
 
 export function Podium({ players }: PodiumProps) {
@@ -58,7 +58,7 @@ export function Podium({ players }: PodiumProps) {
               {player.totalScore} pts
             </motion.p>
             <div
-              className={`w-20 md:w-32 ${PODIUM_CONFIG[i]?.barHeight} bg-gradient-to-t from-[#e2b04a]/20 to-[#e2b04a]/5 rounded-t-lg mt-1 flex items-center justify-center`}
+              className={`w-20 md:w-32 ${PODIUM_CONFIG[i]?.barHeight} bg-gradient-to-t ${PODIUM_CONFIG[i]?.barStyle} rounded-t-lg mt-1 flex items-center justify-center`}
             >
               <span className="text-lg md:text-xl font-bold text-[#e2b04a]">
                 #{player.rank}

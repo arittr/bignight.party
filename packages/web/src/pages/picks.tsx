@@ -60,7 +60,14 @@ export function PicksPage() {
   }, [currentCategory?.id, picks]);
 
   if (!currentCategory) {
-    return <div className="p-4 text-gray-400">Loading categories...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-[#e2b04a] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-gray-400 text-sm">Loading categories...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
