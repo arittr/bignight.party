@@ -14,7 +14,6 @@ export function Layout() {
           <div className="flex gap-4 text-sm">
             <Link to="/picks" className="text-[#e2b04a] hover:underline">Picks</Link>
             <Link to="/leaderboard" className="text-[#e2b04a] hover:underline">Leaderboard</Link>
-            <Link to="/my-picks" className="text-[#e2b04a] hover:underline">My Picks</Link>
           </div>
         </nav>
       )}
