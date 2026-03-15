@@ -56,6 +56,7 @@ function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
 interface Category {
   id: string;
   name: string;
+  points?: number;
   nominations?: unknown[];
 }
 
@@ -217,7 +218,7 @@ function AdminDashboard({
               >
                 <span>{cat.name}</span>
                 <span className="text-gray-500">
-                  {cat.nominations?.length} nominees
+                  {cat.points ?? 1}pt · {cat.nominations?.length} nominees
                 </span>
               </div>
             ))}
