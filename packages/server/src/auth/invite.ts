@@ -21,6 +21,13 @@ export const inviteGate: MiddlewareHandler = async (c, next) => {
 		return next();
 	}
 
+	// Skip API routes — they're protected by JWT auth already.
+	// The invite gate only protects page loads (HTML/static assets).
+	const pathname = new URL(c.req.url).pathname;
+	if (pathname.startsWith("/api/")) {
+		return next();
+	}
+
 	// Check URL param first (initial invite link)
 	const url = new URL(c.req.url);
 	const paramCode = url.searchParams.get("invite");
