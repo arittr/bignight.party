@@ -6,6 +6,7 @@ import { LeaderboardPage } from "./pages/leaderboard";
 import { MyPicksPage } from "./pages/my-picks";
 import { AdminPage } from "./pages/admin";
 import { AdminLivePage } from "./pages/admin-live";
+import { AdminPlayersPage } from "./pages/admin-players";
 
 export function Router() {
   return (
@@ -18,6 +19,7 @@ export function Router() {
           <Route path="/my-picks" element={<MyPicksPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/admin/live" element={<AdminLivePage />} />
+          <Route path="/admin/players" element={<AdminPlayersPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

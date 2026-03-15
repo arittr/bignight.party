@@ -13,7 +13,7 @@ import type { Server as SocketIOServer } from "socket.io";
 import { WEBSOCKET_EVENTS } from "@bignight/shared";
 import { signToken } from "../auth/token";
 import { authMiddleware, adminMiddleware } from "../auth/middleware";
-import { categories, nominations, picks, gameConfig } from "../db/schema";
+import { categories, nominations, picks, players, gameConfig } from "../db/schema";
 import { markWinner, clearWinner } from "../services/game";
 import { getLeaderboard } from "../services/leaderboard";
 import { previewImport, importFromWikipedia } from "../services/wikipedia";
@@ -138,6 +138,28 @@ export function adminRoutes(db: Db, io?: SocketIOServer) {
       .where(eq(gameConfig.id, 1));
 
     return c.json({ ok: true });
+  });
+
+  router.get("/players", async (c) => {
+    const allPlayers = await db.select().from(players);
+    const allCats = await db.select().from(categories);
+    const allPicks = await db.select().from(picks);
+
+    const totalCategories = allCats.length;
+    const picksByPlayer = new Map<string, number>();
+    for (const pick of allPicks) {
+      picksByPlayer.set(pick.playerId, (picksByPlayer.get(pick.playerId) ?? 0) + 1);
+    }
+
+    const result = allPlayers.map((p) => ({
+      id: p.id,
+      name: p.name,
+      pickCount: picksByPlayer.get(p.id) ?? 0,
+      totalCategories,
+      complete: (picksByPlayer.get(p.id) ?? 0) >= totalCategories,
+    }));
+
+    return c.json({ players: result });
   });
 
   return router;

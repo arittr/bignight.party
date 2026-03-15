@@ -173,6 +173,9 @@ function AdminDashboard({
         <Link to="/admin/live" className="px-4 py-2 bg-[#e2b04a] text-[#1a1a2e] font-bold rounded-lg text-sm hover:bg-[#c99a3a]">
           Go Live
         </Link>
+        <Link to="/admin/players" className="px-4 py-2 bg-white/10 text-gray-300 rounded-lg text-sm hover:bg-white/20">
+          Players
+        </Link>
       </div>
       <p className="text-sm text-gray-400">
         Phase: {gameState?.phase ?? "loading..."}
