@@ -22,7 +22,7 @@ export function Layout() {
         </nav>
       )}
       <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <main className="flex-1 max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto w-full px-4 py-6">
+      <main className="flex-1 max-w-lg md:max-w-2xl lg:max-w-7xl mx-auto w-full px-4 py-6">
         <Outlet />
       </main>
     </div>
