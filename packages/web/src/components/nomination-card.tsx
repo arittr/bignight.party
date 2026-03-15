@@ -5,6 +5,7 @@ interface NominationCardProps {
   isSelected: boolean;
   onSelect: () => void;
   pickCount?: number; // Admin: "6 picks"
+  nominationCount?: number; // Total nominations for this film/person
   isCorrect?: boolean; // My Picks: green for correct
   isIncorrect?: boolean; // My Picks: red for incorrect
   isWinner?: boolean; // Show winner badge
@@ -17,6 +18,7 @@ export function NominationCard({
   isSelected,
   onSelect,
   pickCount,
+  nominationCount,
   isCorrect,
   isIncorrect,
   isWinner,
@@ -49,7 +51,14 @@ export function NominationCard({
             {isCorrect && <span className="text-green-400">✓</span>}
             {isIncorrect && <span className="text-red-400">✗</span>}
           </div>
-          <p className="text-sm text-gray-400 truncate">{subtitle}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-gray-400 truncate">{subtitle}</p>
+            {nominationCount !== undefined && nominationCount > 1 && (
+              <span className="text-xs text-gray-500 shrink-0 bg-white/5 px-1.5 py-0.5 rounded">
+                {nominationCount} noms
+              </span>
+            )}
+          </div>
         </div>
         {pickCount !== undefined && (
           <span className="text-xs text-gray-500 shrink-0">

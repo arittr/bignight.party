@@ -56,6 +56,14 @@ export function PicksPage() {
 
 	const isLocked = phase === "locked" || phase === "completed";
 
+	// Build title → total nomination count across all categories
+	const nominationCounts = new Map<string, number>();
+	for (const cat of categories) {
+		for (const nom of cat.nominations ?? []) {
+			nominationCounts.set(nom.title, (nominationCounts.get(nom.title) ?? 0) + 1);
+		}
+	}
+
 	const currentCategory = categories[selectedCategoryIndex];
 
 	// Restore existing pick selection when switching categories
@@ -81,7 +89,7 @@ export function PicksPage() {
 
 	// Locked/completed: show review mode
 	if (isLocked) {
-		return <PicksReview categories={categories} picks={picks} />;
+		return <PicksReview categories={categories} picks={picks} nominationCounts={nominationCounts} />;
 	}
 
 	// Open: show pick wizard
@@ -114,6 +122,7 @@ export function PicksPage() {
 						title={nom.title}
 						subtitle={nom.subtitle}
 						imageUrl={nom.imageUrl}
+						nominationCount={nominationCounts.get(nom.title)}
 						isSelected={selectedNominationId === nom.id}
 						onSelect={() => handleSelect(currentCategory.id, nom.id)}
 					/>
@@ -150,9 +159,11 @@ export function PicksPage() {
 function PicksReview({
 	categories,
 	picks,
+	nominationCounts,
 }: {
 	categories: Category[];
 	picks: Array<{ categoryId: string; nominationId: string }>;
+	nominationCounts: Map<string, number>;
 }) {
 	const picksByCategory = new Map(
 		picks.map((p) => [p.categoryId, p]),
@@ -211,9 +222,16 @@ function PicksReview({
 											: "border-white/10 bg-white/[0.02]"
 								}`}
 							>
-								<p className="text-white text-sm">
-									{pickedNomination.title}
-								</p>
+								<div className="flex items-center gap-2">
+									<p className="text-white text-sm">
+										{pickedNomination.title}
+									</p>
+									{(nominationCounts.get(pickedNomination.title) ?? 0) > 1 && (
+										<span className="text-xs text-gray-500 bg-white/5 px-1.5 py-0.5 rounded">
+											{nominationCounts.get(pickedNomination.title)} noms
+										</span>
+									)}
+								</div>
 								<p className="text-gray-400 text-xs">
 									{pickedNomination.subtitle}
 								</p>
