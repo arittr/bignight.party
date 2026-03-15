@@ -34,18 +34,21 @@ export const inviteGate: MiddlewareHandler = async (c, next) => {
 
 	if (paramCode === inviteCode) {
 		// Valid invite param — set cookie and redirect to clean URL (strip param)
+		// Behind a reverse proxy, always set secure=true (Caddy handles TLS)
+		const isBehindProxy = !!c.req.header("x-forwarded-proto");
 		setCookie(c, COOKIE_NAME, inviteCode, {
 			httpOnly: true,
-			secure: url.protocol === "https:",
+			secure: isBehindProxy || url.protocol === "https:",
 			sameSite: "Lax",
 			maxAge: COOKIE_MAX_AGE,
 			path: "/",
 		});
 
-		// If this is a page request (not API), redirect to strip the invite param
+		// Redirect to strip the invite param — use pathname only to avoid http/https issues behind proxy
 		if (!url.pathname.startsWith("/api/")) {
 			url.searchParams.delete("invite");
-			return c.redirect(url.toString(), 302);
+			const cleanPath = url.pathname + (url.search || "");
+			return c.redirect(cleanPath || "/", 302);
 		}
 
 		return next();
