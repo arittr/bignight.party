@@ -49,9 +49,9 @@ export function NominationCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-medium text-white truncate">{title}</p>
-            {(titleNomCount ?? 0) >= (subtitleNomCount ?? 0) && (titleNomCount ?? 0) > 1 && (
+            {(titleNomCount ?? 0) >= (subtitleNomCount ?? 0) && (titleNomCount ?? 0) >= 1 && (
               <span className="text-xs text-gray-500 shrink-0 bg-white/5 px-1.5 py-0.5 rounded">
-                {titleNomCount} noms
+                {titleNomCount} {titleNomCount === 1 ? "nom" : "noms"}
               </span>
             )}
             {isWinner && <span className="text-[#e2b04a] text-xs">👑</span>}
@@ -60,9 +60,9 @@ export function NominationCard({
           </div>
           <div className="flex items-center gap-2">
             <p className="text-sm text-gray-400 truncate">{subtitle}</p>
-            {(subtitleNomCount ?? 0) > (titleNomCount ?? 0) && (subtitleNomCount ?? 0) > 1 && (
+            {(subtitleNomCount ?? 0) > (titleNomCount ?? 0) && (subtitleNomCount ?? 0) >= 1 && (
               <span className="text-xs text-gray-500 shrink-0 bg-white/5 px-1.5 py-0.5 rounded">
-                {subtitleNomCount} noms
+                {subtitleNomCount} {subtitleNomCount === 1 ? "nom" : "noms"}
               </span>
             )}
           </div>
