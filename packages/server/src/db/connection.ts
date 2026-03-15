@@ -15,6 +15,10 @@ export function createDb(path: string = DB_PATH) {
   sqlite.exec("PRAGMA foreign_keys = ON;");
   const db = drizzle(sqlite, { schema });
   migrate(db, { migrationsFolder: MIGRATIONS_DIR });
+
+  // Ensure singleton game_config row exists
+  sqlite.exec("INSERT OR IGNORE INTO game_config (id) VALUES (1)");
+
   return db;
 }
 
