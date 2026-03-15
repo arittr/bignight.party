@@ -94,10 +94,15 @@ describe("WebSocket server", () => {
     await Promise.all([waitForConnect(sender), waitForConnect(receiver)]);
 
     const broadcastPromise = waitForEvent(receiver, WEBSOCKET_EVENTS.REACTION_BROADCAST);
-    sender.emit(WEBSOCKET_EVENTS.REACTION_SEND, ALLOWED_REACTIONS[0]);
+    sender.emit(WEBSOCKET_EVENTS.REACTION_SEND, { emoji: ALLOWED_REACTIONS[0] });
 
-    const received = await broadcastPromise;
-    expect(received).toBe(ALLOWED_REACTIONS[0]);
+    const received = (await broadcastPromise) as Record<string, unknown>;
+    expect(received).toMatchObject({
+      playerId: "player_1",
+      emoji: ALLOWED_REACTIONS[0],
+    });
+    expect(received.id).toEqual(expect.any(String));
+    expect(received.timestamp).toEqual(expect.any(Number));
 
     sender.disconnect();
     receiver.disconnect();
@@ -119,5 +124,51 @@ describe("WebSocket server", () => {
     expect(broadcastReceived).toBe(false);
 
     socket.disconnect();
+  });
+});
+
+describe("Reaction broadcast rank field", () => {
+  let port: number;
+  let stopServer: () => Promise<void>;
+  let validToken: string;
+
+  beforeAll(
+    () =>
+      new Promise<void>((resolve) => {
+        const httpServer = createServer();
+        createSocketServer(httpServer); // no db → rank should be null
+
+        httpServer.listen(0, async () => {
+          const addr = httpServer.address();
+          port = typeof addr === "object" && addr ? addr.port : 0;
+          validToken = await signToken({ playerId: "player_1", isAdmin: false });
+          stopServer = () =>
+            new Promise((res, rej) => httpServer.close((err) => (err ? rej(err) : res())));
+          resolve();
+        });
+      }),
+  );
+
+  afterAll(async () => {
+    await stopServer();
+  });
+
+  it("includes rank: null when no db is available", async () => {
+    const sender = connectClient(port, validToken);
+    await waitForConnect(sender);
+
+    const broadcastPromise = waitForEvent(sender, WEBSOCKET_EVENTS.REACTION_BROADCAST);
+    sender.emit(WEBSOCKET_EVENTS.REACTION_SEND, { emoji: ALLOWED_REACTIONS[0] });
+
+    const received = (await broadcastPromise) as Record<string, unknown>;
+    expect(received).toMatchObject({
+      playerId: "player_1",
+      emoji: ALLOWED_REACTIONS[0],
+      rank: null,
+    });
+    expect(received.id).toEqual(expect.any(String));
+    expect(received.timestamp).toEqual(expect.any(Number));
+
+    sender.disconnect();
   });
 });
