@@ -62,7 +62,7 @@ export function LeaderboardPage() {
 		<div className="space-y-4 pb-20">
 			{/* Header */}
 			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-bold text-[#e2b04a]">Leaderboard</h1>
+				<h1 className="text-2xl md:text-4xl font-bold text-[#e2b04a]">Leaderboard</h1>
 				<div className="flex items-center gap-2">
 					<span
 						className={`w-2 h-2 rounded-full ${
@@ -149,7 +149,7 @@ export function LeaderboardPage() {
 
 			{/* Remaining players */}
 			{rest.length > 0 && (
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+				<div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-3">
 					<AnimatePresence mode="popLayout">
 						{rest.map((player) => (
 							<PlayerRow
@@ -211,7 +211,7 @@ function PlayerRow({
 				opacity: { duration: 0.2 },
 				boxShadow: { duration: 1.5, ease: "easeInOut" },
 			}}
-			className={`flex items-center justify-between p-3 md:p-4 rounded-lg relative overflow-hidden ${
+			className={`flex items-center justify-between p-3 md:p-5 rounded-lg relative overflow-hidden ${
 				isCurrentUser
 					? "bg-[#e2b04a]/10 border border-[#e2b04a]/30"
 					: "bg-white/[0.04]"
@@ -223,11 +223,11 @@ function PlayerRow({
 					initial={{ scale: 1.5 }}
 					animate={{ scale: 1 }}
 					transition={{ type: "spring", stiffness: 300, damping: 15 }}
-					className="text-gray-500 text-sm w-6 font-medium"
+					className="text-gray-500 text-sm md:text-lg w-6 md:w-8 font-medium"
 				>
 					#{player.rank}
 				</motion.span>
-				<span className="text-white">{player.name}</span>
+				<span className="text-white md:text-lg">{player.name}</span>
 			</div>
 			<div className="flex items-center gap-2">
 				{/* Score delta badge */}
@@ -242,7 +242,7 @@ function PlayerRow({
 								stiffness: 400,
 								damping: 15,
 							}}
-							className="text-xs font-bold text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded-full"
+							className="text-xs md:text-sm font-bold text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded-full"
 						>
 							+{scoreDelta}
 						</motion.span>
@@ -253,11 +253,11 @@ function PlayerRow({
 					initial={{ scale: 2, color: "#ffffff" }}
 					animate={{ scale: 1, color: "#e2b04a" }}
 					transition={{ duration: 0.6, ease: "easeOut" }}
-					className="font-bold text-lg"
+					className="font-bold text-lg md:text-xl"
 				>
 					{player.totalScore}
 				</motion.span>
-				<span className="text-gray-500 text-xs">
+				<span className="text-gray-500 text-xs md:text-sm">
 					({player.correctCount})
 				</span>
 			</div>

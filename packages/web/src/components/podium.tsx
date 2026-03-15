@@ -9,16 +9,16 @@ interface PodiumProps {
 
 const PODIUM_CONFIG = [
 	{
-		barHeight: "h-20 md:h-28",
+		barHeight: "h-20 md:h-36",
 		barStyle: "from-gray-400/20 to-gray-400/5",
 	},
 	{
-		barHeight: "h-28 md:h-40",
+		barHeight: "h-28 md:h-52",
 		barStyle:
 			"from-[#e2b04a]/30 to-[#e2b04a]/10 shadow-lg shadow-[#e2b04a]/10",
 	},
 	{
-		barHeight: "h-16 md:h-24",
+		barHeight: "h-16 md:h-32",
 		barStyle: "from-amber-700/20 to-amber-700/5",
 	},
 ] as const;
@@ -32,7 +32,7 @@ export function Podium({ players, scoreDeltas }: PodiumProps) {
 	);
 
 	return (
-		<div className="flex items-end justify-center gap-3 md:gap-6 mb-6">
+		<div className="flex items-end justify-center gap-3 md:gap-10 mb-6">
 			<AnimatePresence mode="popLayout">
 				{ordered.map((player, i) => {
 					const delta = scoreDeltas?.get(player.playerId);
@@ -82,11 +82,11 @@ export function Podium({ players, scoreDeltas }: PodiumProps) {
 									damping: 15,
 									delay: 0.1,
 								}}
-								className="text-2xl md:text-4xl mb-1"
+								className="text-2xl md:text-5xl mb-1"
 							>
 								{RANK_EMOJIS[player.rank] ?? ""}
 							</motion.span>
-							<p className="text-sm md:text-base font-medium text-white truncate max-w-[80px] md:max-w-[120px]">
+							<p className="text-sm md:text-xl font-medium text-white truncate max-w-[80px] md:max-w-[160px]">
 								{player.name}
 							</p>
 
@@ -97,7 +97,7 @@ export function Podium({ players, scoreDeltas }: PodiumProps) {
 									initial={{ scale: 2, color: "#ffffff" }}
 									animate={{ scale: 1, color: "#e2b04a" }}
 									transition={{ duration: 0.6, ease: "easeOut" }}
-									className="text-sm md:text-base font-bold"
+									className="text-sm md:text-lg font-bold"
 								>
 									{player.totalScore} pts
 								</motion.span>
@@ -133,9 +133,9 @@ export function Podium({ players, scoreDeltas }: PodiumProps) {
 							</div>
 
 							<div
-								className={`w-20 md:w-32 ${PODIUM_CONFIG[i]?.barHeight} bg-gradient-to-t ${PODIUM_CONFIG[i]?.barStyle} rounded-t-lg mt-1 flex items-center justify-center`}
+								className={`w-20 md:w-44 ${PODIUM_CONFIG[i]?.barHeight} bg-gradient-to-t ${PODIUM_CONFIG[i]?.barStyle} rounded-t-lg mt-1 flex items-center justify-center`}
 							>
-								<span className="text-lg md:text-xl font-bold text-[#e2b04a]">
+								<span className="text-lg md:text-2xl font-bold text-[#e2b04a]">
 									#{player.rank}
 								</span>
 							</div>
