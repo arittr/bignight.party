@@ -61,6 +61,5 @@ export const picks = sqliteTable(
 
 export const gameConfig = sqliteTable("game_config", {
   id: integer("id").primaryKey().default(1),
-  picksLockAt: integer("picks_lock_at", { mode: "number" }),
   completedAt: integer("completed_at", { mode: "number" }),
 });

@@ -112,27 +112,22 @@ describe("clearWinner", () => {
 
 describe("getGamePhase", () => {
   it("returns 'setup' when no categories exist", () => {
-    const phase = getGamePhase({ picksLockAt: null, completedAt: null }, false);
+    const phase = getGamePhase({ completedAt: null }, false, false);
     expect(phase).toBe("setup");
   });
 
   it("returns 'completed' when completedAt is set", () => {
-    const phase = getGamePhase({ picksLockAt: null, completedAt: Date.now() }, true);
+    const phase = getGamePhase({ completedAt: Date.now() }, true, true);
     expect(phase).toBe("completed");
   });
 
-  it("returns 'locked' when picksLockAt is in the past", () => {
-    const phase = getGamePhase({ picksLockAt: Date.now() - 1000, completedAt: null }, true);
+  it("returns 'locked' when a category has been revealed", () => {
+    const phase = getGamePhase({ completedAt: null }, true, true);
     expect(phase).toBe("locked");
   });
 
-  it("returns 'open' when picksLockAt is in the future", () => {
-    const phase = getGamePhase({ picksLockAt: Date.now() + 60000, completedAt: null }, true);
-    expect(phase).toBe("open");
-  });
-
-  it("returns 'open' when picksLockAt is null and categories exist", () => {
-    const phase = getGamePhase({ picksLockAt: null, completedAt: null }, true);
+  it("returns 'open' when no categories are revealed", () => {
+    const phase = getGamePhase({ completedAt: null }, true, false);
     expect(phase).toBe("open");
   });
 });

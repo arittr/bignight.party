@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import { eq, and } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { SubmitPickSchema } from "@bignight/shared";
-import { picks, nominations, players, gameConfig } from "../db/schema";
+import { picks, nominations, players, categories } from "../db/schema";
 import { authMiddleware } from "../auth/middleware";
 import type { Db } from "../db/connection";
 import type { AppEnv } from "../env";
@@ -23,13 +23,11 @@ export function picksRoutes(db: Db) {
       return c.json({ error: "Player not found — please sign in again" }, 401);
     }
 
-    const [config] = await db.select().from(gameConfig).limit(1);
+    // Picks lock when any category has been revealed (first winner announced)
+    const allCats = await db.select().from(categories);
+    const hasRevealed = allCats.some((cat) => cat.isRevealed);
 
-    if (config?.completedAt != null) {
-      return c.json({ error: "Game is completed" }, 403);
-    }
-
-    if (config?.picksLockAt != null && config.picksLockAt <= Date.now()) {
+    if (hasRevealed) {
       return c.json({ error: "Picks are locked" }, 403);
     }
 

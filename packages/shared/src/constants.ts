@@ -5,7 +5,6 @@ export const WEBSOCKET_EVENTS = {
   LEADERBOARD_UPDATE: "leaderboard:update",
   GAME_COMPLETED: "game:completed",
   REACTION_BROADCAST: "reaction:broadcast",
-  PICKS_LOCKED: "picks:locked",
   JOIN: "join",
   REACTION_SEND: "reaction:send",
 } as const;

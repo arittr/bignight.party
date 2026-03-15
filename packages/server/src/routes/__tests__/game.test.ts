@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { createTestApp, seedCategories } from "../../test-utils";
-import { gameConfig } from "../../db/schema";
+import { categories, gameConfig } from "../../db/schema";
 import { eq } from "drizzle-orm";
 
 describe("GET /api/game", () => {
@@ -38,24 +38,12 @@ describe("GET /api/game", () => {
     expect(body.categoryCount).toBeGreaterThan(0);
   });
 
-  it("returns open phase when categories exist and picksLockAt is in the future", async () => {
-    await seedCategories(db);
+  it("returns locked phase when a category has been revealed", async () => {
+    const { categoryId } = await seedCategories(db);
     await db
-      .update(gameConfig)
-      .set({ picksLockAt: Date.now() + 100000 })
-      .where(eq(gameConfig.id, 1));
-
-    const res = await app.request("/api/game");
-    const body = await res.json();
-    expect(body.phase).toBe("open");
-  });
-
-  it("returns locked phase when picksLockAt has passed and game not completed", async () => {
-    await seedCategories(db);
-    await db
-      .update(gameConfig)
-      .set({ picksLockAt: Date.now() - 10000 })
-      .where(eq(gameConfig.id, 1));
+      .update(categories)
+      .set({ isRevealed: true })
+      .where(eq(categories.id, categoryId));
 
     const res = await app.request("/api/game");
     const body = await res.json();

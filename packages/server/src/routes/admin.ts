@@ -7,7 +7,6 @@ import {
   ImportWikipediaSchema,
   MarkWinnerSchema,
   ClearWinnerSchema,
-  SetPicksLockSchema,
 } from "@bignight/shared";
 import type { Server as SocketIOServer } from "socket.io";
 import { WEBSOCKET_EVENTS } from "@bignight/shared";
@@ -112,15 +111,6 @@ export function adminRoutes(db: Db, io?: SocketIOServer) {
     return c.json({ leaderboard });
   });
 
-  router.put("/lock", zValidator("json", SetPicksLockSchema), async (c) => {
-    const { picksLockAt } = c.req.valid("json");
-    await db
-      .update(gameConfig)
-      .set({ picksLockAt })
-      .where(eq(gameConfig.id, 1));
-    return c.json({ picksLockAt });
-  });
-
   router.post("/reset", async (c) => {
     const body = await c.req.json();
     const result = ResetSchema.safeParse(body);
@@ -134,7 +124,7 @@ export function adminRoutes(db: Db, io?: SocketIOServer) {
     await db.delete(categories);
     await db
       .update(gameConfig)
-      .set({ picksLockAt: null, completedAt: null })
+      .set({ completedAt: null })
       .where(eq(gameConfig.id, 1));
 
     return c.json({ ok: true });

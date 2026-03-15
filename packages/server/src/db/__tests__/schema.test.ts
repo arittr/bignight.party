@@ -147,13 +147,12 @@ describe("game_config table", () => {
     db = createTestDb();
     await db.insert(gameConfig).values({
       id: 1,
-      picksLockAt: null,
       completedAt: null,
     });
 
     const result = await db.select().from(gameConfig);
     expect(result).toHaveLength(1);
     expect(result[0]?.id).toBe(1);
-    expect(result[0]?.picksLockAt).toBeNull();
+    expect(result[0]?.completedAt).toBeNull();
   });
 });

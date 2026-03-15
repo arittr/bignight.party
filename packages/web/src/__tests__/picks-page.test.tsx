@@ -91,8 +91,7 @@ describe("PicksPage", () => {
       config: null,
       categoryCount: 2,
       isLoading: false,
-      lockWarning: false,
-    });
+          });
     mockUsePicks.mockReturnValue({
       picks: [],
       selectedNominationId: null,
@@ -198,14 +197,4 @@ describe("PicksPage", () => {
     expect(screen.getByRole("heading", { name: "Best Director" })).toBeInTheDocument();
   });
 
-  it("shows lock warning banner when lockWarning is true", () => {
-    mockUseGameState.mockReturnValue({ phase: "open", config: null, categoryCount: 2, isLoading: false, lockWarning: true });
-    renderPicksPage();
-    expect(screen.getByText(/Less than 30 minutes/)).toBeInTheDocument();
-  });
-
-  it("does not show lock warning banner when lockWarning is false", () => {
-    renderPicksPage();
-    expect(screen.queryByText(/Less than 30 minutes/)).not.toBeInTheDocument();
-  });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { createId } from "@paralleldrive/cuid2";
 import { createTestApp, createPlayerToken, seedCategories } from "../../test-utils";
-import { players, gameConfig } from "../../db/schema";
+import { players, categories, gameConfig } from "../../db/schema";
 import { eq } from "drizzle-orm";
 
 describe("Picks routes", () => {
@@ -76,14 +76,14 @@ describe("Picks routes", () => {
       expect(body.pick.nominationId).toBe(nominationId2);
     });
 
-    it("returns 403 when picks are locked (picksLockAt in the past)", async () => {
-      const { categoryId, nominationId } = await seedCategories(db);
+    it("returns 403 when picks are locked (a category has been revealed)", async () => {
+      const { categoryId, nominationId, otherCategoryId } = await seedCategories(db);
 
-      // Set picksLockAt to the past
+      // Reveal a category (simulates admin marking a winner)
       await db
-        .update(gameConfig)
-        .set({ picksLockAt: Date.now() - 10000 })
-        .where(eq(gameConfig.id, 1));
+        .update(categories)
+        .set({ isRevealed: true })
+        .where(eq(categories.id, otherCategoryId));
 
       const res = await app.request("/api/picks", {
         method: "POST",
@@ -97,13 +97,11 @@ describe("Picks routes", () => {
       expect(res.status).toBe(403);
     });
 
-    it("returns 403 when game is completed", async () => {
-      const { categoryId, nominationId } = await seedCategories(db);
+    it("returns 403 when game is completed (all categories revealed)", async () => {
+      const { categoryId, nominationId, otherCategoryId } = await seedCategories(db);
 
-      await db
-        .update(gameConfig)
-        .set({ completedAt: Date.now() - 1000 })
-        .where(eq(gameConfig.id, 1));
+      // Reveal all categories (game is completed)
+      await db.update(categories).set({ isRevealed: true });
 
       const res = await app.request("/api/picks", {
         method: "POST",

@@ -204,46 +204,6 @@ describe("Admin Routes", () => {
     });
   });
 
-  // ---- Lock ----
-  describe("PUT /api/admin/lock", () => {
-    it("sets picksLockAt", async () => {
-      const lockTime = Date.now() + 60000;
-      const res = await app.request("/api/admin/lock", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${adminToken}`,
-        },
-        body: JSON.stringify({ picksLockAt: lockTime }),
-      });
-      expect(res.status).toBe(200);
-
-      const config = await db.select().from(gameConfig).where(eq(gameConfig.id, 1));
-      expect(config[0].picksLockAt).toBe(lockTime);
-    });
-
-    it("clears picksLockAt with null", async () => {
-      // First set a lock time
-      await db
-        .update(gameConfig)
-        .set({ picksLockAt: Date.now() + 60000 })
-        .where(eq(gameConfig.id, 1));
-
-      const res = await app.request("/api/admin/lock", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${adminToken}`,
-        },
-        body: JSON.stringify({ picksLockAt: null }),
-      });
-      expect(res.status).toBe(200);
-
-      const config = await db.select().from(gameConfig).where(eq(gameConfig.id, 1));
-      expect(config[0].picksLockAt).toBeNull();
-    });
-  });
-
   // ---- Reset ----
   describe("POST /api/admin/reset", () => {
     it("resets all game data when confirm is true", async () => {
@@ -251,7 +211,7 @@ describe("Admin Routes", () => {
       await insertCategory(db, "Best Picture", 0, ["Film A"]);
       await db
         .update(gameConfig)
-        .set({ picksLockAt: Date.now(), completedAt: Date.now() })
+        .set({ completedAt: Date.now() })
         .where(eq(gameConfig.id, 1));
 
       const res = await app.request("/api/admin/reset", {
@@ -271,7 +231,6 @@ describe("Admin Routes", () => {
       expect(noms).toHaveLength(0);
 
       const config = await db.select().from(gameConfig).where(eq(gameConfig.id, 1));
-      expect(config[0].picksLockAt).toBeNull();
       expect(config[0].completedAt).toBeNull();
     });
 

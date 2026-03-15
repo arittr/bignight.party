@@ -24,7 +24,7 @@ interface Category {
 export function PicksPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
-  const { phase, lockWarning } = useGameState();
+  const { phase } = useGameState();
   const { picks, selectedNominationId, setSelectedNominationId, handleSelect, saveStatus, completedCategoryIds } = usePicks();
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(0);
 
@@ -66,12 +66,6 @@ export function PicksPage() {
   return (
     <div className="space-y-4">
       <SaveIndicator status={saveStatus} />
-
-      {lockWarning && (
-        <div className="bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 px-4 py-2 rounded-lg text-sm">
-          ⚠ Less than 30 minutes until picks lock!
-        </div>
-      )}
 
       <p className="text-sm text-gray-400">
         {completedCategoryIds.size} of {categories.length} picked

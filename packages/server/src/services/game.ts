@@ -41,11 +41,12 @@ export async function clearWinner(db: Db, categoryId: string) {
 }
 
 export function getGamePhase(
-  config: { picksLockAt: number | null; completedAt: number | null },
+  config: { completedAt: number | null },
   hasCategories: boolean,
+  hasRevealedCategory: boolean,
 ): GamePhase {
   if (!hasCategories) return "setup";
   if (config.completedAt) return "completed";
-  if (config.picksLockAt && config.picksLockAt < Date.now()) return "locked";
+  if (hasRevealedCategory) return "locked";
   return "open";
 }

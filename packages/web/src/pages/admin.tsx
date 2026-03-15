@@ -61,9 +61,6 @@ interface Category {
 
 interface GameState {
   phase?: string;
-  config?: {
-    picksLockAt?: number;
-  };
 }
 
 interface PreviewData {
@@ -81,9 +78,6 @@ function AdminDashboard({
   const [wikiUrl, setWikiUrl] = useState("");
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [importStatus, setImportStatus] = useState<string | null>(null);
-
-  // Lock time state
-  const [lockTime, setLockTime] = useState("");
 
   // Fetch game state
   const { data: gameState } = useQuery<GameState>({
@@ -138,19 +132,6 @@ function AdminDashboard({
       const body = await res.json();
       setImportStatus(`Error: ${body.error}`);
     }
-  }
-
-  async function handleSetLock() {
-    const timestamp = lockTime ? new Date(lockTime).getTime() : null;
-    await fetch("/api/admin/lock", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ picksLockAt: timestamp }),
-    });
-    queryClient.invalidateQueries({ queryKey: ["game-state"] });
   }
 
   async function handleReset() {
@@ -243,32 +224,6 @@ function AdminDashboard({
           </div>
         </section>
       )}
-
-      {/* Lock Time */}
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-white">Picks Lock Time</h2>
-        <div className="flex gap-2">
-          <input
-            type="datetime-local"
-            value={lockTime}
-            onChange={(e) => setLockTime(e.target.value)}
-            className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-[#e2b04a] focus:outline-none"
-          />
-          <button
-            type="button"
-            onClick={handleSetLock}
-            className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20"
-          >
-            Set
-          </button>
-        </div>
-        {gameState?.config?.picksLockAt && (
-          <p className="text-xs text-gray-500">
-            Currently set to:{" "}
-            {new Date(gameState.config.picksLockAt).toLocaleString()}
-          </p>
-        )}
-      </section>
 
       {/* Reset */}
       <section>

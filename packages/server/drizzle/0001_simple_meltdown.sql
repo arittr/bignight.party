@@ -1,0 +1,1 @@
+ALTER TABLE `game_config` DROP COLUMN `picks_lock_at`;

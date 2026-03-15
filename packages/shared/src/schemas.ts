@@ -52,12 +52,7 @@ export const SubmitPickSchema = z.object({
 // Game Config
 export const GameConfigSchema = z.object({
   id: z.number().int().default(1),
-  picksLockAt: z.number().int().nullable(),
   completedAt: z.number().int().nullable(),
-});
-
-export const SetPicksLockSchema = z.object({
-  picksLockAt: z.number().int().nullable(),
 });
 
 // Admin

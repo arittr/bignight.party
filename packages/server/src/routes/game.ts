@@ -11,11 +11,11 @@ export function gameRoutes(db: Db) {
 
   router.get("/", async (c) => {
     const [config] = await db.select().from(gameConfig).limit(1);
-    const [{ value: categoryCount }] = await db
-      .select({ value: count() })
-      .from(categories);
+    const allCats = await db.select().from(categories);
+    const categoryCount = allCats.length;
+    const hasRevealed = allCats.some((cat) => cat.isRevealed);
 
-    const phase = derivePhase(config, categoryCount);
+    const phase = derivePhase(config, categoryCount, hasRevealed);
 
     return c.json({ phase, config, categoryCount });
   });
@@ -33,11 +33,12 @@ export function gameRoutes(db: Db) {
 }
 
 function derivePhase(
-  config: { picksLockAt: number | null; completedAt: number | null } | undefined,
+  config: { completedAt: number | null } | undefined,
   categoryCount: number,
+  hasRevealed: boolean,
 ): GamePhase {
   if (!config || categoryCount === 0) return "setup";
   if (config.completedAt != null) return "completed";
-  if (config.picksLockAt != null && config.picksLockAt <= Date.now()) return "locked";
+  if (hasRevealed) return "locked";
   return "open";
 }

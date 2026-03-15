@@ -81,7 +81,7 @@ describe("GameStateResponseSchema", () => {
   it("validates open phase with config", () => {
     const result = GameStateResponseSchema.safeParse({
       phase: "open",
-      config: { id: 1, picksLockAt: 1710000000, completedAt: null },
+      config: { id: 1, completedAt: null },
       categoryCount: 23,
     });
     expect(result.success).toBe(true);
