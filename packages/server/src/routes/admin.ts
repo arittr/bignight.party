@@ -118,7 +118,8 @@ export function adminRoutes(db: Db, io?: SocketIOServer) {
       return c.json({ error: "Must provide { confirm: true } to reset" }, 400);
     }
 
-    // Delete in order respecting foreign keys
+    // Clear winnerId FKs first (breaks circular ref), then delete
+    await db.update(categories).set({ winnerId: null });
     await db.delete(picks);
     await db.delete(nominations);
     await db.delete(categories);
