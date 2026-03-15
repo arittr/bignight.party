@@ -211,26 +211,27 @@ function PlayerRow({
 				opacity: { duration: 0.2 },
 				boxShadow: { duration: 1.5, ease: "easeInOut" },
 			}}
-			className={`flex items-center justify-between p-3 md:p-5 rounded-lg relative overflow-hidden ${
+			className={`flex items-center justify-between p-3 rounded-lg relative overflow-hidden md:flex-col md:items-center md:justify-center md:p-4 md:gap-1 ${
 				isCurrentUser
 					? "bg-[#e2b04a]/10 border border-[#e2b04a]/30"
 					: "bg-white/[0.04]"
 			}`}
 		>
-			<div className="flex items-center gap-3 min-w-0">
+			<div className="flex items-center gap-3 min-w-0 md:flex-col md:gap-0">
 				<motion.span
 					key={`rank-${player.playerId}-${player.rank}`}
 					initial={{ scale: 1.5 }}
 					animate={{ scale: 1 }}
 					transition={{ type: "spring", stiffness: 300, damping: 15 }}
-					className="text-gray-500 text-sm md:text-lg w-6 md:w-8 font-medium shrink-0"
+					className="text-gray-500 text-sm md:text-base font-medium shrink-0 md:mb-1"
 				>
 					#{player.rank}
 				</motion.span>
-				<span className="text-white md:text-lg truncate">{player.name}</span>
+				<span className="text-white md:text-lg truncate max-w-full text-center">
+					{player.name}
+				</span>
 			</div>
 			<div className="flex items-center gap-2 shrink-0">
-				{/* Score delta badge */}
 				<AnimatePresence>
 					{hasScored && (
 						<motion.span
