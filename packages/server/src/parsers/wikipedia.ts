@@ -533,6 +533,18 @@ function parseBulletPointNominations(text: string): ParsedNomination[] {
  *   - Work: "Anora" → title=work, subtitle=person/details
  */
 function parseBulletPointNomination(mainPart: string, details: string): ParsedNomination | null {
+	// Special case: "Song Title" from Film Title (Best Original Song)
+	const songMatch = mainPart.match(/^"(.+?)"\s+from\s+(.+)$/);
+	if (songMatch) {
+		const songName = songMatch[1]!;
+		const filmName = songMatch[2]!;
+		return {
+			title: `"${songName}"`,
+			subtitle: filmName,
+			imageUrl: null,
+		};
+	}
+
 	// Heuristic: person names start with "Firstname Lastname" pattern,
 	// but common English articles indicate a work title (e.g. "The Brutalist").
 	// Use Unicode-aware \p{Lu}/\p{Ll} for accented names like "Timothée Chalamet".
