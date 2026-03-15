@@ -3,6 +3,7 @@ import {
   PlayerSchema, CreatePlayerSchema, SubmitPickSchema, MarkWinnerSchema,
   JoinResponseSchema, GameStateResponseSchema, CategoriesResponseSchema,
   PicksResponseSchema, SubmitPickResponseSchema, LeaderboardResponseSchema,
+  ReactionBroadcastSchema,
 } from "../schemas";
 import { ALLOWED_REACTIONS } from "../constants";
 
@@ -199,8 +200,8 @@ describe("LeaderboardResponseSchema", () => {
 });
 
 describe("ALLOWED_REACTIONS", () => {
-  it("contains exactly five emojis", () => {
-    expect(ALLOWED_REACTIONS).toHaveLength(5);
+  it("contains exactly six emojis", () => {
+    expect(ALLOWED_REACTIONS).toHaveLength(6);
   });
   it("includes expected emojis", () => {
     expect(ALLOWED_REACTIONS).toContain("🔥");
@@ -208,5 +209,56 @@ describe("ALLOWED_REACTIONS", () => {
     expect(ALLOWED_REACTIONS).toContain("💩");
     expect(ALLOWED_REACTIONS).toContain("💀");
     expect(ALLOWED_REACTIONS).toContain("👏");
+    expect(ALLOWED_REACTIONS).toContain("🍿");
+  });
+});
+
+describe("ReactionBroadcastSchema", () => {
+  it("accepts a reaction with a numeric rank", () => {
+    const result = ReactionBroadcastSchema.safeParse({
+      playerId: "p1",
+      name: "Drew",
+      emoji: "🔥",
+      id: "abc-123",
+      timestamp: Date.now(),
+      rank: 1,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a reaction with null rank", () => {
+    const result = ReactionBroadcastSchema.safeParse({
+      playerId: "p1",
+      name: "Drew",
+      emoji: "🔥",
+      id: "abc-123",
+      timestamp: Date.now(),
+      rank: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a reaction with non-integer rank", () => {
+    const result = ReactionBroadcastSchema.safeParse({
+      playerId: "p1",
+      name: "Drew",
+      emoji: "🔥",
+      id: "abc-123",
+      timestamp: Date.now(),
+      rank: 1.5,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a reaction with rank 0", () => {
+    const result = ReactionBroadcastSchema.safeParse({
+      playerId: "p1",
+      name: "Drew",
+      emoji: "🔥",
+      id: "abc-123",
+      timestamp: Date.now(),
+      rank: 0,
+    });
+    expect(result.success).toBe(false);
   });
 });
