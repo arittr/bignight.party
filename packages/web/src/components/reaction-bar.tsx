@@ -21,10 +21,10 @@ export function ReactionBar({ onReact, reactions }: ReactionBarProps) {
               animate={{ opacity: 0, y: -(typeof window !== "undefined" ? window.innerHeight + 50 : 800) }}
               exit={{ opacity: 0 }}
               transition={{ duration: 10, ease: "easeOut" }}
-              className="absolute bottom-16 text-4xl"
+              className="absolute bottom-16 text-4xl md:text-6xl"
             >
               {r.emoji}
-              <span className="text-xs ml-1" style={{ color: playerColor(r.playerId) }}>
+              <span className="text-xs md:text-lg ml-1" style={{ color: playerColor(r.playerId) }}>
                 {getRankEmoji(r.rank)} {r.name}
               </span>
             </motion.div>
@@ -38,7 +38,7 @@ export function ReactionBar({ onReact, reactions }: ReactionBarProps) {
           <button
             key={emoji}
             onClick={() => onReact(emoji)}
-            className="text-2xl p-2 hover:scale-125 transition-transform active:scale-90"
+            className="text-2xl md:text-4xl p-2 hover:scale-125 transition-transform active:scale-90"
           >
             {emoji}
           </button>
