@@ -17,7 +17,7 @@ export function Layout() {
           <div className="flex gap-4 text-sm">
             <Link to="/picks" className="text-[#e2b04a] hover:underline">Picks</Link>
             <Link to="/leaderboard" className="text-[#e2b04a] hover:underline">Leaderboard</Link>
-            <button onClick={() => setHelpOpen(true)} className="text-[#e2b04a] hover:underline">?</button>
+            <button onClick={() => setHelpOpen(true)} className="text-[#e2b04a] hover:underline cursor-pointer">?</button>
           </div>
         </nav>
       )}
