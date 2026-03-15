@@ -149,7 +149,7 @@ export function LeaderboardPage() {
 
 			{/* Remaining players */}
 			{rest.length > 0 && (
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-3">
+				<div className="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-3">
 					<AnimatePresence mode="popLayout">
 						{rest.map((player) => (
 							<PlayerRow
@@ -217,19 +217,19 @@ function PlayerRow({
 					: "bg-white/[0.04]"
 			}`}
 		>
-			<div className="flex items-center gap-3">
+			<div className="flex items-center gap-3 min-w-0">
 				<motion.span
 					key={`rank-${player.playerId}-${player.rank}`}
 					initial={{ scale: 1.5 }}
 					animate={{ scale: 1 }}
 					transition={{ type: "spring", stiffness: 300, damping: 15 }}
-					className="text-gray-500 text-sm md:text-lg w-6 md:w-8 font-medium"
+					className="text-gray-500 text-sm md:text-lg w-6 md:w-8 font-medium shrink-0"
 				>
 					#{player.rank}
 				</motion.span>
-				<span className="text-white md:text-lg">{player.name}</span>
+				<span className="text-white md:text-lg truncate">{player.name}</span>
 			</div>
-			<div className="flex items-center gap-2">
+			<div className="flex items-center gap-2 shrink-0">
 				{/* Score delta badge */}
 				<AnimatePresence>
 					{hasScored && (
