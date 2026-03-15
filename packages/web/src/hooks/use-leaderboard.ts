@@ -58,8 +58,8 @@ export function useLeaderboard() {
           categoryName: data.revealedCategory.name,
           winnerTitle: data.revealedCategory.winnerTitle,
         });
-        // Auto-clear after 10s
-        setTimeout(() => setJustAnnounced(null), 10000);
+        // Auto-clear after 3s
+        setTimeout(() => setJustAnnounced(null), 3000);
       }
       if (data.revealedCount !== undefined)
         setRevealedCount(data.revealedCount);
