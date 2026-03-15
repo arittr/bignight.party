@@ -143,13 +143,8 @@ describe("game_config table", () => {
     db.$client.close();
   });
 
-  test("stores singleton game config row", async () => {
+  test("has singleton game config row from startup", async () => {
     db = createTestDb();
-    await db.insert(gameConfig).values({
-      id: 1,
-      completedAt: null,
-    });
-
     const result = await db.select().from(gameConfig);
     expect(result).toHaveLength(1);
     expect(result[0]?.id).toBe(1);

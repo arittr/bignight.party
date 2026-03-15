@@ -1,5 +1,6 @@
 import { parseWikipediaUrl } from "../parsers/wikipedia";
 import { createId } from "@paralleldrive/cuid2";
+import { getCategoryPoints } from "@bignight/shared";
 import { categories, nominations } from "../db/schema";
 import type { Db } from "../db/connection";
 
@@ -25,7 +26,7 @@ export async function importFromWikipedia(url: string, db: Db) {
         id: catId,
         name: cat.name,
         order: i,
-        points: 1,
+        points: getCategoryPoints(cat.name),
         isRevealed: false,
         createdAt: Date.now(),
       });

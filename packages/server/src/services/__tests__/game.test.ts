@@ -7,9 +7,7 @@ import { markWinner, clearWinner, getGamePhase } from "../game";
 import type { Db } from "../../db/connection";
 
 function setupDb() {
-  const db = createTestDb();
-  db.insert(gameConfig).values({ id: 1 }).run();
-  return db;
+  return createTestDb();
 }
 
 async function insertCategory(

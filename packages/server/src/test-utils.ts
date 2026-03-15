@@ -1,14 +1,12 @@
 import { createTestDb } from "./db/connection";
 import { createApp } from "./app";
 import { signToken } from "./auth/token";
-import { gameConfig, categories, nominations } from "./db/schema";
+import { categories, nominations } from "./db/schema";
 import { createId } from "@paralleldrive/cuid2";
 import type { Db } from "./db/connection";
 
 export function createTestApp() {
   const db = createTestDb();
-  // Insert singleton game config row
-  db.insert(gameConfig).values({ id: 1 }).run();
   const app = createApp(db);
   return { app, db };
 }

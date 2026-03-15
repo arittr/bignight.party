@@ -6,9 +6,7 @@ import { getLeaderboard } from "../leaderboard";
 import type { Db } from "../../db/connection";
 
 function setupDb() {
-  const db = createTestDb();
-  db.insert(gameConfig).values({ id: 1 }).run();
-  return db;
+  return createTestDb();
 }
 
 /** Insert a category and its nominations, returning their IDs.
