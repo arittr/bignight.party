@@ -211,23 +211,23 @@ function PlayerRow({
 				opacity: { duration: 0.2 },
 				boxShadow: { duration: 1.5, ease: "easeInOut" },
 			}}
-			className={`flex items-center justify-between p-3 rounded-lg relative overflow-hidden md:flex-col md:items-center md:justify-center md:p-4 md:gap-1 ${
+			className={`flex items-center justify-between p-3 rounded-lg relative overflow-hidden md:p-4 ${
 				isCurrentUser
 					? "bg-[#e2b04a]/10 border border-[#e2b04a]/30"
 					: "bg-white/[0.04]"
 			}`}
 		>
-			<div className="flex items-center gap-3 min-w-0 md:flex-col md:gap-0">
+			<div className="flex items-center gap-3 min-w-0">
 				<motion.span
 					key={`rank-${player.playerId}-${player.rank}`}
 					initial={{ scale: 1.5 }}
 					animate={{ scale: 1 }}
 					transition={{ type: "spring", stiffness: 300, damping: 15 }}
-					className="text-gray-500 text-sm md:text-base font-medium shrink-0 md:mb-1"
+					className="text-gray-500 text-sm md:text-xl font-medium shrink-0"
 				>
 					#{player.rank}
 				</motion.span>
-				<span className="text-white md:text-lg truncate max-w-full text-center">
+				<span className="text-white md:text-xl truncate">
 					{player.name}
 				</span>
 			</div>
@@ -243,7 +243,7 @@ function PlayerRow({
 								stiffness: 400,
 								damping: 15,
 							}}
-							className="text-xs md:text-sm font-bold text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded-full"
+							className="text-xs md:text-base font-bold text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded-full"
 						>
 							+{scoreDelta}
 						</motion.span>
@@ -254,11 +254,11 @@ function PlayerRow({
 					initial={{ scale: 2, color: "#ffffff" }}
 					animate={{ scale: 1, color: "#e2b04a" }}
 					transition={{ duration: 0.6, ease: "easeOut" }}
-					className="font-bold text-lg md:text-xl"
+					className="font-bold text-lg md:text-2xl"
 				>
 					{player.totalScore}
 				</motion.span>
-				<span className="text-gray-500 text-xs md:text-sm">
+				<span className="text-gray-500 text-xs md:text-base">
 					({player.correctCount})
 				</span>
 			</div>
