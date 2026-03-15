@@ -7,7 +7,7 @@ interface PodiumProps {
 
 const PODIUM_CONFIG = [
   { position: 1, medal: "🥈", barHeight: "h-20 md:h-28", order: 0 },
-  { position: 0, medal: "👑", barHeight: "h-28 md:h-40", order: 1 },
+  { position: 0, medal: "🪿", barHeight: "h-28 md:h-40", order: 1 },
   { position: 2, medal: "🥉", barHeight: "h-16 md:h-24", order: 2 },
 ] as const;
 
