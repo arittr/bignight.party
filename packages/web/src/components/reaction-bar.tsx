@@ -1,11 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ALLOWED_REACTIONS } from "@bignight/shared";
-
-interface FloatingReaction {
-  id: string;
-  emoji: string;
-  name: string;
-}
+import { ALLOWED_REACTIONS, getRankEmoji } from "@bignight/shared";
+import { playerColor } from "../lib/player-color";
+import type { FloatingReaction } from "../hooks/use-reactions";
 
 interface ReactionBarProps {
   onReact: (emoji: string) => void;
@@ -28,7 +24,9 @@ export function ReactionBar({ onReact, reactions }: ReactionBarProps) {
               className="absolute bottom-16 text-4xl"
             >
               {r.emoji}
-              <span className="text-xs text-white/50 ml-1">{r.name}</span>
+              <span className="text-xs ml-1" style={{ color: playerColor(r.playerId) }}>
+                {getRankEmoji(r.rank)} {r.name}
+              </span>
             </motion.div>
           ))}
         </AnimatePresence>
