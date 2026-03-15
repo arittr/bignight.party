@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 
 interface AuthState {
   token: string | null;
@@ -51,6 +51,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuth(state);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
+
+  // Validate session on mount — if the player was deleted (e.g., DB reset),
+  // clear stale auth and redirect to sign-in
+  useEffect(() => {
+    if (!auth.token || auth.isAdmin) return;
+    fetch("/api/player/me", {
+      headers: { Authorization: `Bearer ${auth.token}` },
+    }).then((res) => {
+      if (res.status === 401) {
+        logout();
+      }
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AuthContext.Provider value={{ ...auth, login, loginAdmin, logout }}>
