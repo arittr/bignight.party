@@ -39,6 +39,8 @@ export function AdminLivePage() {
   );
   const revealedCount = revealedIds.size;
 
+  const [error, setError] = useState<string | null>(null);
+
   const markWinner = useMutation({
     mutationFn: async ({
       categoryId,
@@ -55,11 +57,19 @@ export function AdminLivePage() {
         },
         body: JSON.stringify({ categoryId, nominationId }),
       });
-      if (!res.ok) throw new Error("Failed to mark winner");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed to mark winner");
+      }
     },
     onSuccess: () => {
       setConfirming(null);
+      setError(null);
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+    onError: (err: Error) => {
+      setConfirming(null);
+      setError(err.message);
     },
   });
 
@@ -73,10 +83,17 @@ export function AdminLivePage() {
         },
         body: JSON.stringify({ categoryId }),
       });
-      if (!res.ok) throw new Error("Failed to clear winner");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed to clear winner");
+      }
     },
     onSuccess: () => {
+      setError(null);
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+    },
+    onError: (err: Error) => {
+      setError(err.message);
     },
   });
 
@@ -84,6 +101,12 @@ export function AdminLivePage() {
 
   return (
     <div className="space-y-4">
+      {error && (
+        <div className="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-2 rounded-lg text-sm flex justify-between items-center">
+          <span>{error}</span>
+          <button type="button" onClick={() => setError(null)} className="text-red-400 hover:text-red-200 ml-2">✕</button>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[#e2b04a]">Live</h1>
         <span className="text-sm text-gray-400">

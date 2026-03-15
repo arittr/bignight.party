@@ -24,6 +24,8 @@ export function categoriesRoutes(db: Db) {
 
     const result = allCategories.map((category) => ({
       ...category,
+      // Hide winnerId until the category is revealed — prevents players from inspecting the API
+      winnerId: category.isRevealed ? category.winnerId : null,
       nominations: nominationsByCategory.get(category.id) ?? [],
     }));
 

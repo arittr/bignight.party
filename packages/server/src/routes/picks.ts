@@ -23,43 +23,52 @@ export function picksRoutes(db: Db) {
       return c.json({ error: "Player not found — please sign in again" }, 401);
     }
 
-    // Picks lock when any category has been revealed (first winner announced)
-    const allCats = await db.select().from(categories);
-    const hasRevealed = allCats.some((cat) => cat.isRevealed);
+    // Wrap lock check + insert in a transaction to prevent race with winner reveal
+    const result = await db.transaction(async (tx) => {
+      // Picks lock when any category has been revealed (first winner announced)
+      const allCats = await tx.select().from(categories);
+      const hasRevealed = allCats.some((cat) => cat.isRevealed);
 
-    if (hasRevealed) {
-      return c.json({ error: "Picks are locked" }, 403);
+      if (hasRevealed) {
+        return { error: "Picks are locked", status: 403 as const };
+      }
+
+      // Verify nomination belongs to the specified category
+      const [nomination] = await tx
+        .select()
+        .from(nominations)
+        .where(and(eq(nominations.id, nominationId), eq(nominations.categoryId, categoryId)))
+        .limit(1);
+
+      if (!nomination) {
+        return { error: "Nomination does not belong to the specified category", status: 400 as const };
+      }
+
+      const now = Date.now();
+      const id = createId();
+
+      await tx
+        .insert(picks)
+        .values({ id, playerId, categoryId, nominationId, createdAt: now, updatedAt: now })
+        .onConflictDoUpdate({
+          target: [picks.playerId, picks.categoryId],
+          set: { nominationId, updatedAt: now },
+        });
+
+      const [pick] = await tx
+        .select()
+        .from(picks)
+        .where(and(eq(picks.playerId, playerId), eq(picks.categoryId, categoryId)))
+        .limit(1);
+
+      return { pick };
+    });
+
+    if ("error" in result) {
+      return c.json({ error: result.error }, result.status);
     }
 
-    // Verify nomination belongs to the specified category
-    const [nomination] = await db
-      .select()
-      .from(nominations)
-      .where(and(eq(nominations.id, nominationId), eq(nominations.categoryId, categoryId)))
-      .limit(1);
-
-    if (!nomination) {
-      return c.json({ error: "Nomination does not belong to the specified category" }, 400);
-    }
-
-    const now = Date.now();
-    const id = createId();
-
-    await db
-      .insert(picks)
-      .values({ id, playerId, categoryId, nominationId, createdAt: now, updatedAt: now })
-      .onConflictDoUpdate({
-        target: [picks.playerId, picks.categoryId],
-        set: { nominationId, updatedAt: now },
-      });
-
-    const [pick] = await db
-      .select()
-      .from(picks)
-      .where(and(eq(picks.playerId, playerId), eq(picks.categoryId, categoryId)))
-      .limit(1);
-
-    return c.json({ pick });
+    return c.json({ pick: result.pick });
   });
 
   router.get("/", async (c) => {
