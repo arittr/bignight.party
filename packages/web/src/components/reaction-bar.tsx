@@ -24,7 +24,7 @@ export function ReactionBar({ onReact, reactions }: ReactionBarProps) {
               initial={{ opacity: 1, y: 0, x: Math.random() * (typeof window !== "undefined" ? window.innerWidth * 0.7 : 300) }}
               animate={{ opacity: 0, y: -(typeof window !== "undefined" ? window.innerHeight + 50 : 800) }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 6, ease: "easeOut" }}
+              transition={{ duration: 10, ease: "easeOut" }}
               className="absolute bottom-16 text-4xl"
             >
               {r.emoji}
