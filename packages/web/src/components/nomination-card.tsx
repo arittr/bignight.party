@@ -47,18 +47,16 @@ export function NominationCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-medium text-white truncate">{title}</p>
-            {isWinner && <span className="text-[#e2b04a] text-xs">👑</span>}
-            {isCorrect && <span className="text-green-400">✓</span>}
-            {isIncorrect && <span className="text-red-400">✗</span>}
-          </div>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-gray-400 truncate">{subtitle}</p>
             {nominationCount !== undefined && nominationCount > 1 && (
               <span className="text-xs text-gray-500 shrink-0 bg-white/5 px-1.5 py-0.5 rounded">
                 {nominationCount} noms
               </span>
             )}
+            {isWinner && <span className="text-[#e2b04a] text-xs">👑</span>}
+            {isCorrect && <span className="text-green-400">✓</span>}
+            {isIncorrect && <span className="text-red-400">✗</span>}
           </div>
+          <p className="text-sm text-gray-400 truncate">{subtitle}</p>
         </div>
         {pickCount !== undefined && (
           <span className="text-xs text-gray-500 shrink-0">

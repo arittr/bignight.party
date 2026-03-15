@@ -56,11 +56,16 @@ export function PicksPage() {
 
 	const isLocked = phase === "locked" || phase === "completed";
 
-	// Build title → total nomination count across all categories
+	// Build name → total nomination count across all categories.
+	// Count both titles and subtitles since the film name can appear in either
+	// position depending on category (title in Best Picture, subtitle in Best Actor).
 	const nominationCounts = new Map<string, number>();
 	for (const cat of categories) {
 		for (const nom of cat.nominations ?? []) {
 			nominationCounts.set(nom.title, (nominationCounts.get(nom.title) ?? 0) + 1);
+			if (nom.subtitle) {
+				nominationCounts.set(nom.subtitle, (nominationCounts.get(nom.subtitle) ?? 0) + 1);
+			}
 		}
 	}
 
@@ -122,7 +127,10 @@ export function PicksPage() {
 						title={nom.title}
 						subtitle={nom.subtitle}
 						imageUrl={nom.imageUrl}
-						nominationCount={nominationCounts.get(nom.title)}
+						nominationCount={Math.max(
+							nominationCounts.get(nom.title) ?? 0,
+							nominationCounts.get(nom.subtitle) ?? 0,
+						)}
 						isSelected={selectedNominationId === nom.id}
 						onSelect={() => handleSelect(currentCategory.id, nom.id)}
 					/>
