@@ -127,10 +127,8 @@ export function PicksPage() {
 						title={nom.title}
 						subtitle={nom.subtitle}
 						imageUrl={nom.imageUrl}
-						nominationCount={Math.max(
-							nominationCounts.get(nom.title) ?? 0,
-							nominationCounts.get(nom.subtitle) ?? 0,
-						)}
+						titleNomCount={nominationCounts.get(nom.title)}
+						subtitleNomCount={nominationCounts.get(nom.subtitle)}
 						isSelected={selectedNominationId === nom.id}
 						onSelect={() => handleSelect(currentCategory.id, nom.id)}
 					/>
@@ -230,16 +228,9 @@ function PicksReview({
 											: "border-white/10 bg-white/[0.02]"
 								}`}
 							>
-								<div className="flex items-center gap-2">
-									<p className="text-white text-sm">
-										{pickedNomination.title}
-									</p>
-									{(nominationCounts.get(pickedNomination.title) ?? 0) > 1 && (
-										<span className="text-xs text-gray-500 bg-white/5 px-1.5 py-0.5 rounded">
-											{nominationCounts.get(pickedNomination.title)} noms
-										</span>
-									)}
-								</div>
+								<p className="text-white text-sm">
+									{pickedNomination.title}
+								</p>
 								<p className="text-gray-400 text-xs">
 									{pickedNomination.subtitle}
 								</p>

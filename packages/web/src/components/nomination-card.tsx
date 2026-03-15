@@ -5,7 +5,8 @@ interface NominationCardProps {
   isSelected: boolean;
   onSelect: () => void;
   pickCount?: number; // Admin: "6 picks"
-  nominationCount?: number; // Total nominations for this film/person
+  titleNomCount?: number; // Nomination count for the title text
+  subtitleNomCount?: number; // Nomination count for the subtitle text
   isCorrect?: boolean; // My Picks: green for correct
   isIncorrect?: boolean; // My Picks: red for incorrect
   isWinner?: boolean; // Show winner badge
@@ -18,7 +19,8 @@ export function NominationCard({
   isSelected,
   onSelect,
   pickCount,
-  nominationCount,
+  titleNomCount,
+  subtitleNomCount,
   isCorrect,
   isIncorrect,
   isWinner,
@@ -47,16 +49,23 @@ export function NominationCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-medium text-white truncate">{title}</p>
-            {nominationCount !== undefined && nominationCount > 1 && (
+            {(titleNomCount ?? 0) >= (subtitleNomCount ?? 0) && (titleNomCount ?? 0) > 1 && (
               <span className="text-xs text-gray-500 shrink-0 bg-white/5 px-1.5 py-0.5 rounded">
-                {nominationCount} noms
+                {titleNomCount} noms
               </span>
             )}
             {isWinner && <span className="text-[#e2b04a] text-xs">👑</span>}
             {isCorrect && <span className="text-green-400">✓</span>}
             {isIncorrect && <span className="text-red-400">✗</span>}
           </div>
-          <p className="text-sm text-gray-400 truncate">{subtitle}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-gray-400 truncate">{subtitle}</p>
+            {(subtitleNomCount ?? 0) > (titleNomCount ?? 0) && (subtitleNomCount ?? 0) > 1 && (
+              <span className="text-xs text-gray-500 shrink-0 bg-white/5 px-1.5 py-0.5 rounded">
+                {subtitleNomCount} noms
+              </span>
+            )}
+          </div>
         </div>
         {pickCount !== undefined && (
           <span className="text-xs text-gray-500 shrink-0">
