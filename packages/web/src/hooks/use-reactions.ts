@@ -3,10 +3,12 @@ import { WEBSOCKET_EVENTS, REACTION_TTL_MS } from "@bignight/shared";
 import { useAuth } from "../auth";
 import { getSocket } from "../socket";
 
-interface FloatingReaction {
+export interface FloatingReaction {
   id: string;
   emoji: string;
   name: string;
+  playerId: string;
+  rank: number | null;
 }
 
 export function useReactions() {

@@ -117,4 +117,5 @@ export const ReactionBroadcastSchema = z.object({
   emoji: z.string(),
   id: z.string(),
   timestamp: z.number(),
+  rank: z.number().int().positive().nullable(),
 });

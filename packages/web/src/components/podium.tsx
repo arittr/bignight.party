@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { RANK_EMOJIS } from "@bignight/shared";
 import type { LeaderboardPlayer } from "@bignight/shared";
 
 interface PodiumProps {
@@ -8,18 +9,15 @@ interface PodiumProps {
 
 const PODIUM_CONFIG = [
 	{
-		medal: "🥈",
 		barHeight: "h-20 md:h-28",
 		barStyle: "from-gray-400/20 to-gray-400/5",
 	},
 	{
-		medal: "🪿",
 		barHeight: "h-28 md:h-40",
 		barStyle:
 			"from-[#e2b04a]/30 to-[#e2b04a]/10 shadow-lg shadow-[#e2b04a]/10",
 	},
 	{
-		medal: "🥉",
 		barHeight: "h-16 md:h-24",
 		barStyle: "from-amber-700/20 to-amber-700/5",
 	},
@@ -86,7 +84,7 @@ export function Podium({ players, scoreDeltas }: PodiumProps) {
 								}}
 								className="text-2xl md:text-4xl mb-1"
 							>
-								{PODIUM_CONFIG[i]?.medal}
+								{RANK_EMOJIS[player.rank] ?? ""}
 							</motion.span>
 							<p className="text-sm md:text-base font-medium text-white truncate max-w-[80px] md:max-w-[120px]">
 								{player.name}

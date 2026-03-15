@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { ALLOWED_REACTIONS, WEBSOCKET_EVENTS } from "@bignight/shared";
 import { verifyToken } from "../auth/token";
 import { players } from "../db/schema";
+import { getLeaderboard } from "../services/leaderboard";
 import type { Db } from "../db/connection";
 
 const GAME_ROOM = "game";
@@ -39,10 +40,18 @@ export function configureSocketServer(io: Server, db?: Db): void {
   io.on("connection", (socket) => {
     socket.join(GAME_ROOM);
 
-    socket.on(WEBSOCKET_EVENTS.REACTION_SEND, (data: unknown) => {
+    socket.on(WEBSOCKET_EVENTS.REACTION_SEND, async (data: unknown) => {
       if (!data || typeof data !== "object" || !("emoji" in data)) return;
       const { emoji } = data as { emoji: string };
       if (!(ALLOWED_REACTIONS as readonly string[]).includes(emoji)) return;
+
+      // Look up current rank if db is available
+      let rank: number | null = null;
+      if (db) {
+        const leaderboard = await getLeaderboard(db);
+        const entry = leaderboard.find((p) => p.playerId === socket.data.playerId);
+        rank = entry?.rank ?? null;
+      }
 
       io.to(GAME_ROOM).emit(WEBSOCKET_EVENTS.REACTION_BROADCAST, {
         playerId: socket.data.playerId,
@@ -50,6 +59,7 @@ export function configureSocketServer(io: Server, db?: Db): void {
         emoji,
         id: crypto.randomUUID(),
         timestamp: Date.now(),
+        rank,
       });
     });
   });

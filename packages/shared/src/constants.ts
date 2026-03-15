@@ -40,3 +40,16 @@ export const REACTION_TTL_MS = 3000;
 export const TOKEN_EXPIRY_HOURS = 24;
 export const PIN_MIN_LENGTH = 4;
 export const PIN_MAX_LENGTH = 6;
+
+/** Emoji shown next to player names for top-3 ranks. Matches podium display. */
+export const RANK_EMOJIS: Record<number, string> = {
+  1: "🪿",
+  2: "🥈",
+  3: "🥉",
+};
+
+/** Get the podium emoji for a rank, or empty string if not top 3. */
+export function getRankEmoji(rank: number | null): string {
+  if (rank === null) return "";
+  return RANK_EMOJIS[rank] ?? "";
+}
