@@ -20,6 +20,8 @@ export interface ParsedNomination {
 	title: string;
 	subtitle: string;
 	imageUrl: string | null;
+	/** Wikipedia page slug for the primary entity (film or person). Used for thumbnail fetch. */
+	wikipediaSlug?: string;
 }
 
 export interface ParsedCategory {
@@ -74,30 +76,54 @@ export async function parseWikipediaUrl(url: string): Promise<ParsedCeremony> {
 		);
 	}
 
+	// Enrich nominations with thumbnail images from linked Wikipedia pages
+	await enrichWithThumbnails(categories);
+
 	return { name: ceremonyName, categories };
 }
 
 /**
- * Fetches the main image URL for a Wikipedia page by slug.
- *
- * Useful for enriching nominations with poster/headshot images.
- * Returns null on any failure (missing page, no images, network error).
+ * Fetches a thumbnail URL from the Wikipedia REST API.
+ * Uses /api/rest_v1/page/summary which returns thumbnails directly.
+ * Much faster than fetching the full page via wtf_wikipedia.
  */
-export async function fetchWikipediaImage(wikipediaSlug: string): Promise<string | null> {
+async function fetchThumbnail(slug: string): Promise<string | null> {
 	try {
-		const fetchResult = await wtf.fetch(wikipediaSlug);
-		if (!fetchResult) return null;
-
-		const doc = Array.isArray(fetchResult) ? fetchResult[0] : fetchResult;
-		if (!doc) return null;
-
-		const images = doc.images();
-		if (!images || images.length === 0) return null;
-
-		const mainImage = images[0];
-		return mainImage?.url() || null;
+		const encoded = encodeURIComponent(slug.replace(/ /g, "_"));
+		const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encoded}`);
+		if (!res.ok) return null;
+		const data = await res.json();
+		return data.thumbnail?.source ?? null;
 	} catch {
 		return null;
+	}
+}
+
+/**
+ * Enriches nominations with thumbnail images from linked Wikipedia pages.
+ * Fetches in parallel batches to avoid overwhelming the API.
+ */
+async function enrichWithThumbnails(categories: ParsedCategory[]): Promise<void> {
+	const BATCH_SIZE = 10;
+	const tasks: Array<{ nomination: ParsedNomination; slug: string }> = [];
+
+	for (const cat of categories) {
+		for (const nom of cat.nominations) {
+			if (nom.imageUrl) continue;
+			if (nom.wikipediaSlug) {
+				tasks.push({ nomination: nom, slug: nom.wikipediaSlug });
+			}
+		}
+	}
+
+	for (let i = 0; i < tasks.length; i += BATCH_SIZE) {
+		const batch = tasks.slice(i, i + BATCH_SIZE);
+		const results = await Promise.all(
+			batch.map(({ slug }) => fetchThumbnail(slug)),
+		);
+		for (let j = 0; j < batch.length; j++) {
+			batch[j].nomination.imageUrl = results[j];
+		}
 	}
 }
 
@@ -368,16 +394,22 @@ function isCompactFormat(rows: unknown[]): boolean {
 	);
 }
 
+interface CellData {
+	text: string;
+	links?: Array<{ text?: string; page?: string; type?: string }>;
+}
+
 /**
- * Extracts the text content from a compact table cell (col1 or col2).
+ * Extracts the text and links from a compact table cell.
  */
-function extractCompactCellText(row: Record<string, unknown>, colKey: string): string {
-	if (!(colKey in row)) return "";
+function extractCompactCell(row: Record<string, unknown>, colKey: string): CellData {
+	if (!(colKey in row)) return { text: "", links: [] };
 	const cell = row[colKey];
 	if (typeof cell === "object" && cell !== null && "text" in cell) {
-		return (cell as { text: string }).text;
+		const c = cell as CellData;
+		return { text: c.text ?? "", links: c.links ?? [] };
 	}
-	return "";
+	return { text: "", links: [] };
 }
 
 /**
@@ -390,11 +422,14 @@ function parseCompactColumn(
 ): ParsedCategory | null {
 	if (!categoryName) return null;
 
-	const text = extractCompactCellText(row, colKey);
-	if (!text) return null;
+	const cell = extractCompactCell(row, colKey);
+	if (!cell.text) return null;
 
-	const nominations = parseBulletPointNominations(text);
+	const nominations = parseBulletPointNominations(cell.text);
 	if (nominations.length === 0) return null;
+
+	// Match Wikipedia slugs to nominations using the cell's links
+	assignWikipediaSlugs(nominations, cell.links ?? []);
 
 	return { name: categoryName, nominations };
 }
@@ -555,6 +590,41 @@ function extractPersonFromDetails(details: string): string | undefined {
 	}
 
 	return undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Wikipedia slug assignment
+// ---------------------------------------------------------------------------
+
+/**
+ * Matches nominations to their Wikipedia page slugs using the cell's links.
+ * For each nomination, finds the first link whose text matches the title.
+ * Prefers the film/work link (for poster thumbnails) over person links.
+ */
+function assignWikipediaSlugs(
+	nominations: ParsedNomination[],
+	links: Array<{ text?: string; page?: string; type?: string }>,
+): void {
+	const internalLinks = links.filter((l) => l.type === "internal" && l.page);
+
+	for (const nom of nominations) {
+		// Try to find a link matching the nomination title
+		const titleMatch = internalLinks.find(
+			(l) => (l.text ?? l.page ?? "").toLowerCase() === nom.title.toLowerCase(),
+		);
+		if (titleMatch?.page) {
+			nom.wikipediaSlug = titleMatch.page;
+			continue;
+		}
+
+		// Fuzzy: title might be shortened (e.g. "Bugonia" vs "Bugonia (film)")
+		const fuzzyMatch = internalLinks.find(
+			(l) => l.page?.toLowerCase().startsWith(nom.title.toLowerCase()),
+		);
+		if (fuzzyMatch?.page) {
+			nom.wikipediaSlug = fuzzyMatch.page;
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
