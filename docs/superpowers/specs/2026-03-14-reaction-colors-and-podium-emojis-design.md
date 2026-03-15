@@ -38,51 +38,63 @@ A utility function `playerColor(playerId: string): string` in the web package ma
 
 ### Podium emojis in reactions
 
-**Rank emojis (matching the podium component):**
+**Rank emojis:** Shared constant `RANK_EMOJIS` in `packages/shared/src/constants.ts`, used by both `podium.tsx` and `ReactionBar`. This prevents the podium component and reaction rendering from drifting.
+
 - Rank 1 → 🪿 (goose)
 - Rank 2 → 🥈
 - Rank 3 → 🥉
 - All others → no emoji
 
-**Server change:** The reaction broadcast payload gains a `rank` field. When a player sends a reaction, the server queries their current leaderboard rank and includes it.
+**Server change:** The reaction broadcast payload gains a `rank` field. When a player sends a reaction, the server calls the existing `getLeaderboard(db)` from `packages/server/src/services/leaderboard.ts` and finds the player's rank in the result.
 
-**Schema change:** `ReactionBroadcastSchema` adds `rank: z.number().nullable()`. Null means the player isn't on the leaderboard (hasn't completed picks).
+**Performance note:** `getLeaderboard` does a full scan of categories/picks/players. This is acceptable for a party game with ~15 users. No caching needed.
 
-**Server implementation:** Extract the leaderboard ranking query into a reusable function callable by both the leaderboard API route and the WebSocket reaction handler. The WebSocket handler calls this to look up the sending player's rank.
+**Schema change:** `ReactionBroadcastSchema` adds `rank: z.number().int().positive().nullable()`. Null means the player isn't on the leaderboard (hasn't completed picks, is admin, or no winners revealed yet).
+
+**When `db` is not available:** `configureSocketServer` receives `db` as an optional parameter. When `db` is undefined (e.g., in tests using `createSocketServer` without a db), rank defaults to `null`. No podium emoji is shown.
 
 **Client rendering:** The floating reaction renders as: `{emoji} {rankEmoji} {coloredName}` — e.g., `🔥 🪿 Drew` with "Drew" in their assigned color.
+
+### Edge cases
+
+- **Admin reactions:** Admin is not on the leaderboard → `rank: null` → no podium emoji. No special-case code needed.
+- **Players without all picks:** Filtered out by `getLeaderboard` → `rank: null` → no podium emoji.
+- **Pre-reveal (no winners yet):** All leaderboard players have 0 points and rank 1. This is correct — tied players share rank 1, and they'd all get the goose. This is fine; it's a fun detail before scoring starts.
+- **Tied ranks:** Handled by `buildLeaderboard` already. Two players tied at rank 1 both get 🪿. Next player is rank 3 and gets 🥉. No one gets 🥈. This matches podium behavior.
 
 ### Data flow
 
 ```
 Player taps reaction
   → client emits REACTION_SEND { emoji }
-  → server looks up playerName + current rank
+  → server looks up playerName (existing) + calls getLeaderboard(db) for rank
   → server broadcasts REACTION_BROADCAST { playerId, name, emoji, id, timestamp, rank }
   → client receives broadcast
   → client computes color from playerId (client-side only)
-  → client maps rank to podium emoji (client-side)
+  → client maps rank to podium emoji via shared RANK_EMOJIS constant
   → floating reaction renders with color + podium emoji
 ```
 
 ### Interface changes
 
-**`FloatingReaction` (use-reactions.ts and reaction-bar.tsx):** Add `playerId: string` and `rank: number | null`. The `playerId` field is already in the broadcast but wasn't included in the client-side interface.
+**`FloatingReaction`:** Currently duplicated in `use-reactions.ts` and `reaction-bar.tsx`. Consolidate into a single definition in `use-reactions.ts` and import in `reaction-bar.tsx`. Add `playerId: string` and `rank: number | null`.
 
 ### Files touched
 
 | File | Change |
 |------|--------|
+| `packages/shared/src/constants.ts` | Add `RANK_EMOJIS` map (rank → emoji) |
 | `packages/shared/src/schemas.ts` | Add `rank` to `ReactionBroadcastSchema` |
-| `packages/server/src/websocket/server.ts` | Look up player rank, include in broadcast |
-| `packages/server/src/routes/leaderboard.ts` (or equivalent) | Extract ranking query into reusable function |
+| `packages/server/src/websocket/server.ts` | Call `getLeaderboard(db)` for player rank, include in broadcast |
 | `packages/web/src/lib/player-color.ts` | New — `playerColor()` utility |
-| `packages/web/src/hooks/use-reactions.ts` | Add `playerId` and `rank` to `FloatingReaction` |
-| `packages/web/src/components/reaction-bar.tsx` | Add `playerId` and `rank` to interface, render colored name with podium emoji |
+| `packages/web/src/hooks/use-reactions.ts` | Add `playerId` and `rank` to `FloatingReaction`, export the interface |
+| `packages/web/src/components/reaction-bar.tsx` | Import `FloatingReaction`, render colored name with podium emoji |
+| `packages/web/src/components/podium.tsx` | Use shared `RANK_EMOJIS` constant instead of local `PODIUM_CONFIG.medal` |
 
 ### Testing
 
-- Unit test for `playerColor()`: deterministic output, same input always returns same color, different inputs produce varied colors.
-- Unit test for rank-to-emoji mapping.
-- Integration test: reaction broadcast includes rank field.
-- Existing reaction tests should continue to pass with the new field.
+- **`playerColor()` unit tests:** Deterministic (same ID → same color), varied (10 random UUIDs produce at least 4 distinct colors), handles empty string without crashing.
+- **Rank-to-emoji mapping unit tests:** Ranks 1/2/3 return correct emoji, rank 4+ returns undefined/empty, null rank returns no emoji.
+- **Server integration test:** Reaction broadcast includes `rank` field. This test uses `createSocketServer` without `db`, so rank should be `null`. A separate test with a db fixture verifies that rank is populated correctly when a player has completed picks and a winner is revealed.
+- **Rendering:** Verify colored name span has inline style with a color from the palette. Verify podium emoji appears for rank 1-3 players.
+- **Existing tests:** Must continue to pass with the new broadcast field.
