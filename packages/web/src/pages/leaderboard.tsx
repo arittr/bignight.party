@@ -149,7 +149,7 @@ export function LeaderboardPage() {
 
 			{/* Remaining players */}
 			{rest.length > 0 && (
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-2">
 					<AnimatePresence mode="popLayout">
 						{rest.map((player) => (
 							<PlayerRow
